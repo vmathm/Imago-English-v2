@@ -35,3 +35,41 @@ export FLASK_APP=main.py
 flask run
 ``` 
 
+## Tech Stack
+- Python 3.10+
+
+- Flask (blueprints + app factory)
+
+- SQLite (via SQLAlchemy, later)
+
+- Google Translate API
+
+- Web Speech API (browser-based TTS)
+
+- HTML/CSS with Jinja templates
+
+- JavaScript
+
+## Folder Structure
+
+app/
+├── auth/                # Auth blueprint
+│   └── routes.py
+├── models/              # Future: DB models
+├── services/            # External integrations (translate, calendar)
+├── static/              # CSS, JS
+├── templates/           # HTML templates
+└── __init__.py          # App factory
+main.py                  # Entry point
+config.py                # App config
+requirements.txt         # Dependencies
+.env.example             # Sample environment config
+README.md
+docs/
+
+
+## Project Start Date
+
+June 12, 2025
+
+See docs/ for architecture, API design, and roadmap.
