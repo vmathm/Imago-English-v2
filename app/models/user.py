@@ -51,10 +51,11 @@ class User(Base, UserMixin):
 
     # Role helpers
     def is_student(self):
-        return self.role == 'student'
+        return self.role in ('teacher', '@dmin!', 'student')
 
     def is_teacher(self):
         return self.role in ('teacher', '@dmin!')
 
     def is_admin(self):
         return self.role == '@dmin!'
+    
