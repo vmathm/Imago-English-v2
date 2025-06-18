@@ -1,0 +1,9 @@
+import os
+
+class Config:
+    # Loaded from .env or system environment
+    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key")
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", "sqlite:///app.db")
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    ALLOW_DEV_LOGIN = os.environ.get("ALLOW_DEV_LOGIN")
+    

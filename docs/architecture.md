@@ -7,15 +7,50 @@ This project uses the Flask **app factory pattern** and **blueprints** to keep t
 - `main.py`: Entry point that runs the app
 - `app/__init__.py`: Creates the app instance and registers all blueprints
 - `app/auth/`: Handles user-related routes and logic
-- `app/services/`: Contains reusable service functions like Google Translate
+- `app/database.py`: Sets up SQLAlchemy database. Creates an engine and a scoped_session called db_session
+- `app/services/`: Contains reusable service functions like Google Translate and Google Calendar
+
+## 📁 Project Structure
+├── app/ # Main Flask application package
+│ ├── init.py # App factory + config loader + DB init
+│ ├── database.py #sets up the SQLAlchemy database.
+│ ├── auth/ #User-related routes and logic
+│ ├── admin/#routes and logic
+│ ├── audiobook/#routes and logic
+│ ├── dashboard/#routes and logic
+│ ├── flashcard/#routes and logic
+│ ├── models/ # All database models
+│ │ ├── init.py # Aggregates all models for easy import
+│ │ ├── base.py # SQLAlchemy declarative base
+│ │ ├── user.py # User model (with roles)
+│ │ └── flashcard.py # Flashcard model (TBD)
+│ └── templates/ # HTML templates
+│
+├── scripts/
+│ └── seed_users.py # Adds test users for dev login
+│
+├── config.py # App configuration classes (dev, prod)
+├── .env # Local environment settings
+├── .flaskenv # Defines environment variables specifically for the Flask command-line interface (CLI) -  $ flask run
+├── main.py # App launcher
+├── requirements.txt # Python dependencies
+└── README.md # Project overview and setup instructions
+
+| Folder   / File      | Purpose |
+|----------------------|---------|
+| `app/__init__.py`    | Initializes Flask app, loads config, connects DB |
+| `models/user.py`     | Defin
+| `config.py`          | Defines settings based on .env variables |
+| `scripts/seed_users.py` | Adds sample users to the DB for testing |
+
 
 ## Blueprints
 
 Each major feature has its own blueprint:
 - `auth` for login/signup routes
-- `flashcards` for vocabulary creation
+- `flashcard` for vocabulary creation
 - `audiobook` for text/audio display + text selection for translation
-
+- `dashboard` for student, teachers and admin dashboards. 
 
 
 ## Why this structure?
@@ -23,6 +58,26 @@ Each major feature has its own blueprint:
 - Easy to test and maintain
 - Scalable as new features are added
 - Encourages clean separation of concerns
+
+
+## ⚙️ Configuration System
+
+The app uses a centralized `config.py` module to manage settings based on .env variables
+
+
+### Configuration Fields in .env
+
+| Field                     | Purpose |
+|---------------------------|---------|
+| `SECRET_KEY`              | Flask session encryption and CSRF protection |
+| `SQLALCHEMY_DATABASE_URI` | Database connection string (SQLite) |
+| `SQLALCHEMY_TRACK_MODIFICATIONS` | Performance optimization (set to `False`) |
+| `ALLOW_DEV_LOGIN`         | Custom flag that enables `/auth/dev-login/<user_id>` |
+
+
+### Switching Environments
+
+Use .flaskenv to set the variable FLASK_DEBUG=1 to enable Debug Mode/Dev mode and to 0 otherwise.  
 
 
 
@@ -37,11 +92,11 @@ from sqlalchemy.orm import declarative_base
 Base = declarative_base()
 ```
 
-##  User Model
+## User Model
 
-The `User` model represents all types of users in the system: students, teachers, and admins. We use a single-table role-based approach, where each user has a `role` field to define their access level and permissions.
+The `User` model represents all types of users in the system: students, teachers, and admins. Each user has a `role` field to define their access level and permissions.
 
-### 🧱 Table: `users`
+### Table: `users`
 
 | Column               | Type         | Description |
 |----------------------|--------------|-------------|
@@ -53,7 +108,7 @@ The `User` model represents all types of users in the system: students, teachers
 | profilepic           | String       | Profile image URL |
 | phone                | String       | Optional phone number |
 | level                | String       | English level (e.g., A1, B2) |
-| role                 | String       | `'student'`, `'teacher'`, or `'admin'` |
+| role                 | String       | `'student'`, `'teacher'`, or `'@dmin!'` |
 | active               | Boolean      | Whether the account is active (used by Flask-Login) |
 | delete_date          | Date         | Soft-delete timestamp |
 | user_stripe_id       | String       | Stripe ID for payment tracking |
@@ -75,7 +130,6 @@ The `User` model represents all types of users in the system: students, teachers
 
 - `assigned_teacher_id` is a self-referencing FK used for assigning a teacher to a student.
 - `assigned_students` is a reverse relationship available to teacher users.
-- `progress`: links user to their reading progress (one-to-many)
 - `flashcards`: links user to their flashcards (one-to-many)
 
 ---
@@ -84,7 +138,7 @@ The `User` model represents all types of users in the system: students, teachers
 
 - `role = 'student'`: Limited to studying and viewing own data
 - `role = 'teacher'`: Can manage students assigned to them
-- `role = 'admin'`: Has full control (user management, assignment, etc.)
+- `role = '@dmin!'`: Has full control (user management, assignment, etc.)
 
 Use helper methods for checks:
 
@@ -92,6 +146,58 @@ Use helper methods for checks:
 user.is_student()   # True if student
 user.is_teacher()   # True if teacher or admin
 user.is_admin()     # True if admin
+```
+
+
+## Flashcard Model
+
+The Flashcard model represents a language learning flashcard created by a user or teacher. It supports spaced repetition for personalized review and includes metadata for visibility, source, and linguistic tagging.
+
+| Column             | Type         |  Description   |
+| ------------------ | ------------ |--------------- |
+| id                 | Integer (PK) | Unique         |
+| question           | String       | The front side of the|
+| answer             | String       | The back side of the                                                                  |
+| identify_language | Integer    | Language orientation: `0` = answer in English, `1` = question in English, `2` = bothEnglish |
+| part_of_speech   | String(20)   | Grammatcal category (e.g., `'noun'`, `'verb'`,etc.) |
+| level              | Integer      | Number of successful reviews|
+| ease               | Integer      | Ease factor used in spaced  |
+| interval           | Integer      | Days until the next review  |
+| last_review       | DateTime     | Timestamp of the most recent review|
+|next_review	    | DateTime	   |   When the flashcard should be shown again |
+|show_answer	    | Boolean	   | Whether the answer is currently shown (controlled by frontend)|
+|reviewed_by_tc	    | Boolean	   | Indicates if the flashcard was reviewed by a teacher|
+|add_by_tc	        | Boolean	   | Indicates if the flashcard was created by a teacher |
+|add_by_user	    | Boolean	   | Indicates if the flashcard was created by a student |
+|user_id	        | FK → users.id| Foreign key linking to the flashcard owner |
+
+### 🔁 Relationships
+user_id is a foreign key that links each flashcard to its owner in the users table.
+
+user: the SQLAlchemy relationship back to the User model, allowing access to user.flashcards.
+
+### Spaced Repetition Support
+The fields level, ease, interval, last_review, and next_review enable the app to implement a lightweight spaced repetition algorithm.
+
+### Data Exposure
+Use to_dict() when exposing flashcard data to the frontend or API. This method ensures show_answer is returned as False by default for study sessions:
+
+```python
+def to_dict(self):
+    return {
+        "id": self.id,
+        "question": self.question,
+        "answer": self.answer,
+        "level": self.level,
+        "ease": self.ease,
+        "interval": self.interval,
+        "last_review": self.last_review,
+        "next_review": self.next_review,
+        "user_id": self.user_id,
+        "show_answer": False,
+    }
+``` 
+
 
 
 

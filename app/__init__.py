@@ -18,9 +18,6 @@ def create_app():
 
     # Dynamically load config based on FLASK_CONFIG env variable
     app.config.from_object("config.Config")
-    print("flask_config:", os.getenv("FLASK_CONFIG"))
-    print("DEBUG mode:", app.config["DEBUG"])
-    print("DEBUG:", app.debug)
     
    # Initialize DB
     engine, db_session = init_engine(app)
@@ -32,8 +29,7 @@ def create_app():
     # Register blueprints
     from .auth.routes import bp as auth_bp
     app.register_blueprint(auth_bp)
-    from .dashboard.routes import bp as dashboard_bp
-    app.register_blueprint(dashboard_bp)
+    
 
     '''
     from .flashcards.routes import bp as flashcards_bp

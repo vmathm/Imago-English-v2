@@ -10,11 +10,10 @@
 
 ## Phase 2 - Define Models
 - [x] Model for users
-- [ ] Model for flashcards
+- [x] Model for flashcards
 
 
 ## Phase 3 – Flashcards
-- [ ] Create flashcard model
 - [ ] Set up form to add new flashcards
 - [ ] Implement flashcard study mode
 
@@ -33,3 +32,5 @@
 ## Later
 - [ ] Stripe integration for monetization
 - [ ] Deployment (Render/Fly.io/PythonAnywhere)
+- [ ] CSRF protection is not currently enabled, as this is a showcase app. In a production setting, integration with Flask-WTF's `CSRFProtect` would be implemented for all POST/PUT/DELETE routes.
+

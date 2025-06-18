@@ -37,11 +37,10 @@ class User(Base, UserMixin):
     assigned_teacher = relationship('User', remote_side=[id], backref='assigned_students')
 
     # 🔗 Relationships to other tables
-    progress = relationship('Progress', back_populates='user')
     flashcards = relationship('Flashcard', back_populates='user')
 
     @hybrid_property
-    def assigned_teacher_name(self):
+    def assigned_teacher_name(self):    
         return self.assigned_teacher.name if self.assigned_teacher else None
 
 
