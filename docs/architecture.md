@@ -15,6 +15,7 @@ This project uses the Flask **app factory pattern** and **blueprints** to keep t
 │ ├── init.py # App factory + config loader + DB init
 │ ├── database.py #sets up the SQLAlchemy database.
 │ ├── auth/ #User-related routes and logic
+│ │ ├── user_loader.py #Defines @login_manager.user_loader decorator to load User objects from session on request
 │ ├── admin/#routes and logic
 │ ├── audiobook/#routes and logic
 │ ├── dashboard/#routes and logic
@@ -33,6 +34,7 @@ This project uses the Flask **app factory pattern** and **blueprints** to keep t
 ├── .env # Local environment settings
 ├── .flaskenv # Defines environment variables specifically for the Flask command-line interface (CLI) -  $ flask run
 ├── main.py # App launcher
+├── extensions.py # Defines LoginManager()
 ├── requirements.txt # Python dependencies
 └── README.md # Project overview and setup instructions
 
