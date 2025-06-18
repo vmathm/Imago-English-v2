@@ -81,9 +81,9 @@ Use .flaskenv to set the variable FLASK_DEBUG=1 to enable Debug Mode/Dev mode an
 
 
 
-# Models and Schema
+## Models and Schema
 
-## Base Class Setup
+### Base Class Setup
 
 All models inherit from a shared SQLAlchemy base class, defined in `models/base.py`:
 
@@ -92,11 +92,11 @@ from sqlalchemy.orm import declarative_base
 Base = declarative_base()
 ```
 
-## User Model
+### User Model
 
 The `User` model represents all types of users in the system: students, teachers, and admins. Each user has a `role` field to define their access level and permissions.
 
-### Table: `users`
+#### Table: `users`
 
 | Column               | Type         | Description |
 |----------------------|--------------|-------------|
@@ -126,7 +126,7 @@ The `User` model represents all types of users in the system: students, teachers
 
 ---
 
-### 🔁 Relationships
+#### 🔁 Relationships
 
 - `assigned_teacher_id` is a self-referencing FK used for assigning a teacher to a student.
 - `assigned_students` is a reverse relationship available to teacher users.
@@ -134,7 +134,7 @@ The `User` model represents all types of users in the system: students, teachers
 
 ---
 
-### 🧠 Role System
+#### 🧠 Role System
 
 - `role = 'student'`: Limited to studying and viewing own data
 - `role = 'teacher'`: Can manage students assigned to them
@@ -149,7 +149,7 @@ user.is_admin()     # True if admin
 ```
 
 
-## Flashcard Model
+### Flashcard Model
 
 The Flashcard model represents a language learning flashcard created by a user or teacher. It supports spaced repetition for personalized review and includes metadata for visibility, source, and linguistic tagging.
 
@@ -171,15 +171,15 @@ The Flashcard model represents a language learning flashcard created by a user o
 |add_by_user	    | Boolean	   | Indicates if the flashcard was created by a student |
 |user_id	        | FK → users.id| Foreign key linking to the flashcard owner |
 
-### 🔁 Relationships
+#### 🔁 Relationships
 user_id is a foreign key that links each flashcard to its owner in the users table.
 
 user: the SQLAlchemy relationship back to the User model, allowing access to user.flashcards.
 
-### Spaced Repetition Support
+#### Spaced Repetition Support
 The fields level, ease, interval, last_review, and next_review enable the app to implement a lightweight spaced repetition algorithm.
 
-### Data Exposure
+#### Data Exposure
 Use to_dict() when exposing flashcard data to the frontend or API. This method ensures show_answer is returned as False by default for study sessions:
 
 ```python
