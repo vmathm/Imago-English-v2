@@ -505,6 +505,14 @@ html[data-bs-theme="light"] .google-login-box {
   color: white;
 }
 
+html[data-bs-theme="light"] footer,
+html[data-bs-theme="light"] footer a {
+  color: white !important;
+}
+
+html[data-bs-theme="light"] footer a:hover {
+  color: #ccc; /* optional: lighter shade on hover */
+}
 /* ===== Dark Mode: Bootstrap-native ===== */
 html[data-bs-theme="dark"] {
   background-color: #000;
