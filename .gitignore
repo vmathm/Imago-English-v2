@@ -202,4 +202,4 @@ app/static/*
 # Un-ignore the js folder
 !app/static/js/         
 # Un-ignore theme-toggle.js
-!app/static/js/theme-toggle.js  
+!app/static/js/theme-toggle.js

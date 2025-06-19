@@ -59,3 +59,15 @@ html {
 
 ### 📌 Next Steps
 - Replace remaining hardcoded colors like `#FFB559`, `#B8E067` (will be done when study route is created.)
+
+## 🧠 JavaScript Overview
+
+### 🔘 Theme Toggle Script
+
+Handles dark mode switching using Bootstrap 5.3’s `data-bs-theme` attribute.
+
+- File: `app/static/js/theme-toggle.js`
+- Loads on every page via `<script>` in `layout.html`
+- Saves user preference in `localStorage`
+- Automatically re-applies the saved theme on page load
+- Connected to the checkbox input with `id="dark-mode-toggle"`
