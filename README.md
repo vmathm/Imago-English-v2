@@ -25,7 +25,59 @@ A modular Flask-based language learning app designed to help students build voca
 
 ---
 
-##  Getting Started
+
+## Flask-Login Authentication & Session Flow
+               ┌──────────────────────────────┐
+               │   User submits login form    │
+               └────────────┬─────────────────┘
+                            │
+                            ▼
+           ┌──────────────────────────────────────┐
+           │   Your view calls `login_user(user)` │
+           └────────────┬─────────────────────────┘
+                        │
+                        ▼
+        ┌────────────────────────────────────────────┐
+        │ Flask stores user.id in session (securely) │
+        └────────────────────┬───────────────────────┘
+                             │
+                             ▼
+         Browser stores session in a signed cookie
+
+ ┌────────────────────────────────────────────────────────┐
+ │                    A new request comes in             │
+ └────────────────────────────────────────────────────────┘
+                             │
+                             ▼
+        Flask reads the signed cookie and loads session
+                             │
+                             ▼
+        ┌────────────────────────────────────────────┐
+        │ Flask-Login finds user_id in session       │
+        └────────────┬───────────────────────────────┘
+                     │
+                     ▼
+      Calls your `@login_manager.user_loader` function:
+     ┌───────────────────────────────────────────────┐
+     │  @login_manager.user_loader                   │
+     │  def load_user(user_id):                      │
+     │      return User.query.get(user_id)           │
+     └───────────────────────────────────────────────┘
+                     │
+                     ▼
+          Sets `current_user` to that user object
+
+Now in any route:
+    🔹 current_user is available
+    🔹 protect views with `@login_required`
+
+
+
+## Folder Structure
+Refer to docs/architecture.md ## Project Structure
+
+
+## Getting Started
 
 ### 1. Clone and set up the environment
 ```bash
@@ -55,31 +107,10 @@ flask run
 ``` 
 
 
-## Tech Stack
-- Python 3.10+
-
-- Flask (blueprints + app factory)
-
-- SQLite (via SQLAlchemy, later)
-
-- Google Translate API
-
-- Web Speech API (browser-based TTS)
-
-- HTML/CSS with Jinja templates
-
-- JavaScript
-
-## Folder Structure
-Refer to docs/architecture.md ## Project Structure
-
-
-
-
 ## Project Start Date
 
 June 12, 2025
 
 See docs/ for architecture, API design, and roadmap.
 
-  
+

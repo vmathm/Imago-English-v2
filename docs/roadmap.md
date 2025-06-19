@@ -12,17 +12,22 @@
 - [x] Model for users
 - [x] Model for flashcards
 
+## Phase 3 - Dashboard Layout
+- [x] set layout.html
+- [x] set dashboard.html
+- [x] set css
 
-## Phase 3 – Flashcards
+
+## Phase 4 – Flashcards
 - [ ] Set up form to add new flashcards
 - [ ] Implement flashcard study mode
 
-## Phase 4 – Audiobook Module
+## Phase 5 – Audiobook Module
 - [ ] Display text/audio together
 - [ ] Add click-to-translate
 - [ ] Allow adding translated items to flashcards
 
-## Phase 5 – Dashboard and Analytics
+## Phase 6 – Analytics
 - [ ] Progress/streak tracking
 - [ ] Admin view for teachers
 
