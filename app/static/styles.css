@@ -1,0 +1,503 @@
+
+
+html, body {
+  background-image: linear-gradient(to left top, #504681, #535689, #7e7da5, #F3F2F1);
+  border-radius: 5px;
+  min-height: 100vh;
+  padding-bottom: 100px;
+  color: white;
+}
+
+/* Dark Mode: override background only */
+html.dark-mode, body.dark-mode {
+  background: #000 !important;
+}
+
+
+/*LOAD.HTML DARK MODE */
+.text-content {
+  background-color: rgba(0, 0, 0, 0.9) !important; /* Adjust the last value (alpha) to control darkness */
+  color: white !important; /* Set text color to contrast with the dark background */
+  padding: 10px; 
+  margin-top: 20px;
+  text-align: justify;
+}
+.text-content p {
+  margin-bottom: 20px; /* Adjust the value as needed for the desired spacing */
+}
+
+#text-content {
+  background-color: rgba(0, 0, 0, 0.9) !important; /* Adjust the last value (alpha) to control darkness */
+  color: white !important; /* Set text color to contrast with the dark background */
+  padding: 10px; 
+  margin-top: 20px;
+  text-align: justify;
+}
+
+/* Navbar Styles */
+.navbar-nav .nav-link {
+  color: #ffffff !important;
+  font-weight: bold;
+  text-transform: uppercase;
+  text-align: right;
+}
+
+/* Dark Mode Switch Styling */
+.form-switch .form-check-input {
+  width: 2.5rem;
+  height: 1.2rem;
+  background-color: #ccc;
+  border-radius: 1.2rem;
+  transition: background-color 0.3s;
+}
+
+.form-switch .form-check-input:checked {
+  background-color: #0d6efd;
+}
+
+.form-switch .form-check-label {
+  margin-left: 0.5rem;
+  color: #000;
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
+}
+
+/* Dark mode switch color */
+body.dark-mode .form-check-input {
+  background-color: #444;
+  border-color: #777;
+}
+
+body.dark-mode .form-check-input:checked {
+  background-color: #6e6b6b;
+}
+
+body.dark-mode .form-check-label {
+  color: #fff; 
+}
+
+/* Navbar switch alignment */
+.nav-item .form-check {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Adjust spacing between navbar items */
+.nav-item.d-flex {
+  margin-left: 0.5rem;
+}
+
+/* Fix for collapsed switch */
+@media (max-width: 767.98px) {
+  .navbar-nav {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .navbar-nav .nav-link {
+    text-align: right;
+    width: 100%; /* Full width for each link */
+  }
+
+  /* Ensure the switch appears as a separate item in collapsed view */
+  .navbar-nav .nav-item.d-flex {
+    justify-content: flex-end;
+    width: 100%;
+    text-align: right;
+  }
+
+  .navbar-collapse {
+    align-items: flex-end;
+  }
+
+  .navbar-nav .form-check {
+    margin: 0.5rem 0;
+    text-align: right;
+    width: auto;
+  }
+
+  /* Switch positioning in collapsed mode */
+  .form-switch {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    width: auto;
+  }
+
+  /* Improved label spacing */
+  .form-switch .form-check-label {
+    display: inline-block;
+    margin-right: 0.3rem;
+    white-space: nowrap;
+  }
+
+  .form-switch .form-check-input {
+    margin-left: 0.2rem;
+  }
+
+  /* Ensure label and input are separate */
+  .form-switch label, .form-switch input {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* Dark mode switch button hover */
+.form-check-input:hover {
+  cursor: pointer;
+}
+
+/* Adjust the gap between the switch and the last item */
+.navbar-nav.ms-auto {
+  margin-right: 0.5rem;
+}
+
+/* Improved alignment of switch and label */
+.form-check-label {
+  white-space: nowrap;
+  margin-right: 0.5rem;
+}
+
+
+
+/* Alert Message */
+.alert {
+  background-color: #1A8784; /* Customize the background color of the alert message */
+  color: #fff; /* Customize the text color of the alert message */
+  font-weight: bold;
+  border-radius: 0;
+}
+
+
+
+/* Button color*/
+.btn-primary {
+  background-color: #006EA8;
+  margin: 5px !important;
+}
+
+
+
+/* Card Image */
+.card-img-top {
+  max-width: 50%;
+  height: auto;
+}
+
+
+.section-box {
+  position: relative;
+  display: inline-block; /* Adjusts the box size to the content */
+  /* border: 1px rgba(0, 255, 255, 0.2); /* Customize the border style */
+  border-radius: 5px;
+  font-family: "brandon_regular",sans-serif;
+  color: white;
+  padding: 2rem; /* Customize the padding */
+  background-color: rgba(255, 255, 255, 0.2); /* Set the background color with desired opacity */
+  margin: 10px;
+}
+
+.section-box p {
+  margin-bottom: 0px; 
+}
+
+.card {
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 10px;
+}
+
+a {
+  color: #ffffff !important;
+  text-decoration: none !important; /* Remove underline */
+}
+
+
+
+
+
+.message-box {
+  background-color: rgba(255, 255, 255, 0);
+  padding: 10px;
+  border-radius: 5px;
+  overflow-y: auto; /* Enable vertical scrollbar */
+  scrollbar-width: thin; /* Width of the scrollbar */
+  scrollbar-color: #337ab7 #f3f3f3; /* Color of the scrollbar */
+}
+
+.message-box textarea {
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0);
+  resize: vertical;
+  padding: 5px;
+  margin-bottom: 10px;
+}
+
+.message-box button {
+  background-color: #473D84;
+  color: #fff;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  
+ 
+  
+}
+
+
+/* Track */
+.message-box::-webkit-scrollbar-track {
+  background: #f3f3f3;
+}
+
+/* Handle */
+.message-box::-webkit-scrollbar-thumb {
+  background-color: #337ab7;
+  border-radius: 5px;
+}
+
+/* Handle on hover */
+.message-box::-webkit-scrollbar-thumb:hover {
+  background-color: #7A54A1;
+}
+
+/* reviewcard buttons */
+#b1{
+  background-color: #F37765;
+}
+#b2{
+  background-color: #FFB559;
+}
+#b3{
+  background-color: #F9F871;
+}
+#b4{
+  background-color: #B8E067;
+}
+#b5{
+  background-color: #2FAB63;
+}
+
+
+
+/* Footer 
+footer {
+position: relative;
+bottom: 0px;
+width: 100%;
+background-color: rgba(255, 255, 255, 0.2);
+color: #fff !important;
+
+}
+
+*/
+
+
+#flash-message-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 9999; /* Ensure it's above other content */
+    /* Add additional styling as needed */
+  }
+
+
+
+/* JS msg*/
+  .flashcard-success-message {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px;
+    background-color: #029051; /* Green background color */
+    color: white; /* White text color */
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.flashcard-error-message {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px;
+  background-color: #902102; /* Green background color */
+  color: white; /* White text color */
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+
+#content {
+  width: 80%; /* You can adjust the width as needed */
+  margin-left: auto; /* Center the textarea horizontally */
+  margin-right: auto;
+}
+
+/* Style the modal */
+.modal {
+  display: none;
+
+}
+
+/* Style the modal content */
+.modal-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 90%;
+  max-height: 90%;
+  width: auto;
+  height: auto;
+  overflow-y: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  background-color: rgba(0, 0, 0, 0.9);
+  text-align: justify;
+  box-sizing: border-box; /* Include padding and border in the box's total width and height */
+}
+
+.modal-btn{
+  max-width: 80%;
+  text-align: center;
+  display: block;
+  margin: 10px auto;
+
+}
+
+/* Style the close button */
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.flex-row {
+  display: flex;
+  justify-content: space-evenly; /* Adjusts spacing between sections */
+  align-items: start; /* Aligns items at the start of the container */
+  flex-wrap: wrap; /* Allows items to wrap in smaller screens */
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center aligns the child elements */
+}
+
+
+
+.video-wrapper {
+  width: 100%;
+  max-width: 640px; /* Ensure the video does not exceed this width */
+  margin: 0 auto; /* Center the video container within its parent */
+}
+
+.video-container {
+  position: relative;
+  padding-bottom: 56.25%; /* Aspect ratio: 16:9 */
+  height: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+.video-container video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+
+
+.google-login-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 20px;
+  border-radius: 5px;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin: 20px auto;
+  max-width: 600px;
+}
+
+.google-logo {
+  width: 100px;
+  height: auto;
+  margin-right: 0px;
+}
+
+.google-login-message {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+
+
+
+/* Flashcard Rating Button Colors */
+.btn-red {
+    background-color: #F37765; /* Bright Red */
+    color: white;
+}
+
+.btn-yellow {
+    background-color: #F9F871; /* Bright Yellow */
+    color: white;
+}
+
+.btn-green {
+    background-color:#2FAB63; /* Bright Green */
+    color: white;
+}
+
+.btn {
+    margin: 5px; /* Increase margin for more space between buttons */
+}
+
+
+/* Fix for hover text color */
+.btn:hover, .btn:active, .btn:focus {
+    color: white !important; /* Maintain white text on hover, active, and focus */
+}
+
+.btn:hover {
+    opacity: 0.8;
+}
+
+.btn:active {
+    opacity: 0.6;
+}
+
+
+
+/* Hover effect for navigation items */
+.nav-item:hover {
+    
+     color: #b0adad
+}
+
+/* Optional: for better spacing and alignment */
+.nav-item {
+    padding: 2px 2x;
+    margin: 1px;
+    cursor: pointer;
+}
