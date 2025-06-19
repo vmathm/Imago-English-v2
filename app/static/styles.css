@@ -1,24 +1,12 @@
 
 
-html, body {
-  background-image: linear-gradient(to left top, #504681, #535689, #7e7da5, #F3F2F1);
-  border-radius: 5px;
-  min-height: 100vh;
-  padding-bottom: 100px;
-  color: white;
-}
-
-/* Dark Mode: override background only */
-html.dark-mode, body.dark-mode {
-  background: #000 !important;
-}
 
 
 /*LOAD.HTML DARK MODE */
 .text-content {
-  background-color: rgba(0, 0, 0, 0.9) !important; /* Adjust the last value (alpha) to control darkness */
-  color: white !important; /* Set text color to contrast with the dark background */
-  padding: 10px; 
+  background-color: var(--bs-body-bg) !important; /* Adjust the last value (alpha) to control darkness */
+  color: var(--bs-body-color) !important; /* Set text color to contrast with the dark background */
+  padding: 10px; /* Add some padding for better visual appeal */
   margin-top: 20px;
   text-align: justify;
 }
@@ -27,16 +15,17 @@ html.dark-mode, body.dark-mode {
 }
 
 #text-content {
-  background-color: rgba(0, 0, 0, 0.9) !important; /* Adjust the last value (alpha) to control darkness */
-  color: white !important; /* Set text color to contrast with the dark background */
-  padding: 10px; 
+  background-color: var(--bs-body-bg) !important; /* Adjust the last value (alpha) to control darkness */
+  color: var(--bs-body-color) !important; /* Set text color to contrast with the dark background */
+  padding: 10px; /* Add some padding for better visual appeal */
   margin-top: 20px;
   text-align: justify;
 }
 
+
 /* Navbar Styles */
 .navbar-nav .nav-link {
-  color: #ffffff !important;
+  color: var(--bs-body-color) !important;
   font-weight: bold;
   text-transform: uppercase;
   text-align: right;
@@ -46,18 +35,18 @@ html.dark-mode, body.dark-mode {
 .form-switch .form-check-input {
   width: 2.5rem;
   height: 1.2rem;
-  background-color: #ccc;
+  background-color: var(--bs-secondary-bg);
   border-radius: 1.2rem;
   transition: background-color 0.3s;
 }
 
 .form-switch .form-check-input:checked {
-  background-color: #0d6efd;
+  background-color: var(--bs-primary);
 }
 
 .form-switch .form-check-label {
   margin-left: 0.5rem;
-  color: #000;
+  color: var(--bs-body-color);
   display: inline-flex;
   align-items: center;
   position: relative;
@@ -67,16 +56,15 @@ html.dark-mode, body.dark-mode {
 
 /* Dark mode switch color */
 body.dark-mode .form-check-input {
-  background-color: #444;
-  border-color: #777;
+  background-color: var(--bs-secondary-bg);
 }
 
 body.dark-mode .form-check-input:checked {
-  background-color: #6e6b6b;
+  background-color: var(--bs-secondary-bg);
 }
 
 body.dark-mode .form-check-label {
-  color: #fff; 
+  color: var(--bs-body-color); 
 }
 
 /* Navbar switch alignment */
@@ -162,11 +150,17 @@ body.dark-mode .form-check-label {
 }
 
 
+/* Button appearance */
+.btn-primary {
+  background-color: var(--bs-primary);
+  margin: 5px !important;
+}
+
 
 /* Alert Message */
 .alert {
-  background-color: #1A8784; /* Customize the background color of the alert message */
-  color: #fff; /* Customize the text color of the alert message */
+  background-color: var(--bs-primary); /* Customize the background color of the alert message */
+  color: var(--bs-body-color); /* Customize the text color of the alert message */
   font-weight: bold;
   border-radius: 0;
 }
@@ -175,7 +169,7 @@ body.dark-mode .form-check-label {
 
 /* Button color*/
 .btn-primary {
-  background-color: #006EA8;
+  background-color: var(--bs-primary);
   margin: 5px !important;
 }
 
@@ -194,9 +188,9 @@ body.dark-mode .form-check-label {
   /* border: 1px rgba(0, 255, 255, 0.2); /* Customize the border style */
   border-radius: 5px;
   font-family: "brandon_regular",sans-serif;
-  color: white;
+  color: var(--bs-body-color);
   padding: 2rem; /* Customize the padding */
-  background-color: rgba(255, 255, 255, 0.2); /* Set the background color with desired opacity */
+  background-color: var(--bs-body-bg); /* Set the background color with desired opacity */
   margin: 10px;
 }
 
@@ -204,13 +198,17 @@ body.dark-mode .form-check-label {
   margin-bottom: 0px; 
 }
 
+
+
+
+
 .card {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: var(--bs-body-bg);
   padding: 10px;
 }
 
 a {
-  color: #ffffff !important;
+  color: var(--bs-body-color) !important;
   text-decoration: none !important; /* Remove underline */
 }
 
@@ -237,7 +235,7 @@ a {
 
 .message-box button {
   background-color: #473D84;
-  color: #fff;
+  color: var(--bs-body-color);
   padding: 5px 10px;
   border: none;
   border-radius: 3px;
@@ -266,34 +264,22 @@ a {
 
 /* reviewcard buttons */
 #b1{
-  background-color: #F37765;
+  background-color: var(--bs-danger);
 }
 #b2{
   background-color: #FFB559;
 }
 #b3{
-  background-color: #F9F871;
+  background-color: var(--bs-warning);
 }
 #b4{
   background-color: #B8E067;
 }
 #b5{
-  background-color: #2FAB63;
+  background-color: var(--bs-success);
 }
 
 
-
-/* Footer 
-footer {
-position: relative;
-bottom: 0px;
-width: 100%;
-background-color: rgba(255, 255, 255, 0.2);
-color: #fff !important;
-
-}
-
-*/
 
 
 #flash-message-container {
@@ -315,7 +301,7 @@ color: #fff !important;
     transform: translateX(-50%);
     padding: 10px;
     background-color: #029051; /* Green background color */
-    color: white; /* White text color */
+    color: var(--bs-body-color); /* White text color */
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 }
@@ -326,8 +312,8 @@ color: #fff !important;
   left: 50%;
   transform: translateX(-50%);
   padding: 10px;
-  background-color: #902102; /* Green background color */
-  color: white; /* White text color */
+  background-color: var(--bs-danger); /* Green background color */
+  color: var(--bs-body-color); /* White text color */
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 }
@@ -429,10 +415,10 @@ color: #fff !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: var(--bs-body-bg);
   padding: 20px;
   border-radius: 5px;
-  color: white;
+  color: var(--bs-body-color);
   font-family: Arial, sans-serif;
   text-align: center;
   margin: 20px auto;
@@ -455,18 +441,18 @@ color: #fff !important;
 
 /* Flashcard Rating Button Colors */
 .btn-red {
-    background-color: #F37765; /* Bright Red */
-    color: white;
+    background-color: var(--bs-danger); /* Bright Red */
+    color: var(--bs-body-color);
 }
 
 .btn-yellow {
-    background-color: #F9F871; /* Bright Yellow */
-    color: white;
+    background-color: var(--bs-warning); /* Bright Yellow */
+    color: var(--bs-body-color);
 }
 
 .btn-green {
-    background-color:#2FAB63; /* Bright Green */
-    color: white;
+    background-color: var(--bs-success); /* Bright Green */
+    color: var(--bs-body-color);
 }
 
 .btn {
@@ -476,7 +462,7 @@ color: #fff !important;
 
 /* Fix for hover text color */
 .btn:hover, .btn:active, .btn:focus {
-    color: white !important; /* Maintain white text on hover, active, and focus */
+    color: var(--bs-body-color) !important; /* Maintain white text on hover, active, and focus */
 }
 
 .btn:hover {
@@ -489,15 +475,62 @@ color: #fff !important;
 
 
 
-/* Hover effect for navigation items */
-.nav-item:hover {
-    
-     color: #b0adad
+
+/* ===== Light Mode: Your Custom Look ===== */
+html[data-bs-theme="light"] {
+  color: white;
 }
 
-/* Optional: for better spacing and alignment */
-.nav-item {
-    padding: 2px 2x;
-    margin: 1px;
-    cursor: pointer;
+html[data-bs-theme="light"] body {
+  background-image: linear-gradient(to left top, #504681, #535689, #7e7da5, #F3F2F1);
+  color: white;
+}
+
+html[data-bs-theme="light"] .navbar-nav .nav-link {
+  color: white !important;
+}
+
+html[data-bs-theme="light"] .navbar-nav .nav-link:hover,
+html[data-bs-theme="light"] .navbar-nav .nav-link:focus,
+html[data-bs-theme="light"] .navbar-nav .nav-link.active {
+  color: #082865 !important;
+}
+
+html[data-bs-theme="light"] .section-box,
+html[data-bs-theme="light"] .card,
+html[data-bs-theme="light"] .alert,
+html[data-bs-theme="light"] .message-box,
+html[data-bs-theme="light"] .google-login-box {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* ===== Dark Mode: Bootstrap-native ===== */
+html[data-bs-theme="dark"] {
+  background-color: #000;
+  background-image: none;
+  color: var(--bs-body-color);
+}
+
+html[data-bs-theme="dark"] body {
+  color: var(--bs-body-color);
+}
+
+html[data-bs-theme="dark"] .section-box,
+html[data-bs-theme="dark"] .card,
+html[data-bs-theme="dark"] .alert,
+html[data-bs-theme="dark"] .message-box,
+html[data-bs-theme="dark"] .google-login-box {
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
+}
+
+html[data-bs-theme="dark"] .navbar-nav .nav-link:hover,
+html[data-bs-theme="dark"] .navbar-nav .nav-link:focus,
+html[data-bs-theme="dark"] .navbar-nav .nav-link.active {
+  color: #7e7da5 !important;
+}
+/* Smooth transition */
+html {
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
