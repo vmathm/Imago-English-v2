@@ -194,3 +194,12 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# Ignore everything in static
+app/static/*        
+# Un-ignore styles.css
+!app/static/styles.css  
+# Un-ignore the js folder
+!app/static/js/         
+# Un-ignore theme-toggle.js
+!app/static/js/theme-toggle.js  
