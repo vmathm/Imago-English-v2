@@ -14,10 +14,11 @@ This project uses the Flask **app factory pattern** and **blueprints** to keep t
 ├── app/ # Main Flask application package
 │ ├── init.py # App factory + config loader + DB init
 │ ├── database.py #sets up the SQLAlchemy database.
+│ ├── admin/#routes and logic
+│ ├── audiobook/#routes and logic
 │ ├── auth/ #User-related routes and logic
 │ │ ├── user_loader.py #Defines @login_manager.user_loader decorator to load User objects from session on request
 │ ├── admin/#routes and logic
-│ ├── audiobook/#routes and logic
 │ ├── dashboard/#routes and logic
 │ ├── flashcard/#routes and logic
 │ ├── models/ # All database models
@@ -26,7 +27,7 @@ This project uses the Flask **app factory pattern** and **blueprints** to keep t
 │ │ ├── user.py # User model (with roles)
 │ │ └── flashcard.py # Flashcard model (TBD)
 │ └── templates/ # HTML templates
-│
+│   └── partials/ # JINJA logic such as in navlinks being included in HTML via `{% include 'partials/navlinks.html' %}`
 ├── scripts/
 │ └── seed_users.py # Adds test users for dev login
 │

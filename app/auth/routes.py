@@ -27,4 +27,5 @@ def dev_login(user_id):
         abort(404)
 
     login_user(user)
-    return "dev-login route is working!"    
+    print("User logged in:", user_id)
+    return redirect("/dashboard")   

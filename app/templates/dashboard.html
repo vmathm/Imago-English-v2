@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard - Imago English{% endblock %}
+
+{% block main %}
+  <div class="container mt-5">
+    <h1 class="mb-4">Welcome, {{ current_user.name }}!</h1>
+
+    {% if current_user.role %}
+      <p class="lead">Your role: <strong>{{ current_user.role }}</strong></p>
+    {% endif %}
+
+    <hr>
+
+    <p>This is your dashboard. Soon you’ll be able to:</p>
+    <ul class="list-group">
+      <li class="list-group-item">📝 Create and manage flashcards</li>
+      <li class="list-group-item">🎧 Practice with audio</li>
+      <li class="list-group-item">📈 Track your study streak</li>
+    </ul>
+  </div>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% if current_user.is_authenticated %}
+
+    {% if current_user.role == 'teacher' %}
+        {# Teacher view #}
+        <ul class="navbar-nav ms-auto mt-2">
+            <li class="nav-item"><a class="nav-link" href="/">Alunos</a></li>
+            <li class="nav-item"><a class="nav-link" href="/tc_reviewcards">Review cards</a></li>
+            <li class="nav-item"><a class="nav-link" href="/load">Audiobooks</a></li>
+            <li class="nav-item"><a class="nav-link" href="/flashcards">Flashcards</a></li>
+            <li class="nav-item"><a class="nav-link" href="/ranking">Ranking</a></li>
+            <li class="nav-item"><a class="nav-link" href="/logout">Sair</a></li>
+        </ul>
+
+    {% elif current_user.role == '@dmin!' %}
+        {# Master/admin view #}
+        <ul class="navbar-nav ms-auto mt-2">
+            <li class="nav-item"><a class="nav-link" href="/online_course_students">Alunos</a></li>
+            <li class="nav-item"><a class="nav-link" href="/load">Audiobooks</a></li>
+            <li class="nav-item"><a class="nav-link" href="/flashcards">Flashcards</a></li>
+            <li class="nav-item"><a class="nav-link" href="/manage_stories">Manage Stories</a></li>
+            <li class="nav-item"><a class="nav-link" href="/logout">Sair</a></li>
+        </ul>
+
+   <!--     
+    {% elif current_user.assigned_teacher_name == 'Imago English' %}
+        {# Subscribed student (Imago English teacher) #}
+        <ul class="navbar-nav ms-auto mt-2">
+            <li class="nav-item"><a class="nav-link" href="/">Início</a></li>
+            <li class="nav-item"><a class="nav-link" href="/inglesdozero">Curso</a></li>
+            <li class="nav-item"><a class="nav-link" href="/load">Audiobooks</a></li>
+            <li class="nav-item"><a class="nav-link" href="/flashcards">Flashcards</a></li>
+            <li class="nav-item"><a class="nav-link" href="/subscription">Assinatura</a></li>
+            <li class="nav-item"><a class="nav-link" href="/ranking">Ranking</a></li>
+            <li class="nav-item"><a class="nav-link" href="/logout">Log Out</a></li>
+        </ul>
+    -->
+
+    {% elif current_user.teacher %}
+        {# Student assigned to a teacher #}
+        <ul class="navbar-nav ms-auto mt-2">
+            <li class="nav-item"><a class="nav-link" href="/">Início</a></li>
+            <li class="nav-item"><a class="nav-link" href="/load">Audiobooks</a></li>
+            <li class="nav-item"><a class="nav-link" href="/flashcards">Flashcards</a></li>
+            <li class="nav-item"><a class="nav-link" href="/ranking">Ranking</a></li>
+            <li class="nav-item"><a class="nav-link" href="/logout">Log Out</a></li>
+        </ul>
+
+    {% else %}
+        {# Unassigned student or fallback case #}
+        <ul class="navbar-nav ms-auto mt-2">
+            <li class="nav-item"><a class="nav-link" href="/">Início</a></li>
+            <li class="nav-item"><a class="nav-link" href="/load">Audiobooks</a></li>
+            <li class="nav-item"><a class="nav-link" href="/flashcards">Flashcards</a></li>
+            <li class="nav-item"><a class="nav-link" href="/ranking">Ranking</a></li>
+            <li class="nav-item"><a class="nav-link" href="/logout">Log Out</a></li>
+        </ul>
+    {% endif %}
+
+{% else %}
+    {# Not authenticated (visitor) #}
+    <ul class="navbar-nav ms-auto mt-2">
+        <li class="nav-item"><a class="nav-link" href="/login">ESTUDANTE</a></li>
+        <li class="nav-item"><a class="nav-link" href="/teacher_login">PROFESSOR</a></li>
+    </ul>
+{% endif %}
+
+{# Dark mode switch (always shown) #}
+<ul class="navbar-nav ms-auto mt-2">
+    <li class="nav-item d-flex align-items-center justify-content-end">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="dark-mode-toggle">
+        </div>
+    </li>
+</ul>

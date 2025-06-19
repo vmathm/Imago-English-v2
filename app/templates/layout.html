@@ -1,71 +1,149 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR" data-bs-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <title>{% block title %}Imago English{% endblock %}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Meta Info -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, width=device-width">
+    <title>Imago English - {% block title %}{% endblock %}</title>
 
-    <!-- Bootstrap 5 CDN (optional but helps with layout) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Favicon & Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}"> 
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
 
+    <!-- Stylesheets -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+    <!-- Structured Data (SEO) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org/",
+      "@id": "https://www.imagoenglish.com.br",
+      "@type": "Course",
+      "name": "Inglês Online",
+      "description": "Inglês online do zero!",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Imago English",
+        "url": "https://www.imagoenglish.com.br"
+      },
+      "provider": {
+        "@type": "Organization",
+        "name": "Imago English",
+        "url": "https://www.imagoenglish.com.br"
+      },
+      "image": ["https://www.imagoenglish.com.br/static/Imagologo.png"],
+      "offers": [
+        {
+          "@type": "Offer",
+          "category": "Paid",
+          "priceCurrency": "BRL",
+          "price": 50.00,
+          "priceSpecification": {
+            "@type": "PriceSpecification",
+            "price": 50.00,
+            "priceCurrency": "BRL",
+            "valueAddedTaxIncluded": false
+          }
+        }
+      ],
+      "inLanguage": "en",
+      "availableLanguage": ["pt-BR", "en"],
+      "hasCourseInstance": {
+        "@type": "CourseInstance",
+        "courseMode": "Individualized",
+        "location": "Online",
+        "description": "Inglês online do zero!"
+      } 
+    }
+    </script>
+
+    <!-- Facebook Pixel -->
+    <script>
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '633229805962637');
+      fbq('track', 'PageView');
+    </script>
+    <noscript>
+      <img height="1" width="1" style="display:none"
+           src="https://www.facebook.com/tr?id=633229805962637&ev=PageView&noscript=1"/>
+    </noscript>
+
+    <!-- Google Analytics (gtag) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-16490417878"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'AW-16490417878');
+    </script>
 </head>
+
+
+
 <body>
+
+    <!-- Flash container for JS (optional placeholder) -->
+    <div id="flash-message-container"></div>
+
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
-        <a class="navbar-brand" href="/">Imago English</a>
-        <div class="collapse navbar-collapse">
-            <ul class="navbar-nav me-auto">
-                {% if current_user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('dashboard.index') }}">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('flashcards.index') }}">Study</a>
-                    </li>
-                    {% if current_user.role in ['teacher', '@dmin!'] %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('admin.index') }}">Admin</a>
-                        </li>
-                    {% endif %}
-                {% endif %}
-            </ul>
-            <ul class="navbar-nav">
-                {% if current_user.is_authenticated %}
-                    <li class="nav-item">
-                        <span class="navbar-text me-3">Hello, {{ current_user.name }}</span>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
-                    </li>
-                {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
-                    </li>
-                {% endif %}
-            </ul>
+    <nav class="navbar navbar-expand-md navbar-light border">
+        <div class="container-fluid">
+            <!-- Logo -->
+            <a class="nav-link" href="/">
+                <img src="{{ url_for('static', filename='Imagologo.png') }}" alt="Logo" style="max-width: 200px; max-height: 150px;">
+            </a>
+
+            <!-- Toggler -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar"
+                aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Nav Links (from partial) -->
+            <div class="collapse navbar-collapse" id="navbar">
+                {% include 'partials/navlinks.html' %}
+            </div>
         </div>
     </nav>
 
-    <!-- Flash Messages -->
-    <div class="container mt-3">
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <div class="alert alert-info" role="alert">
-                    {% for message in messages %}
-                        <p>{{ message }}</p>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
-    </div>
+    <!-- Flash Message (from Flask) -->
+    {% if get_flashed_messages() %}
+        <header>
+            <div class="alert alert-primary mb-0 text-center" role="alert">
+                {{ get_flashed_messages() | join(" ") }}
+            </div>
+        </header>
+    {% endif %}
 
-    <!-- Main Content -->
-    <div class="container mt-4">
-        {% block content %}{% endblock %}
-    </div>
+    <!-- Main Page Content -->
+    <main class="container-fluid py-5 text-center">
+        {% block main %}{% endblock %}
+    </main>
 
-    <!-- Optional JS (e.g., Bootstrap interactivity) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Footer -->
+    <footer class="mb-5 small text-center footer">
+        Copyright © 2023 by Imago English |
+        <a href="/termosdeuso">Termos de Uso</a> |
+        <a href="/politicadeprivacidade">Política de Privacidade</a> |
+        <a href="https://wa.me/message/T7TR2RSIXT7YA1" target="_blank" rel="noopener noreferrer">
+            Fale Conosco
+            <img src="{{ url_for('static', filename='Whatsapp.png') }}" alt="WhatsApp" style="max-width: 30px; max-height: 30px; display: inline-block;">
+        </a>
+    </footer>
+
+    <!-- Scripts (deferred to improve load speed) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/theme-toggle.js') }}"></script>
 </body>
+
 </html>

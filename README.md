@@ -1,5 +1,5 @@
 
-# Imago English v2
+# Imago English v2  
 
 A modular Flask-based language learning app designed to help students build vocabulary using flashcards, study streak tracking, text-to-speech, and an interactive audiobook feature. This is a rewrite of the original Imago English app, structured for clarity and maintainability.
 
@@ -71,22 +71,8 @@ flask run
 - JavaScript
 
 ## Folder Structure
+Refer to docs/architecture.md ## Project Structure
 
-app/
-├── auth/                # Auth blueprint
-│   └── routes.py
-├── models/              # Future: DB models
-├── services/            # External integrations (translate, calendar)
-├── static/              # CSS, JS
-├── templates/           # HTML templates
-└── __init__.py          # App factory
-main.py                  # Entry point
-config.py                # App config
-requirements.txt         # Dependencies
-.env.example             # Sample environment config
-README.md
-docs/
-scripts/
 
 
 
