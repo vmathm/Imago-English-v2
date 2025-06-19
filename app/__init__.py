@@ -5,7 +5,7 @@ import os
 from config import Config
 from .models.base import Base
 from .database import init_engine
-from .extensions import login_manager
+from .extensions import login_manager, csrf
 from .auth import user_loader
 
 
@@ -16,6 +16,7 @@ def create_app():
     app = Flask(__name__)
     # Dynamically load config based on FLASK_CONFIG env variable
     app.config.from_object("config.Config")
+    csrf.init_app(app)
     login_manager.init_app(app)
 
     
