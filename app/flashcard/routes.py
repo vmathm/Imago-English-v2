@@ -9,7 +9,7 @@ from app.models import Flashcard, User
 bp = Blueprint('flashcard', __name__, url_prefix='/flashcard')
 
 
-@bp.route("/flashcards", methods=["POST"])
+@bp.route("/flashcards", methods=["GET"])
 @login_required
 def flashcards():
     return render_template("flashcards.html", form=FlashcardForm())
@@ -59,6 +59,9 @@ def addcards():
     flash("Something went wrong. Please check your input.", "danger")
     return redirect(url_for('dashboard.index'))
 
+
+
+
 @bp.route("/edit_cards", methods=["GET"])
 @login_required
 def edit_cards():
@@ -98,6 +101,8 @@ def edit_cards():
     # Fallback for unrecognized roles
     flash("Access denied.", "danger")
     return redirect(url_for("dashboard.index"))
+
+
 
 
 @bp.route("/edit_card/<int:card_id>", methods=["POST"])
