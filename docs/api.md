@@ -30,3 +30,9 @@ More routes will be added as blueprints are developed.
 ### `GET /index`
 loads dashboard.html with form for flashcards.
 
+
+## Flashcards
+### `POST /addcards`
+adds a flashcard to the user's db and redirects to dashboard.index. 
+Handles flashcards being added to current_user or to student by using a hidden input for student.id:
+<input type="hidden" name="student_id" value="{{ student.id }}">
