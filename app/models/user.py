@@ -40,8 +40,8 @@ class User(Base, UserMixin):
     flashcards = relationship('Flashcard', back_populates='user')
 
     @hybrid_property
-    def assigned_teacher_name(self):    
-        return self.assigned_teacher.name if self.assigned_teacher else None
+    def assigned_teacher_id(self):    
+        return self.assigned_teacher.id if self.assigned_teacher else None
 
 
     @property

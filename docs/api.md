@@ -36,3 +36,15 @@ loads dashboard.html with form for flashcards.
 adds a flashcard to the user's db and redirects to dashboard.index. 
 Handles flashcards being added to current_user or to student by using a hidden input for student.id:
 <input type="hidden" name="student_id" value="{{ student.id }}">
+
+### `GET /edit_cards`
+- Renders edit.html with users flashcards for editing. Uses querystrings (e.g.  <a href="{{ url_for('your_blueprint.edit_card') }}?student_id={{ student.id }}">) which can be retrieved with `request.args.get("student_id")` to handle teachers and admin managing students flashcards.
+
+- Checks if student is assigned to teacher making the request. Admin has access to all flashcards. 
+
+### `POST /edit_card/<int:card_id>` 
+- Uses the card id and information on the form to update flashcard. Handles student, teacher and admin requests. 
+
+### `GET /flashcards`
+- Renders flashcards.html, with forms to add flashcards using Google Translate from Portuguese to English, to add both 'question' and 'answer' and icon to render flashcards in edit mode. 
+
