@@ -19,7 +19,8 @@
 
 
 ## Phase 4 – Flashcards
-- [ ] Set up form to add new flashcards
+- [x] Set up form to add new flashcards with FlaskForm and CSRF protection 
+- [ ] Implement routes to edit and delete flashcards 
 - [ ] Implement flashcard study mode
 
 ## Phase 5 – Audiobook Module
@@ -37,5 +38,5 @@
 ## Later
 - [ ] Stripe integration for monetization
 - [ ] Deployment (Render/Fly.io/PythonAnywhere)
-- [ ] CSRF protection is not currently enabled, as this is a showcase app. In a production setting, integration with Flask-WTF's `CSRFProtect` would be implemented for all POST/PUT/DELETE routes.
+
 

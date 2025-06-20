@@ -72,6 +72,38 @@ Now in any route:
     🔹 protect views with `@login_required`
 
 
+## FlashcardForm: Flask-WTF Form Structure
+This app uses Flask-WTF for secure and structured form handling.
+
+FlashcardForm is used to let students and teachers create flashcards.
+
+Location: app/flashcard/form.py
+
+Inherits from: FlaskForm
+This enables:
+
+- automatic CSRF protection
+
+- built-in form validation
+
+- integration with Jinja templates
+
+Main fields:
+
+front: Required text field (question/prompt)
+
+back: Required text area (answer/explanation)
+
+submit: Button to submit the form
+
+Template Usage Example:
+<form method="post" action="{{ url_for('flashcards.add_card') }}">
+    {{ form.hidden_tag() }}
+    {{ form.front.label }} {{ form.front() }}
+    {{ form.back.label }} {{ form.back() }}
+    {{ form.submit() }}
+</form>
+form.hidden_tag() ensures CSRF tokens are submitted properly.
 
 ## Folder Structure
 Refer to docs/architecture.md ## Project Structure
@@ -107,7 +139,7 @@ flask run
 ``` 
 
 
-## Project Start Date
+## Project Start Dat
 
 June 12, 2025
 

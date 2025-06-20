@@ -2,6 +2,7 @@
 
 ## Auth
 
+
 ### `GET /auth/test`
 - Returns: `"Auth route is working!"`
 - Purpose: Test that the auth blueprint is registered and working properly
@@ -9,7 +10,7 @@
 More routes will be added as blueprints are developed.
 
 
-### `GET /dev-login/<user_id>`
+### `GET /dev_login`
 - Simulates logging in as an existing user. Useful for testing features without going through the Google OAuth flow.
 
 #### Requirements:
@@ -20,3 +21,12 @@ More routes will be added as blueprints are developed.
 - Redirects the user to the dashboard (`/dashboard`) after logging them in
 - Returns `403` if disabled or not in debug mode
 - Returns `404` if the user does not exist
+
+
+
+
+## Dashboard
+
+### `GET /index`
+loads dashboard.html with form for flashcards.
+

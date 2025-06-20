@@ -1,4 +1,3 @@
-from flask import Blueprint
 from flask import Blueprint, redirect, url_for, abort, current_app
 from flask_login import login_user
 from app.models import User

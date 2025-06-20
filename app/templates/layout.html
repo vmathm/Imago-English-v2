@@ -116,14 +116,17 @@
         </div>
     </nav>
 
-    <!-- Flash Message (from Flask) -->
-    {% if get_flashed_messages() %}
-        <header>
-            <div class="alert alert-primary mb-0 text-center" role="alert">
-                {{ get_flashed_messages() | join(" ") }}
-            </div>
-        </header>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <header>
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} mb-0 text-center" role="alert">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </header>
     {% endif %}
+{% endwith %}
 
     <!-- Main Page Content -->
     <main class="container-fluid py-5 text-center">

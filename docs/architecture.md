@@ -51,7 +51,7 @@ This project uses the Flask **app factory pattern** and **blueprints** to keep t
 
 Each major feature has its own blueprint:
 - `auth` for login/signup routes
-- `flashcard` for vocabulary creation
+- `flashcard` for vocabulary build up and spaced repetition studying.
 - `audiobook` for text/audio display + text selection for translation
 - `dashboard` for student, teachers and admin dashboards. 
 

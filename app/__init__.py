@@ -30,14 +30,14 @@ def create_app():
     # Register blueprints
     from .auth.routes import bp as auth_bp
     from .dashboard.routes import bp as dashboard_bp
-
+    from .flashcard.routes import bp as flashcard_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
-    
+    app.register_blueprint(flashcard_bp)
 
     '''
-    from .flashcards.routes import bp as flashcards_bp
+    
     from .audiobook.routes import bp as audiobook_bp
 
     
