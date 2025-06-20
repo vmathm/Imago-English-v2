@@ -39,9 +39,6 @@ class User(Base, UserMixin):
     # 🔗 Relationships to other tables
     flashcards = relationship('Flashcard', back_populates='user')
 
-    @hybrid_property
-    def assigned_teacher_id(self):    
-        return self.assigned_teacher.id if self.assigned_teacher else None
 
 
     @property
