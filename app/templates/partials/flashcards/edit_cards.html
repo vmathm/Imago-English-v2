@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit flashcards - Imago English{% endblock %}
+
+{% block main %}
+ <div id="flash-message-container"></div>
+{% for card in flashcards %}
+<div id="card-{{ card.id }}" class="section-box">
+    <form class="flashcard-form" data-card-id="{{ card.id }}" method="POST" action="{{ url_for('flashcard.edit_card', card_id=card.id) }}">
+        {{ forms[card.id].hidden_tag() }}
+        <input type="hidden" name="csrf_token" value="{{ forms[card.id].csrf_token._value() }}">
+
+        <div class="mb-3">
+            {{ forms[card.id].question.label }}
+            {{ forms[card.id].question(class="form-control") }}
+        </div>
+
+        <div class="mb-3">  
+            {{ forms[card.id].answer.label }}
+            {{ forms[card.id].answer(class="form-control") }}
+        </div>
+
+        <button type="submit" name="action" value="edit" class="btn btn-primary">Editar</button>
+        <button type="submit" name="action" value="delete" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja deletar este flashcard?');">Deletar</button>
+    </form>
+</div>
+  <hr>
+{% endfor %}
+
+
+
+{% endblock %}

@@ -3,6 +3,7 @@ from flask_login import current_user, login_required
 from app.database import db_session
 from app.flashcard.form import FlashcardForm
 from app.models import Flashcard, User 
+from flask import jsonify
 
 
 
@@ -12,7 +13,7 @@ bp = Blueprint('flashcard', __name__, url_prefix='/flashcard')
 @bp.route("/flashcards", methods=["GET"])
 @login_required
 def flashcards():
-    return render_template("flashcards.html", form=FlashcardForm())
+    return render_template("flashcards/index_cards.html", form=FlashcardForm())
 
 
 
@@ -65,13 +66,15 @@ def addcards():
 @bp.route("/edit_cards", methods=["GET"])
 @login_required
 def edit_cards():
+    
     if current_user.is_student():
         flashcards = (
             db_session.query(Flashcard)
             .filter_by(user_id=current_user.id)
             .all()
         )
-        return render_template("edit_cards.html", flashcards=flashcards)
+        forms = {card.id: FlashcardForm(obj=card) for card in flashcards} 
+        return render_template("flashcards/edit_cards.html", flashcards=flashcards, forms=forms)
 
     if current_user.is_teacher() or current_user.is_admin():
         student_id = request.args.get("student_id") 
@@ -96,7 +99,7 @@ def edit_cards():
             .filter_by(user_id=student_id)
             .all()
         )
-        return render_template("edit.html", flashcards=flashcards)
+        return render_template("edit.html", flashcards=flashcards)   
 
     # Fallback for unrecognized roles
     flash("Access denied.", "danger")
@@ -111,10 +114,8 @@ def edit_card(card_id):
     flashcard = db_session.query(Flashcard).get(card_id)
 
     if not flashcard:
-        flash("Flashcard not found.", "danger")
-        return redirect(url_for('dashboard.index'))
+        return jsonify({"status": "error", "message": "Flashcard not found."}), 404
 
-    # Check ownership or teacher-student relationship
     is_owner = flashcard.user_id == current_user.id
     is_teacher_of_student = (
         current_user.is_teacher() and
@@ -122,18 +123,25 @@ def edit_card(card_id):
     )
 
     if not (is_owner or is_teacher_of_student or current_user.is_admin()):
-        flash("You're not authorized to edit this flashcard.", "danger")
-        return redirect(url_for('dashboard.index'))
+        return jsonify({"status": "error", "message": "Not authorized."}), 403
 
-    form = FlashcardForm(obj=flashcard) # pre-fill for GET
+    form = FlashcardForm()
 
     if form.validate_on_submit():
-        flashcard.question = form.question.data
-        flashcard.answer = form.answer.data
-        db_session.commit()
-        flash("Flashcard updated successfully!", "success")
-        return redirect(url_for('dashboard.index'))
+        action = request.form.get("action")
 
+        if action == "edit":
+            flashcard.question = form.question.data
+            flashcard.answer = form.answer.data
+            db_session.commit()
+            return jsonify({"status": "success", "message": "Flashcard updated!"})
+
+        elif action == "delete":
+            db_session.delete(flashcard)
+            db_session.commit()
+            return jsonify({"status": "success", "message": "Flashcard deleted!"})
+
+    return jsonify({"status": "error", "message": "Form validation failed."}), 400
 
 
 
