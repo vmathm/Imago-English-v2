@@ -109,7 +109,7 @@ form.hidden_tag() ensures CSRF tokens are submitted properly.
 Refer to docs/architecture.md ## Project Structure
 
 
-## Getting Started
+## How to run the app
 
 ### 1. Clone and set up the environment
 ```bash
@@ -123,20 +123,25 @@ pip install -r requirements.txt
 ### 2. Create a `.env` file in the project root:
 
 ```env
-FLASK_CONFIG=config.DevelopmentConfig*
+
 SECRET_KEY=your-secret-key
 ALLOW_DEV_LOGIN=True
 ```
-*Check config.py for classes
-
 Optional: 
 add DATABASE_URL=sqlite:///app.db= your_database.db to .env
 
-### 2. Run the app
+
+#### Seed users
+Run scripts/seed_users.py to create a user for each role for testing purposes. Production only allows users to login via Google API. 
+
+
+### 3. Run the app
 ```bash
 export FLASK_APP=main.py
 flask run
 ``` 
+
+
 
 
 ## Project Start Dat

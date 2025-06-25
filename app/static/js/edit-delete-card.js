@@ -1,20 +1,18 @@
-console.log("Script loaded")
+console.log("Script loaded");
 document.querySelectorAll('.flashcard-form').forEach(form => {
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
 
-    const cardId = form.dataset.cardId;
     const formData = new FormData(form);
-    const action = formData.get('action');
+    const actionType = formData.get('action');
 
-    const response = await fetch(`edit_card/${cardId}`, {
+    const response = await fetch(form.getAttribute('action'), {
       method: 'POST',
       body: formData
     });
 
     const result = await response.json();
 
-    // Show flash message
     const flashDiv = document.createElement('div');
     flashDiv.className = `flashcard-${result.status}-message`;
     flashDiv.textContent = result.message;
@@ -22,8 +20,8 @@ document.querySelectorAll('.flashcard-form').forEach(form => {
 
     setTimeout(() => flashDiv.remove(), 3000);
 
-    if (action === "delete" && result.status === "success") {
-      document.getElementById(`card-${cardId}`).remove();
+    if (actionType === "delete" && result.status === "success") {
+      document.getElementById(`card-${form.dataset.cardId}`).remove();
     }
   });
 });

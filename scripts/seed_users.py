@@ -1,7 +1,8 @@
 from datetime import date
 import os
 import sys
-
+from dotenv import load_dotenv
+load_dotenv()
 # Add the parent directory of 'app/' to the Python path
 '''
 -  os.path.join(os.path.dirname(__file__) - Returns the directory path where the current script (seed_users.py) lives
