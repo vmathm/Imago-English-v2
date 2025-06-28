@@ -61,8 +61,18 @@ html {
 - Replace remaining hardcoded colors like `#FFB559`, `#B8E067` (will be done when study route is created.)
 
 ## 🧠 JavaScript Overview
+###  Edit/Delete Flashcard Script
+Provides asynchronous editing and deleting of flashcards.
 
-### 🔘 Theme Toggle Script
+- File: `app/static/js/edit-delete-card.js`
+- Loaded from `layout.html` on the edit cards page
+- Listens for `submit` events on elements with the `.flashcard-form` class
+- Adds the clicked button’s `name` and `value` to the `FormData` so Flask receives the `action` field
+- Sends the request to `form.getAttribute('action')` via `fetch`
+- Shows the returned message inside `#flash-message-container`
+- If deletion succeeds, removes the corresponding card element from the page
+
+###  Theme Toggle Script
 
 Handles dark mode switching using Bootstrap 5.3’s `data-bs-theme` attribute.
 

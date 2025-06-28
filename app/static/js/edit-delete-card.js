@@ -1,11 +1,17 @@
-console.log("Script loaded");
 document.querySelectorAll('.flashcard-form').forEach(form => {
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
 
     const formData = new FormData(form);
-    const actionType = formData.get('action');
 
+    // Add the clicked button's name/value if present
+    if (e.submitter && e.submitter.name) {
+      formData.append(e.submitter.name, e.submitter.value);
+    }
+
+    const actionType = formData.get('action');
+    
+    
     const response = await fetch(form.getAttribute('action'), {
       method: 'POST',
       body: formData
@@ -21,7 +27,7 @@ document.querySelectorAll('.flashcard-form').forEach(form => {
     setTimeout(() => flashDiv.remove(), 3000);
 
     if (actionType === "delete" && result.status === "success") {
-      document.getElementById(`card-${form.dataset.cardId}`).remove();
+      form.closest(".section-box").remove();
     }
   });
 });
