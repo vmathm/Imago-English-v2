@@ -4,11 +4,19 @@
 
 {% block main %}
   <div class="container mt-5">
+
+
+
+    <form action="{{ url_for('flashcard.study') }}" method="get">
+        <button type="submit" class="btn btn-primary">Estudar</button>
+    </form>
     
 
     <form action="{{ url_for('flashcard.edit_cards') }}" method="get">
         <button type="submit" class="btn btn-primary">Editar flashcards</button>
     </form>
+
+    
 
     {% include "partials/add-card-form.html" %}
 

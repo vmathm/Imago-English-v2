@@ -4,7 +4,8 @@ from app.database import db_session
 from app.flashcard.form import FlashcardForm
 from app.models import Flashcard, User 
 from flask import jsonify
-
+from datetime import datetime, timezone
+from sqlalchemy import or_
 
 
 bp = Blueprint('flashcard', __name__, url_prefix='/flashcard')
@@ -58,6 +59,7 @@ def addcards():
             question=question,
             answer=answer,
             user_id=flashcard_owner_id
+            
         )
 
         db_session.add(new_flashcard)
@@ -166,5 +168,32 @@ def edit_card(card_id):
 
 
 
+@bp.route("/study")
+@login_required
+def study():
+    """Show flashcards due for review."""
+    due_cards = (
+        db_session.query(
+            Flashcard.id,
+            Flashcard.question,
+            Flashcard.answer
+        )
+        .filter(
+            Flashcard.user_id == current_user.id,
+            or_(
+                Flashcard.next_review == None,  
+                Flashcard.next_review <= datetime.now(timezone.utc)
+            )
+        )
+        .all()
+    )
 
+    # convert to dict so it can be JSON‑serialized
+    cards_data = [
+    {"id": card.id, "question": card.question, "answer": card.answer}
+    for card in due_cards
+    ]   
+    if not cards_data:
+        flash("Você não tem flashcards para estudar.", "info")
+    return render_template("flashcards/study.html", cards=cards_data)
 

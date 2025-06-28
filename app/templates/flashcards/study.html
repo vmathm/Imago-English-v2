@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% block title %}Estudo de Flashcards{% endblock %}
+
+{% block main %}
+<div id="flashcard-container" class="mt-4"></div>
+
+<script type="text/javascript">
+// make the list available to JS
+const flashcards = {{ cards|tojson |safe }};
+</script>
+<script src="{{ url_for('static', filename='js/study.js') }}"></script>
+{% endblock %}

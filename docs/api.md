@@ -48,3 +48,8 @@ Handles flashcards being added to current_user or to student by using a hidden i
 ### `GET /flashcards`
 - Renders flashcards.html, with forms to add flashcards using Google Translate from Portuguese to English, to add both 'question' and 'answer' and icon to render flashcards in edit mode. 
 
+###  `GET /study`
+- Returns `flashcards/study.html` populated with flashcards where
+`next_review` is on or before the current UTC time (or None).
+
+

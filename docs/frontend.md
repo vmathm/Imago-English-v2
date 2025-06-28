@@ -95,3 +95,16 @@ Handles dark mode switching using Bootstrap 5.3’s `data-bs-theme` attribute.
 
 
 
+
+### 📚 Study Mode
+
+`flashcards/study.html` template loads an empty container and makes the
+card list available to JavaScript at `app/static/js/study.js`. 
+
+`study.js`
+- shuffles the cards and displays them one by one; 
+- toggles the answer when the user clicks “Mostrar Resposta”.
+- Buttons 1, 2, and 3 send the chosen rating to `/review_flashcard`.
+- A rating of 1 moves the card to the end of the queue; otherwise it is removed.
+- When no cards remain, the script shows `“Você estudou todos os flashcards!”`.
+
