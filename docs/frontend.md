@@ -65,12 +65,23 @@ html {
 Provides asynchronous editing and deleting of flashcards.
 
 - File: `app/static/js/edit-delete-card.js`
-- Loaded from `layout.html` on the edit cards page
+- Loaded from `layout.html`
 - Listens for `submit` events on elements with the `.flashcard-form` class
 - Adds the clicked button’s `name` and `value` to the `FormData` so Flask receives the `action` field
 - Sends the request to `form.getAttribute('action')` via `fetch`
 - Shows the returned message inside `#flash-message-container`
 - If deletion succeeds, removes the corresponding card element from the page
+
+
+### Add Flashcard Script
+Handles asynchronous submission of the "Add Flashcard" form.
+
+- File: `app/static/js/add-card.js`  
+- Loaded from: `layout.html` or any page containing the `#add-card-form`
+- Listens for `submit` events with `id="add-card-form"`
+- Sends the request to `form.getAttribute('action')` via `fetch`
+- Shows the returned message inside `#flash-message-container`
+- Reset form
 
 ###  Theme Toggle Script
 

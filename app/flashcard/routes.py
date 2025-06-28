@@ -25,28 +25,37 @@ def addcards():
         question = form.question.data
         answer = form.answer.data
 
-        # Get optional student_id from the form or query string
+        # Optional student ID for teachers/admins
         student_id = request.form.get("student_id")
 
-        # Determine the owner of the flashcard
         if student_id:
             if not current_user.is_admin and not current_user.is_teacher:
                 flash("Unauthorized to add flashcards for other users.", "danger")
-                return redirect(url_for('dashboard.index'))
+                return redirect(url_for("dashboard.index"))
 
-            # Optional: validate that the student exists and is connected to the teacher
             student = db_session.query(User).filter_by(id=student_id).first()
             if not student:
                 flash("Student not found.", "danger")
-                return redirect(url_for('dashboard.index'))
+                return redirect(url_for("dashboard.index"))
 
             flashcard_owner_id = student.id
         else:
             flashcard_owner_id = current_user.id
 
-        # Create the flashcard
+        # Check if this user already has a card with the same question
+        existing = db_session.query(Flashcard).filter_by(
+            question=question,
+            user_id=flashcard_owner_id
+        ).first()
+
+        if existing:
+            message = "Flashcard already exists!"
+            return jsonify({"status": "error", "message": message})
+
+
+        # Create the new flashcard
         new_flashcard = Flashcard(
-            question=question, 
+            question=question,
             answer=answer,
             user_id=flashcard_owner_id
         )
@@ -54,11 +63,20 @@ def addcards():
         db_session.add(new_flashcard)
         db_session.commit()
 
-        flash("Flashcard added successfully!", "success")
-        return redirect(url_for('dashboard.index'))
+        message = "Flashcard added successfully!"
+        return jsonify({"status": "success", "message": message})
+        flash(message, "success")
+        return redirect(url_for("dashboard.index"))
 
-    flash("Something went wrong. Please check your input.", "danger")
-    return redirect(url_for('dashboard.index'))
+    message = "Something went wrong. Please check your input."
+    return jsonify({"status": "error", "message": message})
+   
+
+
+        
+
+
+
 
 
 
