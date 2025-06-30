@@ -524,7 +524,8 @@ html[data-bs-theme="dark"] body {
   color: var(--bs-body-color);
 }
 
-html[data-bs-theme="dark"] .section-box,
+html[data-bs-theme="dark"] .section-box {
+  background-color: rgba(255, 255, 255, 0.05) !important;} /* Adjust the last value (alpha) to control darkness */ 
 html[data-bs-theme="dark"] .card,
 html[data-bs-theme="dark"] .alert,
 html[data-bs-theme="dark"] .message-box,
@@ -541,4 +542,39 @@ html[data-bs-theme="dark"] .navbar-nav .nav-link.active {
 /* Smooth transition */
 html {
   transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+
+#flashcard-container {
+  transition: opacity 0.4s ease;
+}
+
+.fade-out {
+  opacity: 0;
+}
+
+.fade-in {
+  opacity: 1;
+}
+
+
+.rate-btn {
+  color: white !important;
+}
+
+
+.section-box.flashcard-highlight {
+  animation: flash-bg 0.4s ease;
+}
+
+@keyframes flash-bg {
+  0%   { background-color: transparent; }
+  30%  { background-color: var(--flash-color, transparent); }
+  100% { background-color: transparent; }
+}
+
+
+
+.rate-btn {
+  color: white !important;
 }
