@@ -563,18 +563,3 @@ html {
 }
 
 
-.section-box.flashcard-highlight {
-  animation: flash-bg 0.4s ease;
-}
-
-@keyframes flash-bg {
-  0%   { background-color: transparent; }
-  30%  { background-color: var(--flash-color, transparent); }
-  100% { background-color: transparent; }
-}
-
-
-
-.rate-btn {
-  color: white !important;
-}

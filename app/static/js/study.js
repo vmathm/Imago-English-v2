@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   shuffle(flashcards);
   const queue = flashcards;
-
   const container = document.getElementById("flashcard-container");
   let index = 0;
 
@@ -18,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    
     container.classList.remove("fade-in");
     container.classList.add("fade-out");
 
@@ -51,19 +51,8 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.onclick = async () => {
           const rating = btn.dataset.value;
 
-          // Flash background color
-          let color;
-          if (rating === "1") color = "#F37765";   // red
-          if (rating === "2") color = "#F9F871";   // yellow
-          if (rating === "3") color = "#2FAB63";   // green
-
-          const sectionBox = container.querySelector(".section-box");
-          sectionBox.style.setProperty("--flash-color", color);
-          sectionBox.classList.add("flashcard-highlight");
-          sectionBox.addEventListener("animationend", () => {
-            sectionBox.classList.remove("flashcard-highlight");
-          }, { once: true });
-
+      
+        
           await fetch("/review_flashcard", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -78,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
           showNext();
         };
       });
-    }, 400);
+    }, 150);
   }
 
   showNext();
