@@ -11,17 +11,19 @@ A modular Flask-based language learning app designed to help students build voca
 - ✅ User authentication module (auth blueprint)
 - ✅ Initial route test (`/auth/test`)
 - ✅ User model
-  - Role-based access: `student`, `teacher`, `admin`
-  - Self-referencing relationship for teacher assignment
-  - Integrated with Flask-Login (via `UserMixin`)
-  - Overrides `is_active` based on DB value
-  - Documented in `docs/architecture.md`
-- 🛠 Flashcard creation and study flow
+  ✅ Role-based access: `student`, `teacher`, `@dmin!`
+  ✅ Self-referencing relationship for teacher assignment
+  ✅ Integrated with Flask-Login (via `UserMixin`)
+  ✅ Overrides `is_active` based on DB value
+  ✅ Documented in `docs/architecture.md`
+- ✅ Flashcard creation and study flow
+- 🛠 Teacher dashboard
+- 🛠 Admin dashboard
+- 🛠 Audiobook reader (with text parsing and flashcard addition)
 - 🛠 Progress tracking
 - 🛠 Google Translate integration
-- 🛠 Audiobook reader (with text parsing and flashcard addition)
 - 🛠 Google Calendar integration (for teacher availability)
-- 🛠 Teacher dashboard
+
 
 ---
 

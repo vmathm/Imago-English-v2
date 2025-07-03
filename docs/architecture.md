@@ -56,14 +56,8 @@ Each major feature has its own blueprint:
 - `dashboard` for student, teachers and admin dashboards. 
 
 
-## Why this structure?
 
-- Easy to test and maintain
-- Scalable as new features are added
-- Encourages clean separation of concerns
-
-
-## ⚙️ Configuration System
+## Configuration System
 
 The app uses a centralized `config.py` module to manage settings based on .env variables
 
@@ -112,7 +106,7 @@ The `User` model represents all types of users in the system: students, teachers
 | phone                | String       | Optional phone number |
 | level                | String       | English level (e.g., A1, B2) |
 | role                 | String       | `'student'`, `'teacher'`, or `'@dmin!'` |
-| active               | Boolean      | Whether the account is active (used by Flask-Login) |
+| active *               | Boolean      | Whether the account is active (used by Flask-Login)  |
 | delete_date          | Date         | Soft-delete timestamp |
 | user_stripe_id       | String       | Stripe ID for payment tracking |
 | join_date            | Date         | First registration date |
@@ -127,9 +121,11 @@ The `User` model represents all types of users in the system: students, teachers
 | rate_three_count     | Integer      | Number of "3" ratings received for flashcards |
 | assigned_teacher_id  | FK → users.id | Reference to the user’s assigned teacher |
 
+* `active` overrides he default behavior of Flask-Login's `is_active` property so it's based on DB value. (default is always True)
+
 ---
 
-#### 🔁 Relationships
+#### Relationships
 
 - `assigned_teacher_id` is a self-referencing FK used for assigning a teacher to a student.
 - `assigned_students` is a reverse relationship available to teacher users.
@@ -137,7 +133,7 @@ The `User` model represents all types of users in the system: students, teachers
 
 ---
 
-#### 🧠 Role System
+#### Role System
 
 - `role = 'student'`: Limited to studying and viewing own data
 - `role = 'teacher'`: Can manage students assigned to them
@@ -150,6 +146,7 @@ user.is_student()   # True if student
 user.is_teacher()   # True if teacher or admin
 user.is_admin()     # True if admin
 ```
+
 
 
 ### Flashcard Model
@@ -174,7 +171,7 @@ The Flashcard model represents a language learning flashcard created by a user o
 |add_by_user	    | Boolean	   | Indicates if the flashcard was created by a student |
 |user_id	        | FK → users.id| Foreign key linking to the flashcard owner |
 
-#### 🔁 Relationships
+#### Relationships
 user_id is a foreign key that links each flashcard to its owner in the users table.
 
 user: the SQLAlchemy relationship back to the User model, allowing access to user.flashcards.
