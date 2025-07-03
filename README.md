@@ -144,7 +144,7 @@ flask run
 
 
 
-## Project Start Dat
+## Project Start Date
 
 June 12, 2025
 

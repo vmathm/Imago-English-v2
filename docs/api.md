@@ -52,4 +52,8 @@ Handles flashcards being added to current_user or to student by using a hidden i
 - Returns `flashcards/study.html` populated with flashcards where
 `next_review` is on or before the current UTC time (or None).
 
-
+### `POST /review_flashcard`
+- Endpoint triggered by `study.js` when a user rates a card.
+- Expects JSON payload: `{"card_id": <id>, "rating": 1 | 2 | 3}`.
+- Updates the flashcard’s level, ease, interval, and scheduling, awarding points to the appropriate user.
+- Returns `{"status": "success"}` on success, or `404` if the card is not found.

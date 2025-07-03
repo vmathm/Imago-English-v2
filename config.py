@@ -1,4 +1,4 @@
-import os
+import os, app
 
 class Config:
     # Loaded from .env or system environment

@@ -1,5 +1,5 @@
 
-## 🎨 Stylesheet Update: Bootstrap-Compatible Theming (Light + Dark Modes)
+## Stylesheet Update: Bootstrap-Compatible Theming (Light + Dark Modes)
 
 ### ✅ Purpose
 This update to `styles.css` modernizes the project’s design system by:
@@ -60,8 +60,8 @@ html {
 ### 📌 Next Steps
 - Replace remaining hardcoded colors like `#FFB559`, `#B8E067` (will be done when study route is created.)
 
-## 🧠 JavaScript Overview
-###  Edit/Delete Flashcard Script
+## JavaScript Overview
+### Edit/Delete Flashcard Script
 Provides asynchronous editing and deleting of flashcards.
 
 - File: `app/static/js/edit-delete-card.js`
@@ -83,7 +83,7 @@ Handles asynchronous submission of the "Add Flashcard" form.
 - Shows the returned message inside `#flash-message-container`
 - Reset form
 
-###  Theme Toggle Script
+### Theme Toggle Script
 
 Handles dark mode switching using Bootstrap 5.3’s `data-bs-theme` attribute.
 
@@ -96,18 +96,28 @@ Handles dark mode switching using Bootstrap 5.3’s `data-bs-theme` attribute.
 
 
 
-### 📚 Study Mode
+### Study Mode Script
 
 `flashcards/study.html` template loads an empty container and makes the
 card list available to JavaScript at `app/static/js/study.js`. 
 
-`study.js`
+- File:`app/static/js/study.js`
 - shuffles the cards and displays them one by one (Fisher–Yates shuffle algorithm); 
 - uses the `fade-in` and `fade-out` classes to change the oppacity of the flashcard container `id=flashcard-container`
 - toggles the answer when the user clicks “Mostrar Resposta”.
-- Buttons 1, 2, and 3 send the chosen rating to `/review_flashcard`.
+- Buttons 1, 2, and 3 send the chosen rating to `/flashcard/review_flashcard`.
 - A rating of 1 moves the card to the end of the queue; otherwise it is removed.
 - When no cards remain, the message `“Você estudou todos os flashcards!”` is shown.
 
 
  
+
+
+## Spaced Repitition Algorithm
+This system blends spaced repetition with gamified rewards. While based on SuperMemo(SM-2), it has been customized to support:
+
+- Real-time retry logic
+- Day-specific scheduling (midnight)
+- Role-sensitive scoring
+- Simplified ease/interval management
+

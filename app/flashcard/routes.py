@@ -1,11 +1,12 @@
-from flask import Blueprint, request, redirect, url_for, flash, render_template
+from flask import Blueprint, request, redirect, url_for, flash, render_template, jsonify
 from flask_login import current_user, login_required
 from app.database import db_session
 from app.flashcard.form import FlashcardForm
-from app.models import Flashcard, User 
-from flask import jsonify
-from datetime import datetime, timezone
+from app.models import Flashcard, User
+from datetime import datetime, timezone, timedelta
 from sqlalchemy import or_
+import math
+from app.extensions import csrf
 
 
 bp = Blueprint('flashcard', __name__, url_prefix='/flashcard')
@@ -197,3 +198,73 @@ def study():
         flash("Você não tem flashcards para estudar.", "info")
     return render_template("flashcards/study.html", cards=cards_data)
 
+
+
+@bp.route("/review_flashcard", methods=["POST"])
+@csrf.exempt
+@login_required
+def review_flashcard():
+    """
+    Update flashcard scheduling when a rating (1, 2, or 3) is submitted from study.js.
+    """
+    
+    data = request.get_json() or {}
+    card_id = data.get("card_id")
+    rating = int(data.get("rating"))
+
+    MIN_INTERVAL, MAX_INTERVAL = 1, 365
+    flashcard = db_session.query(Flashcard).get(str(card_id))
+    if not flashcard:
+        return jsonify({"status": "error", "message": "Flashcard not found."}), 404
+
+    now = datetime.now(timezone.utc)
+
+    def award_points(user, pts):
+        user.points = user.points + pts
+
+    def get_recipient():
+        if current_user.role == "teacher" and flashcard.user_id == current_user.id:
+            return current_user
+        if current_user.role in ("teacher", "@dmin!") and flashcard.user_id != current_user.id:
+            return db_session.query(User).filter(User.id == flashcard.user_id).first()
+        return current_user
+
+    recipient = get_recipient()
+
+    if rating == 1:
+        flashcard.level += 1
+        flashcard.ease = 1.3
+        flashcard.interval = MIN_INTERVAL
+        flashcard.last_review = now
+        flashcard.next_review = now + timedelta(seconds=3)
+
+    elif rating == 2:
+        award_points(recipient, 2)
+        flashcard.level += 1
+        flashcard.ease = 1.3
+        flashcard.interval = MIN_INTERVAL
+        flashcard.last_review = now
+        next_review = now + timedelta(days=1)
+        flashcard.next_review = next_review.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    else:
+        recipient.rate_three_count = (recipient.rate_three_count or 0) + 1
+
+        flashcard.level += 1
+        new_ease = min(
+            (flashcard.ease + 0.5 - (5 - rating) * (0.08 + (5 - rating) * 0.02)) / 2,
+            2.5,
+        )
+        flashcard.ease = max(new_ease, 1.3)
+
+        new_interval = int(math.ceil(flashcard.interval * flashcard.ease))
+        flashcard.interval = min(MAX_INTERVAL, new_interval)
+
+        award_points(recipient, max(int(flashcard.interval / 2), 1))
+
+        flashcard.last_review = now
+        next_review = now + timedelta(days=flashcard.interval)
+        flashcard.next_review = next_review.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    db_session.commit()
+    return jsonify({"status": "success"})

@@ -53,10 +53,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       
         
-          await fetch("/review_flashcard", {
+          await fetch("/flashcard/review_flashcard", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ card_id: card.id, rating })
+            body: JSON.stringify({ card_id: card.id, rating: rating })
           });
 
           if (rating === "1") {

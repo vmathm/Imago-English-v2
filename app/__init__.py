@@ -5,7 +5,8 @@ import os
 from config import Config
 from .models.base import Base
 from .database import init_engine
-from .extensions import login_manager, csrf
+from .extensions import login_manager
+from .extensions import csrf
 from .auth import user_loader
 
 
