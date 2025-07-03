@@ -102,9 +102,12 @@ Handles dark mode switching using Bootstrap 5.3’s `data-bs-theme` attribute.
 card list available to JavaScript at `app/static/js/study.js`. 
 
 `study.js`
-- shuffles the cards and displays them one by one; 
+- shuffles the cards and displays them one by one (Fisher–Yates shuffle algorithm); 
+- uses the `fade-in` and `fade-out` classes to change the oppacity of the flashcard container `id=flashcard-container`
 - toggles the answer when the user clicks “Mostrar Resposta”.
 - Buttons 1, 2, and 3 send the chosen rating to `/review_flashcard`.
 - A rating of 1 moves the card to the end of the queue; otherwise it is removed.
 - When no cards remain, the message `“Você estudou todos os flashcards!”` is shown.
 
+
+ 
