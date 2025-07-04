@@ -5,16 +5,27 @@
 {% block main %}
   <div class="container mt-5">
     <h1 class="mb-4">Welcome, {{ current_user.name }}!</h1>
+    <p class="lead">Your role: <strong>{{ current_user.role }}</strong></p>
 
-    {% if current_user.role %}
-      <p class="lead">Your role: <strong>{{ current_user.role }}</strong></p>
+    {% if current_user.role == 'student' %}
       
+      {% include "partials/add-card-form.html" %}
 
-    {% include "partials/add-card-form.html" %}
 
+    {% elif current_user.role == 'teacher' %}
+
+      {% include "partials/teacher_dashboard.html" %}
+
+    {% elif current_user.role == '@dmin!' %}
+
+      {% include "partials/admin_dashboard.html" %}
 
     {% endif %}
 
+    {% if current_user.role == 'admin' %}
+      <p class="lead">Your role: <strong>{{ current_user.role }}</strong></p>
+      <p>Admin features coming soon!</p>
+    {% endif %}
     <hr>
 
     <p>This is your dashboard. Soon you’ll be able to:</p>

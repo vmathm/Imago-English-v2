@@ -1,0 +1,11 @@
+{% if assigned_students %}
+    <div class="section-box">
+        <h3 class="mt-4">Assigned Students</h3>
+        <ul class="list-group mb-4">
+          {% for student in assigned_students %}
+            <li class="list-group-item">{{ student.name }} ({{ student.email }})</li>
+          {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+ 
