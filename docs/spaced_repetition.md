@@ -1,4 +1,4 @@
-# Review Algorithm Documentation
+# Spaced Repetition Documentation
 
 This document explains the logic behind the flashcard review algorithm implemented in `/flashcard/review_flashcard`.
 

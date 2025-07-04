@@ -32,10 +32,12 @@ def create_app():
     from .auth.routes import bp as auth_bp
     from .dashboard.routes import bp as dashboard_bp
     from .flashcard.routes import bp as flashcard_bp
+    from .home.routes import bp as home_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(flashcard_bp)
+    app.register_blueprint(home_bp)
 
     '''
     

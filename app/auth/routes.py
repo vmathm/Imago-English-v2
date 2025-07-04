@@ -1,4 +1,4 @@
-from flask import Blueprint, redirect, url_for, abort, current_app
+from flask import Blueprint, redirect, abort, current_app
 from flask_login import login_user
 from app.models import User
 from app.database import db_session
@@ -8,9 +8,8 @@ from app.database import db_session
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
-@bp.route('/test')
-def test():
-    return "Auth route is working!"
+
+
 
 
 @bp.route('/dev-login/<user_id>')

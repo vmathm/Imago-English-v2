@@ -10,7 +10,7 @@ This project uses the Flask **app factory pattern** and **blueprints** to keep t
 - `app/database.py`: Sets up SQLAlchemy database. Creates an engine and a scoped_session called db_session
 - `app/services/`: Contains reusable service functions like Google Translate and Google Calendar
 
-## 📁 Project Structure
+## Project Structure
 ├── app/ # Main Flask application package
 │ ├── init.py # App factory + config loader + DB init
 │ ├── database.py #sets up the SQLAlchemy database.
@@ -177,7 +177,7 @@ user_id is a foreign key that links each flashcard to its owner in the users tab
 user: the SQLAlchemy relationship back to the User model, allowing access to user.flashcards.
 
 #### Spaced Repetition Support
-The fields level, ease, interval, last_review, and next_review enable the app to implement a lightweight spaced repetition algorithm.
+The fields level, ease, interval, last_review, and next_review enable the app to implement a lightweight spaced repetition algorithm (spaced_repetition.md).
 
 #### Data Exposure
 Use to_dict() when exposing flashcard data to the frontend or API. This method ensures show_answer is returned as False by default for study sessions:
