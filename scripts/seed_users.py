@@ -22,7 +22,7 @@ today = date.today()
 
 users = [
     User(
-        id="admin123",
+        id="9990",
         name="admin",
         email="admin@example.com",
         google_access_token="fake-admin-token",
@@ -31,7 +31,7 @@ users = [
         active=True
     ),
     User(
-        id="teacher123",
+        id="9991",
         name="teacher",
         email="teacher@example.com",
         google_access_token="fake-teacher-token",
@@ -40,7 +40,7 @@ users = [
         active=True
     ),
     User(
-        id="student123",
+        id="9992",
         name="student",
         email="student@example.com",
         google_access_token="fake-student-token",
