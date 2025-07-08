@@ -21,6 +21,7 @@ This project uses the Flask **app factory pattern** and **blueprints** to keep t
 │ ├── admin/#routes and logic
 │ ├── dashboard/#routes and logic
 │ ├── flashcard/#routes and logic
+| ├── home/  # root endpoint (landing page)
 │ ├── models/ # All database models
 │ │ ├── init.py # Aggregates all models for easy import
 │ │ ├── base.py # SQLAlchemy declarative base
@@ -50,10 +51,12 @@ This project uses the Flask **app factory pattern** and **blueprints** to keep t
 ## Blueprints
 
 Each major feature has its own blueprint:
+- `home` handles the root endpoint
 - `auth` for login/signup routes
 - `flashcard` for vocabulary build up and spaced repetition studying.
 - `audiobook` for text/audio display + text selection for translation
 - `dashboard` for student, teachers and admin dashboards. 
+- `admin` for student assignment and role management
 
 
 

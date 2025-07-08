@@ -10,8 +10,9 @@
 More routes will be added as blueprints are developed.
 
 
-### `GET /dev_login`
+### `GET /auth/dev-login/<user_id>`
 - Simulates logging in as an existing user. Useful for testing features without going through the Google OAuth flow.
+- Returns `404` if the user does not exist
 
 #### Requirements:
 - Flask app must be running in **debug mode**  
@@ -24,6 +25,16 @@ More routes will be added as blueprints are developed.
 
 
 
+## Admin
+
+### `POST /admin/assign_student`
+- Assign a student to a teacher (admin only).
+
+### `POST /admin/unassign_student`
+- Remove the teacher assignment from a student (admin only).
+
+### `POST /admin/change_role`
+- Update a user's role (`student`, `teacher`, or `@dmin!`) (admin only).
 
 ## Dashboard
 

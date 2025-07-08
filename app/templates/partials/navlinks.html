@@ -12,12 +12,11 @@
         </ul>
 
     {% elif current_user.role == '@dmin!' %}
-        {# Master/admin view #}
+        {# Admin view #}
         <ul class="navbar-nav ms-auto mt-2">
-            <li class="nav-item"><a class="nav-link" href="/online_course_students">Alunos</a></li>
+            
             <li class="nav-item"><a class="nav-link" href="/load">Audiobooks</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
-            <li class="nav-item"><a class="nav-link" href="/manage_stories">Manage Stories</a></li>
             <li class="nav-item"><a class="nav-link" href="/logout">Sair</a></li>
         </ul>
 

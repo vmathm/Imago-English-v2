@@ -33,18 +33,20 @@ def create_app():
     from .dashboard.routes import bp as dashboard_bp
     from .flashcard.routes import bp as flashcard_bp
     from .home.routes import bp as home_bp
+    from .admin.routes import bp as admin_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(flashcard_bp)
     app.register_blueprint(home_bp)
+    app.register_blueprint(admin_bp)
 
     '''
     
     from .audiobook.routes import bp as audiobook_bp
 
     
-    app.register_blueprint(flashcards_bp)
+   
     app.register_blueprint(audiobook_bp)
     '''
 

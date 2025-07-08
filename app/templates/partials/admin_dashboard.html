@@ -1,0 +1,59 @@
+<div class="section-box">
+
+
+
+  <div class="section-box mt-4"> 
+    <h3>Assign Student to Teacher</h3>
+    <form action="{{ url_for('admin.assign_student') }}" method="post">
+      {{ form.hidden_tag() }}
+      <div class="mb-3">
+        {{ assign_form.student_id.label(class="form-label") }}
+        {{ assign_form.student_id(class="form-select") }}
+      </div>
+      <div class="mb-3">
+        {{ assign_form.teacher_id.label(class="form-label") }}
+        {{ assign_form.teacher_id(class="form-select") }}
+      </div>
+      <div class="mb-3">
+        {{ assign_form.submit(class="btn btn-primary") }}
+      </div>
+    </form>
+  </div>
+
+
+
+<div class="section-box mt-4">
+  <h3>Unassign Student</h3>
+  <form action="{{ url_for('admin.unassign_student') }}" method="post">
+    {{ form.hidden_tag() }}
+      <div class="mb-3">
+        {{ unassign_form.student_id.label(class="form-label") }}
+        {{ unassign_form.student_id(class="form-select") }}
+      </div>
+      
+      <div class="mb-3">
+        {{ unassign_form.submit(class="btn btn-warning") }}
+       </div>
+  </form>
+</div>
+
+
+<div class="section-box mt-4">
+  <h3>Change User Role</h3>
+  <form action="{{ url_for('admin.change_role') }}" method="post">
+   {{ form.hidden_tag() }}
+    <div class="mb-3">
+          {{ change_role_form.user_id.label(class="form-label") }}
+          {{ change_role_form.user_id(class="form-select") }}
+    </div>
+
+    <div class="mb-3">
+          {{ change_role_form.role.label(class="form-label") }}
+          {{ change_role_form.role(class="form-select") }}
+    </div>
+
+    <div class="mb-3">
+      {{ change_role_form.submit(class="btn btn-secondary") }}
+    </div>
+    </form>
+</div>
