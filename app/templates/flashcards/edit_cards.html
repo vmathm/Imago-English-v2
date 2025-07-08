@@ -8,8 +8,7 @@
 <div id="card-{{ card.id }}" class="section-box">
     <form class="flashcard-form" data-card-id="{{ card.id }}" method="POST" action="{{ url_for('flashcard.edit_card', card_id=card.id) }}">
         {{ forms[card.id].hidden_tag() }}
-        <input type="hidden" name="csrf_token" value="{{ forms[card.id].csrf_token._value() }}">
-
+    
         <div class="mb-3">
             {{ forms[card.id].question.label }}
             {{ forms[card.id].question(class="form-control") }}
