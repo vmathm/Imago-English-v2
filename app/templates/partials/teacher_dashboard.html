@@ -3,9 +3,12 @@
         <h3 class="mt-4">Assigned Students</h3>
         <ul class="list-group mb-4">
           {% for student in assigned_students %}
-            <li class="list-group-item">{{ student.name }} ({{ student.email }})</li>
+            <li class="list-group-item">
+              <a href="{{ url_for('flashcard.manage_student', student_id=student.id) }}">
+                {{ student.name }} ({{ student.email }})
+              </a>
+            </li>
           {% endfor %}
         </ul>
     </div>
 {% endif %}
- 

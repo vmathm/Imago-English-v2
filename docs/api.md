@@ -68,3 +68,9 @@ Handles flashcards being added to current_user or to student by using a hidden i
 - Expects JSON payload: `{"card_id": <id>, "rating": 1 | 2 | 3}`.
 - Updates the flashcard’s level, ease, interval, and scheduling, awarding points to the appropriate user.
 - Returns `{"status": "success"}` on success, or `404` if the card is not found.
+
+### `GET /flashcard/manage/<int:student_id>`
+- Renders `flashcards/manage_student_cards.html` so a teacher (or admin) can
+  edit, delete, or add flashcards for a specific student.
+- Teachers may only manage students assigned to them. Admins can manage any student.
+- Returns `{"status": "success"}` or `403` if the user lacks permission or the student does not belong to that teacher.

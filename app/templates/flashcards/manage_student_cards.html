@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block title %}{{ student.name }}{% endblock %}
+
+{% block main %}
+  <div id="flash-message-container"></div>
+  <h2>Student: {{ student.name }}</h2>
+
+  {% for card in flashcards %}
+  <div id="card-{{ card.id }}" class="section-box">
+      <form class="flashcard-form" data-card-id="{{ card.id }}" method="POST" action="{{ url_for('flashcard.edit_card', card_id=card.id) }}">
+          {{ forms[card.id].hidden_tag() }}
+          <div class="mb-3">
+              {{ forms[card.id].question.label }}
+              {{ forms[card.id].question(class="form-control") }}
+          </div>
+          <div class="mb-3">
+              {{ forms[card.id].answer.label }}
+              {{ forms[card.id].answer(class="form-control") }}
+          </div>
+          <button name="action" value="edit" class="btn btn-primary">Edit</button>
+          <button name="action" value="delete" class="btn btn-danger" onclick="return confirm('Delete this flashcard?');">Delete</button>
+      </form>
+  </div>
+  {% endfor %}
+
+  <div cass="section-box mt-4">
+    <h3 class="mt-4">Add Flashcard</h3>
+    <form method="POST" action="{{ url_for('flashcard.addcards') }}">
+        {{ form.hidden_tag() }}
+        <input type="hidden" name="student_id" value="{{ student.id }}">
+        <div class="mb-3">
+            {{ form.question.label }}
+            {{ form.question(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            {{ form.answer.label }}
+            {{ form.answer(class="form-control") }}
+        </div>
+        <button type="submit" class="btn btn-success">Add</button>
+    </form>
+  </div>
+{% endblock %}

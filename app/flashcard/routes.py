@@ -7,7 +7,7 @@ from datetime import datetime, timezone, timedelta
 from sqlalchemy import or_
 import math
 from app.extensions import csrf
-
+from os import abort
 
 bp = Blueprint('flashcard', __name__, url_prefix='/flashcard')
 
@@ -268,3 +268,31 @@ def review_flashcard():
 
     db_session.commit()
     return jsonify({"status": "success"})
+
+
+@bp.route("/manage/<int:student_id>", methods=["GET"])
+@login_required
+def manage_student(student_id):
+    if not current_user.is_teacher() and not current_user.is_admin():
+        abort(403)
+
+    student = db_session.query(User).filter_by(id=student_id).first()
+    if not student or (
+        current_user.is_teacher() and student.assigned_teacher_id != current_user.id
+    ):
+        abort(403)
+
+    form = FlashcardForm()
+    flashcards = db_session.query(Flashcard).filter_by(user_id=student_id).all()
+    forms = {c.id: FlashcardForm(obj=c) for c in flashcards}
+
+    return render_template(
+        "flashcards/manage_student_cards.html",
+        student=student,
+        form=form,
+        flashcards=flashcards,
+        forms=forms,
+    )
+
+
+
