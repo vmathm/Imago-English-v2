@@ -27,17 +27,20 @@ def addcards():
         question = form.question.data
         answer = form.answer.data
 
-        # Optional student ID for teachers/admins
-        student_id = request.form.get("student_id")
-
+        student_id = form.student_id.data
+        print(f"Student ID: {student_id}")
         if student_id:
-            if not current_user.is_admin and not current_user.is_teacher:
-                flash("Unauthorized to add flashcards for other users.", "danger")
-                return redirect(url_for("dashboard.index"))
-
             student = db_session.query(User).filter_by(id=student_id).first()
             if not student:
                 flash("Student not found.", "danger")
+                return redirect(url_for("dashboard.index"))
+
+            if current_user.is_teacher():
+                if student.assigned_teacher_id != current_user.id:
+                    flash("You cannot add cards for this student.", "danger")
+                    return redirect(url_for("dashboard.index"))
+            elif not current_user.is_admin():
+                flash("Unauthorized.", "danger")
                 return redirect(url_for("dashboard.index"))
 
             flashcard_owner_id = student.id
@@ -68,8 +71,7 @@ def addcards():
 
         message = "Flashcard added successfully!"
         return jsonify({"status": "success", "message": message})
-        flash(message, "success")
-        return redirect(url_for("dashboard.index"))
+   
 
     message = "Something went wrong. Please check your input."
     return jsonify({"status": "error", "message": message})
@@ -283,6 +285,7 @@ def manage_student(student_id):
         abort(403)
 
     form = FlashcardForm()
+    form.student_id.data = student.id
     flashcards = db_session.query(Flashcard).filter_by(user_id=student_id).all()
     forms = {c.id: FlashcardForm(obj=c) for c in flashcards}
 
