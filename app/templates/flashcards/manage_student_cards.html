@@ -13,16 +13,16 @@
           {{ forms[card.id].hidden_tag() }}
           <div class="mb-3">
               {{ forms[card.id].question.label }}
-              {{ forms[card.id].question(class="form-control") }}
+              {{ forms[card.id].question(class="form-control auto-expand") }}
           </div>
           <div class="mb-3">
               {{ forms[card.id].answer.label }}
-              {{ forms[card.id].answer(class="form-control") }}
+              {{ forms[card.id].answer(class="form-control auto-expand") }}
           </div>
           <button name="action" value="edit" class="btn btn-primary">Edit</button>
           <button name="action" value="delete" class="btn btn-danger" onclick="return confirm('Delete this flashcard?');">Delete</button>
       </form>
   </div>
   {% endfor %}
-
+''
 {% endblock %}

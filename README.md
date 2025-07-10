@@ -23,8 +23,11 @@ A modular Flask-based language learning app designed to help students build voca
     
 - 🛠 Teacher features
     - Dashboard with private information and assigned_students list
-    - student_flashcards.html
-    - Test student flashcards management routes (edit / delete/ add) 
+    ✅ manage_student_flashcards.html
+    ✅ Test student flashcards management routes (edit / delete/ add) 
+    ✅ adds form for adding card for student
+    - creates search button within manage_student_flashcards 
+    
 
 
 - 🛠 Audiobook reader (with text parsing and flashcard addition)

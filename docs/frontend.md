@@ -112,6 +112,21 @@ card list available to JavaScript at `app/static/js/study.js`.
 
  
 
+### Auto Expand Input Script
+Used to auto-resize textarea inputs in flashcard forms based on their content.
+
+- File: app/static/js/auto-expand-input.js
+
+- Targets any <textarea> with the class auto-expand
+
+- Sets the initial height to one line using rows=1 and min-height: 1.5em
+
+- Listens for input events and adjusts height based on scrollHeight
+
+- If empty, the height is reset to the default single-line height (1.5em)
+
+- Disables manual resize (resize: none) and hides scrollbars
+
 
 ## Spaced Repitition Algorithm
 This system blends spaced repetition with gamified rewards. While based on SuperMemo(SM-2), it has been customized to support:

@@ -562,4 +562,9 @@ html {
   color: white !important;
 }
 
-
+/* Auto Expand Input Fields */
+.auto-expand {
+  min-height: 1.5em;
+  max-height: 300px;
+  transition: height 0.2s ease;
+}

@@ -11,12 +11,12 @@
     
         <div class="mb-3">
             {{ forms[card.id].question.label }}
-            {{ forms[card.id].question(class="form-control") }}
+            {{ forms[card.id].question(class="form-control auto-expand") }}
         </div>
 
         <div class="mb-3">  
             {{ forms[card.id].answer.label }}
-            {{ forms[card.id].answer(class="form-control") }}
+            {{ forms[card.id].answer(class="form-control auto-expand") }}
         </div>
 
         <button type="submit" name="action" value="edit" class="btn btn-primary">Editar</button>
