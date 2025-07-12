@@ -4,11 +4,13 @@
 {% block main %}
   <div id="flash-message-container"></div>
   <h2>Student: {{ student.name }}</h2>
-
-    {% include "partials/add-card-form.html" with context %}
-
+  {% include "partials/add-card-form.html" with context %}
+    
+  {% include "partials/search_bar.html" %}
+   
+<div>
   {% for card in flashcards %}
-  <div id="card-{{ card.id }}" class="section-box">
+  <div id="card-{{ card.id }}" class="section-box flashcard">
       <form class="flashcard-form" data-card-id="{{ card.id }}" method="POST" action="{{ url_for('flashcard.edit_card', card_id=card.id) }}">
           {{ forms[card.id].hidden_tag() }}
           <div class="mb-3">
@@ -24,5 +26,5 @@
       </form>
   </div>
   {% endfor %}
-''
 {% endblock %}
+</div>

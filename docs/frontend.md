@@ -61,6 +61,17 @@ html {
 - Replace remaining hardcoded colors like `#FFB559`, `#B8E067` (will be done when study route is created.)
 
 ## JavaScript Overview
+
+### Add Flashcard Script
+Handles asynchronous submission of the "Add Flashcard" form.
+
+- File: `app/static/js/add-card.js`  
+- Loaded from: `layout.html` or any page containing the `#add-card-form`
+- Listens for `submit` events with `id="add-card-form"`
+- Sends the request to `form.getAttribute('action')` via `fetch`
+- Shows the returned message inside `#flash-message-container`
+- Reset form
+
 ### Edit/Delete Flashcard Script
 Provides asynchronous editing and deleting of flashcards.
 
@@ -72,16 +83,43 @@ Provides asynchronous editing and deleting of flashcards.
 - Shows the returned message inside `#flash-message-container`
 - If deletion succeeds, removes the corresponding card element from the page
 
+### Search & Highlight Flashcard Script
+Enables real-time search filtering, highlighting, and bringing forward matched cards.
 
-### Add Flashcard Script
-Handles asynchronous submission of the "Add Flashcard" form.
+- File: app/static/js/flashcard-search.js
 
-- File: `app/static/js/add-card.js`  
-- Loaded from: `layout.html` or any page containing the `#add-card-form`
-- Listens for `submit` events with `id="add-card-form"`
-- Sends the request to `form.getAttribute('action')` via `fetch`
-- Shows the returned message inside `#flash-message-container`
-- Reset form
+- Loaded from: manage_student_cards.html and edit_cards.html
+
+- Selects:
+
+  #flashcard-search-input (the main search text input)
+
+  #search-question and #search-answer (checkboxes to include question and/or answer in search)
+
+  .flashcard (cards to be searched and reordered)
+
+- Listens for input and change events to trigger filtering
+
+- Checks whether each flashcard’s question or answer contains the search query
+
+- Adds the highlight class to matched cards 
+
+- Reorders flashcards so matches appear first, by appending them back into the container
+
+- Displays match count in the #match-count element below the search bar
+
+### Study Mode Script
+
+`flashcards/study.html` template loads an empty container and makes the
+card list available to JavaScript at `app/static/js/study.js`. 
+
+- File:`app/static/js/study.js`
+- shuffles the cards and displays them one by one (Fisher–Yates shuffle algorithm); 
+- uses the `fade-in` and `fade-out` classes to change the oppacity of the flashcard container `id=flashcard-container`
+- toggles the answer when the user clicks “Mostrar Resposta”.
+- Buttons 1, 2, and 3 send the chosen rating to `/flashcard/review_flashcard`.
+- A rating of 1 moves the card to the end of the queue; otherwise it is removed.
+- When no cards remain, the message `“Você estudou todos os flashcards!”` is shown.
 
 ### Theme Toggle Script
 
@@ -96,18 +134,6 @@ Handles dark mode switching using Bootstrap 5.3’s `data-bs-theme` attribute.
 
 
 
-### Study Mode Script
-
-`flashcards/study.html` template loads an empty container and makes the
-card list available to JavaScript at `app/static/js/study.js`. 
-
-- File:`app/static/js/study.js`
-- shuffles the cards and displays them one by one (Fisher–Yates shuffle algorithm); 
-- uses the `fade-in` and `fade-out` classes to change the oppacity of the flashcard container `id=flashcard-container`
-- toggles the answer when the user clicks “Mostrar Resposta”.
-- Buttons 1, 2, and 3 send the chosen rating to `/flashcard/review_flashcard`.
-- A rating of 1 moves the card to the end of the queue; otherwise it is removed.
-- When no cards remain, the message `“Você estudou todos os flashcards!”` is shown.
 
 
  
@@ -131,8 +157,7 @@ Used to auto-resize textarea inputs in flashcard forms based on their content.
 ## Spaced Repitition Algorithm
 This system blends spaced repetition with gamified rewards. While based on SuperMemo(SM-2), it has been customized to support:
 
-- Real-time retry logic
-- Day-specific scheduling (midnight)
-- Role-sensitive scoring
-- Simplified ease/interval management
+- Real-time retry logic: cards rated 1 go back to the end of the queue. 
+- Role-sensitive scoring: Teachers can review flashcards with students during class and rating will award the points to the student. 
+- Simplified ease/interval management: Intervals are days and not hours, as the goal is a daily review of available cards.
 

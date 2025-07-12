@@ -568,3 +568,30 @@ html {
   max-height: 300px;
   transition: height 0.2s ease;
 }
+
+
+
+
+
+
+
+@keyframes flashcard-pop {
+  0% {
+    transform: scale(1);
+    background-color: rgba(255, 255, 0, 0.4);
+  }
+  50% {
+    transform: scale(1.03);
+    background-color: rgba(255, 255, 0, 0.6);
+  }
+  100% {
+    transform: scale(1);
+    background-color: rgba(255, 255, 0, 0.2);
+  }
+}
+
+.highlight {
+  border: 2px solid  #337ab7;
+  background-color: rgba(255, 255, 0, 0.2);
+  animation: flashcard-pop 0.5s ease;
+}
