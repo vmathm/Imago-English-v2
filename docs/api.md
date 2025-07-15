@@ -61,7 +61,7 @@ Handles flashcards being added to current_user or to student by using a hidden i
 
 ###  `GET /study`
 - Returns `flashcards/study.html` populated with flashcards where
-`next_review` is on or before the current UTC time (or None).
+`next_review` is on or before the current UTC time (or None). Checks for `student_id`, which signals the study route is being called from `manage_student_cards` by a teacher, and triggers different behavior from `study.js`
 
 ### `POST /review_flashcard`
 - Endpoint triggered by `study.js` when a user rates a card.

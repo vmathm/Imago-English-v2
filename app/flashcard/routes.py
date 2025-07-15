@@ -175,30 +175,46 @@ def edit_card(card_id):
 @login_required
 def study():
     """Show flashcards due for review."""
+    student_id = request.args.get("student_id")
+    target_user_id = current_user.id
+
+    if student_id:
+        if not (current_user.is_teacher() or current_user.is_admin()):
+            abort(403)
+        student = db_session.query(User).filter_by(id=student_id).first()
+        if not student or (
+            current_user.is_teacher() and student.assigned_teacher_id != current_user.id
+        ):
+            abort(403)
+        target_user_id = student.id
+
     due_cards = (
         db_session.query(
             Flashcard.id,
             Flashcard.question,
-            Flashcard.answer
+            Flashcard.answer,
+            Flashcard.level
         )
         .filter(
-            Flashcard.user_id == current_user.id,
+            Flashcard.user_id == target_user_id,
             or_(
-                Flashcard.next_review == None,  
+                Flashcard.next_review == None,
                 Flashcard.next_review <= datetime.now(timezone.utc)
             )
         )
         .all()
     )
 
-    # convert to dict so it can be JSON‑serialized
     cards_data = [
-    {"id": card.id, "question": card.question, "answer": card.answer}
-    for card in due_cards
-    ]   
+        {"id": card.id, "question": card.question, "answer": card.answer, "level": card.level}
+        for card in due_cards
+    ]
+
     if not cards_data:
         flash("Você não tem flashcards para estudar.", "info")
-    return render_template("flashcards/study.html", cards=cards_data)
+
+    return render_template("flashcards/study.html", cards=cards_data, student_id=student_id)
+
 
 
 

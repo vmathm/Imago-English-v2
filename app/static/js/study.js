@@ -11,6 +11,48 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+if (typeof studentId !== 'undefined' && studentId !== null) {
+  container.innerHTML = ""; // Clear the container
+
+  queue.forEach((card) => {
+    const cardElement = document.createElement("div");
+    cardElement.className = "section-box";
+    cardElement.dataset.cardId = card.id;
+
+    cardElement.innerHTML = `
+      <p><strong>Q:</strong> ${card.question}</p>
+      <p><strong>A:</strong> ${card.answer}</p>
+      <p><strong>Nível:</strong> ${card.level || "—"}</p>
+      <div>
+        <button class="btn btn-danger rate-btn" data-value="1">1</button>
+        <button class="btn btn-warning rate-btn" data-value="2">2</button>
+        <button class="btn btn-success rate-btn" data-value="3">3</button>
+      </div>
+    `;
+
+    container.appendChild(cardElement);
+  });
+
+  document.querySelectorAll(".rate-btn").forEach((btn) => {
+    btn.onclick = async () => {
+      const rating = btn.dataset.value;
+      const cardDiv = btn.closest(".section-box");
+      const cardId = cardDiv.dataset.cardId;
+
+      await fetch("/flashcard/review_flashcard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ card_id: cardId, rating: rating, student_id: studentId })
+      });
+
+      if (rating === "2" || rating === "3") {
+        cardDiv.remove(); // Remove flashcard from the view
+      }
+    };
+  });
+  
+}else {
+  
   function showNext() {
     if (index >= queue.length) {
       container.innerHTML = "<p>Você estudou todos os flashcards!</p>";
@@ -71,4 +113,5 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   showNext();
+}
 });

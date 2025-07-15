@@ -39,9 +39,50 @@ users = [
         join_date=today,
         active=True
     ),
+
+        User(
+        id="9996",
+        name="ReverendTeacher",
+        email="teacher@example.com",
+        google_access_token="fake-teacher-token",
+        role="teacher",
+        join_date=today,
+        active=True
+    ),
+
     User(
         id="9992",
-        name="student",
+        name="Alia",
+        email="student@example.com",
+        google_access_token="fake-student-token",
+        role="student",
+        join_date=today,
+        active=True
+    ),
+
+    User(
+        id="9993",
+        name="Duncan",
+        email="student@example.com",
+        google_access_token="fake-student-token",
+        role="student",
+        join_date=today,
+        active=True
+    ),
+
+    User(
+        id="9994",
+        name="MilesTeg",
+        email="student@example.com",
+        google_access_token="fake-student-token",
+        role="student",
+        join_date=today,
+        active=True
+    ),
+
+    User(
+        id="9995",
+        name="Stilgar",
         email="student@example.com",
         google_access_token="fake-student-token",
         role="student",

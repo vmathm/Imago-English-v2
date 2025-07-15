@@ -26,7 +26,7 @@ A modular Flask-based language learning app designed to help students build voca
     ✅ manage_student_flashcards.html
     ✅ Test student flashcards management routes (edit / delete/ add) 
     ✅ adds form for adding card for student
-    - creates search button within manage_student_flashcards 
+    ✅ creates search button within manage_student_flashcards (added to edit_cards also)
     
 
 

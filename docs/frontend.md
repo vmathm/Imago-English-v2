@@ -120,6 +120,7 @@ card list available to JavaScript at `app/static/js/study.js`.
 - Buttons 1, 2, and 3 send the chosen rating to `/flashcard/review_flashcard`.
 - A rating of 1 moves the card to the end of the queue; otherwise it is removed.
 - When no cards remain, the message `“Você estudou todos os flashcards!”` is shown.
+- If Study Mode is being used by a teacher from `manage_student_cards.html`, then cards are all rendered to the page with level information, and rating 1 doesn't remove them. 
 
 ### Theme Toggle Script
 

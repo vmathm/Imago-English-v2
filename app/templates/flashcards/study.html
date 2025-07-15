@@ -7,6 +7,8 @@
 <script type="text/javascript">
 // make the list available to JS
 const flashcards = {{ cards|tojson |safe }};
+const studentId = {{ student_id|tojson }};
+
 </script>
 <script src="{{ url_for('static', filename='js/study.js') }}"></script>
 {% endblock %}

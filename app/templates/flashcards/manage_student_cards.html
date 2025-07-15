@@ -5,6 +5,11 @@
   <div id="flash-message-container"></div>
   <h2>Student: {{ student.name }}</h2>
   {% include "partials/add-card-form.html" with context %}
+
+  <form action="{{ url_for('flashcard.study') }}" method="get" class="mb-3">
+      <input type="hidden" name="student_id" value="{{ student.id }}">
+      <button type="submit" class="btn btn-primary">Estudar</button>
+  </form>
     
   {% include "partials/search_bar.html" %}
    
@@ -21,6 +26,11 @@
               {{ forms[card.id].answer.label }}
               {{ forms[card.id].answer(class="form-control auto-expand") }}
           </div>
+            <div class="mb-3">
+                Reptitions: {{ card.level }} <br>
+                Last: {{ card.last_review.strftime('%Y-%m-%d %H:%M') }} UTC<br>
+                Next: {{ card.next_review.strftime('%Y-%m-%d %H:%M') }} UTC
+            </div>
           <button name="action" value="edit" class="btn btn-primary">Edit</button>
           <button name="action" value="delete" class="btn btn-danger" onclick="return confirm('Delete this flashcard?');">Delete</button>
       </form>
