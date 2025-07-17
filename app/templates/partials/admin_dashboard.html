@@ -1,31 +1,28 @@
+
+
+<div class="section-box"> 
+  <h3>Assign Student to Teacher</h3>
+  <form action="{{ url_for('admin.assign_student') }}" method="post">
+    {{ assign_form.hidden_tag() }}
+    <div class="mb-3">
+      {{ assign_form.student_id.label(class="form-label") }}
+      {{ assign_form.student_id(class="form-select") }}
+    </div>
+    <div class="mb-3">
+      {{ assign_form.teacher_id.label(class="form-label") }}
+      {{ assign_form.teacher_id(class="form-select") }}
+    </div>
+    <div class="mb-3">
+      {{ assign_form.submit(class="btn btn-primary") }}
+    </div>
+  </form>
+</div>
+
+<br>
 <div class="section-box">
-
-
-
-  <div class="section-box mt-4"> 
-    <h3>Assign Student to Teacher</h3>
-    <form action="{{ url_for('admin.assign_student') }}" method="post">
-      {{ form.hidden_tag() }}
-      <div class="mb-3">
-        {{ assign_form.student_id.label(class="form-label") }}
-        {{ assign_form.student_id(class="form-select") }}
-      </div>
-      <div class="mb-3">
-        {{ assign_form.teacher_id.label(class="form-label") }}
-        {{ assign_form.teacher_id(class="form-select") }}
-      </div>
-      <div class="mb-3">
-        {{ assign_form.submit(class="btn btn-primary") }}
-      </div>
-    </form>
-  </div>
-
-
-
-<div class="section-box mt-4">
   <h3>Unassign Student</h3>
   <form action="{{ url_for('admin.unassign_student') }}" method="post">
-    {{ form.hidden_tag() }}
+    {{ unassign_form.hidden_tag() }}
       <div class="mb-3">
         {{ unassign_form.student_id.label(class="form-label") }}
         {{ unassign_form.student_id(class="form-select") }}
@@ -37,11 +34,11 @@
   </form>
 </div>
 
-
-<div class="section-box mt-4">
+<br>
+<div class="section-box">
   <h3>Change User Role</h3>
   <form action="{{ url_for('admin.change_role') }}" method="post">
-   {{ form.hidden_tag() }}
+   {{ change_role_form.hidden_tag() }}
     <div class="mb-3">
           {{ change_role_form.user_id.label(class="form-label") }}
           {{ change_role_form.user_id(class="form-select") }}
@@ -56,4 +53,37 @@
       {{ change_role_form.submit(class="btn btn-secondary") }}
     </div>
     </form>
+</div>
+
+
+<br>
+<div class="section-box">
+  <h3>Hard Delete User</h3>
+<form method="POST" action="{{ url_for('admin.delete_user') }}" onsubmit="return confirm('Are you sure you want to delete this user?');">
+    {{ delete_user_form.hidden_tag() }}
+
+    <div class="mb-3">
+        {{ delete_user_form.user_id.label }}
+        {{ delete_user_form.user_id(class="form-select") }}
+    </div>
+    <div class="mb-3">
+       {{ delete_user_form.submit(class="btn btn-danger") }}
+    </div>
+</form>
+</div>
+
+<br>
+<div class="section-box">
+  <h3>Toggle User Status</h3>
+<form method="POST" action="{{ url_for('admin.toggle_active_status') }}" onsubmit="return confirm('Toggle user status?');">
+    {{ toggle_active_status_form.hidden_tag() }}
+
+    <div class="mb-3">
+        {{ toggle_active_status_form.user_id.label }}
+        {{ toggle_active_status_form.user_id(class="form-select") }}
+    </div>
+    <div class="mb-3">
+       {{ toggle_active_status_form.submit(class="btn btn-danger") }}
+    </div>
+</form>
 </div>

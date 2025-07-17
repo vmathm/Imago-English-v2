@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from app.flashcard.form import FlashcardForm
 from app.models import User            
 from app.database import db_session
-from app.admin.forms import AssignStudentForm, UnassignStudentForm, ChangeRoleForm
+from app.admin.forms import AssignStudentForm, UnassignStudentForm, ChangeRoleForm, DeleteUserForm, ToggleActiveStatusForm
 bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 
 
@@ -20,6 +20,8 @@ def get_admin_data():
     assign_form = AssignStudentForm()
     unassign_form = UnassignStudentForm()
     change_role_form = ChangeRoleForm()
+    delete_user_form = DeleteUserForm()
+    toggle_active_status_form = ToggleActiveStatusForm()
 
     all_users = db_session.query(User).all()
     teachers = db_session.query(User).filter_by(role='teacher').all()
@@ -31,10 +33,12 @@ def get_admin_data():
     ).all()
 
     # Populate form choices
-    assign_form.student_id.choices = [(s.id, f"{s.name} ({s.email})") for s in unassigned_students]
-    assign_form.teacher_id.choices = [(t.id, f"{t.name} ({t.email})") for t in teachers]
-    unassign_form.student_id.choices = [(s.id, f"{s.name} ({s.email})") for s in assigned_students_admin]
-    change_role_form.user_id.choices = [(u.id, f"{u.name} ({u.email})") for u in all_users]
+    assign_form.student_id.choices = [(s.id, f"{s.name} ({s.email}) | ID: {s.id}") for s in unassigned_students]
+    assign_form.teacher_id.choices = [(t.id, f"{t.name} ({t.email}) | ID: {t.id}") for t in teachers]
+    unassign_form.student_id.choices = [(s.id, f"{s.name} ({s.email}) | Teacher: {s.assigned_teacher.name}") for s in assigned_students_admin]
+    change_role_form.user_id.choices = [(u.id, f"{u.name} ({u.email}) | role: {u.role} | ID: {u.id}") for u in all_users]
+    delete_user_form.user_id.choices = [(u.id, f"{u.name} ({u.email}) | ID: {u.id}") for u in all_users]
+    toggle_active_status_form.user_id.choices = [(u.id, f"{u.name} ({u.email}) | status: {'Active' if u.active else 'Inactive'} | ID: {u.id}") for u in all_users]
     return {
         "assign_form": assign_form,
         "unassign_form": unassign_form,
@@ -43,7 +47,9 @@ def get_admin_data():
         "teachers": teachers,
         "unassigned_students": unassigned_students,
         "assigned_students_admin": assigned_students_admin,
-        "change_role_form": change_role_form
+        "change_role_form": change_role_form,
+        "delete_user_form": delete_user_form,
+        "toggle_active_status_form": toggle_active_status_form
     }
 
 # ──────────────────────────────────────────────
@@ -62,7 +68,8 @@ def index():
         "assigned_students_admin": [],
         "assign_form": None,
         "unassign_form": None,
-        "change_role_form": None
+        "change_role_form": None,
+        "toggle_active_status_form": None
     }
 
     if current_user.is_teacher():
@@ -70,5 +77,6 @@ def index():
 
     if current_user.is_admin():
         context.update(get_admin_data())
+        
 
     return render_template('dashboard.html', **context)

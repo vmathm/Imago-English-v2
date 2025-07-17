@@ -28,18 +28,24 @@ More routes will be added as blueprints are developed.
 ## Admin
 
 ### `POST /admin/assign_student`
-- Assign a student to a teacher (admin only).
+- Assigns a student to a teacher (admin only).
 
 ### `POST /admin/unassign_student`
-- Remove the teacher assignment from a student (admin only).
+- Removes the teacher assignment from a student (admin only).
 
 ### `POST /admin/change_role`
-- Update a user's role (`student`, `teacher`, or `@dmin!`) (admin only).
+- Updates a user's role (`student`, `teacher`, or `@dmin!`) (admin only).
+
+### `POST /admin/delete_user`
+- Hard deletes a user and their flashcards from the database.
+
+### `POST /admin/toggle_active_status`
+- Toggles `user.active` (also affects is_active since it returns self.active)
 
 ## Dashboard
 
 ### `GET /index`
-loads dashboard.html with form for flashcards.
+- Loads `dashboard.html` according to user type, rendering necessary forms and partials. 
 
 
 ## Flashcards

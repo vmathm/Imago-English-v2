@@ -17,19 +17,15 @@ A modular Flask-based language learning app designed to help students build voca
   ✅ Overrides `is_active` based on DB value
   ✅ Documented in `docs/architecture.md`
 - ✅ Flashcard creation and study flow
-- 🛠 Admin dashboard
-    ✅ Routes: Assign students, Unassign students, Change roles
+- ✅ Admin dashboard
+    ✅ Routes: Assign students, Unassign students, Change roles, Hard delete, Activate/Deactivate user
     ✅ Dashboard
-    
-- 🛠 Teacher features
+- ✅ Teacher features
     - Dashboard with private information and assigned_students list
     ✅ manage_student_flashcards.html
     ✅ Test student flashcards management routes (edit / delete/ add) 
     ✅ adds form for adding card for student
-    ✅ creates search button within manage_student_flashcards (added to edit_cards also)
-    
-
-
+    ✅ creates search button within manage_student_flashcards (added to edit_cards also)   
 - 🛠 Audiobook reader (with text parsing and flashcard addition)
 - 🛠 Progress tracking
 - 🛠 Google Translate integration
