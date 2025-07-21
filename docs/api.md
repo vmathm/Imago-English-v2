@@ -80,3 +80,12 @@ Handles flashcards being added to current_user or to student by using a hidden i
   edit, delete, or add flashcards for a specific student.
 - Teachers may only manage students assigned to them. Admins can manage any student.
 - Returns `{"status": "success"}` or `403` if the user lacks permission or the student does not belong to that teacher.
+
+## Audiobook
+
+### `GET /load`
+Serves `audiobook/audiobooks.html`, allowing the user to upload an audio file and a matching text transcript.
+
+### `POST /translate`
+Receives JSON `{"text": "<selected string>"}` and currently returns `{"translation": "api call"}`.  
+Later this will integrate with Google Translate to return a real translation.

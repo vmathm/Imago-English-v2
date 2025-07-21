@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block title %}Audiobooks{% endblock %}
+
+{% block main %}
+<div id="custom-modal" class="modal">
+  <div class="modal-content">
+    <p id="modal-content"></p>
+    <button class="modal-btn btn btn-primary" id="yesBtn">Yes</button>
+    <button class="modal-btn btn btn-secondary" id="noBtn">No</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      <p>Carregue seu arquivo de áudio e texto (formato .txt). Ao selecionar uma palavra ou frase, veja a tradução e crie flashcards.</p>
+      <input type="file" id="audio-input" accept="audio/*" hidden>
+      <input type="file" id="text-input" accept=".txt" hidden>
+
+      <button id="load-audio" class="btn btn-primary">Carregar áudio</button>
+      <button id="load-text"  class="btn btn-primary">Carregar texto</button>
+
+      <audio id="audio-player" controls style="display:none;" class="mt-3"></audio>
+      <div id="text-content" style="display:none;" class="mt-3"></div>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/audiobook.js') }}"></script>
+{% endblock %}

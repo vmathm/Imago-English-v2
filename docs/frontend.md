@@ -142,7 +142,7 @@ Handles dark mode switching using Bootstrap 5.3’s `data-bs-theme` attribute.
 ### Auto Expand Input Script
 Used to auto-resize textarea inputs in flashcard forms based on their content.
 
-- File: app/static/js/auto-expand-input.js
+- File: `app/static/js/auto-expand-input.js`
 
 - Targets any <textarea> with the class auto-expand
 
@@ -154,6 +154,12 @@ Used to auto-resize textarea inputs in flashcard forms based on their content.
 
 - Disables manual resize (resize: none) and hides scrollbars
 
+### Audiobook Script
+- File: `app/static/js/audiobook.js`
+- Loaded by: `audiobook/audiobooks.html`
+- Handles text selection on the audiobook page, calls `/translate` for a dummy translation (`{"translation": "api call"}`), and prompts the user to create a flashcard.
+
+
 
 ## Spaced Repitition Algorithm
 This system blends spaced repetition with gamified rewards. While based on SuperMemo(SM-2), it has been customized to support:
@@ -161,4 +167,6 @@ This system blends spaced repetition with gamified rewards. While based on Super
 - Real-time retry logic: cards rated 1 go back to the end of the queue. 
 - Role-sensitive scoring: Teachers can review flashcards with students during class and rating will award the points to the student. 
 - Simplified ease/interval management: Intervals are days and not hours, as the goal is a daily review of available cards.
+
+
 

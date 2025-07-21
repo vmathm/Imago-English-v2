@@ -287,8 +287,7 @@ a {
     top: 0;
     left: 0;
     width: 100%;
-    z-index: 9999; /* Ensure it's above other content */
-    /* Add additional styling as needed */
+    z-index: 9999; 
   }
 
 
@@ -300,8 +299,8 @@ a {
     left: 50%;
     transform: translateX(-50%);
     padding: 10px;
-    background-color: #029051; /* Green background color */
-    color: var(--bs-body-color); /* White text color */
+    background-color: #029051; 
+    color: var(--bs-body-color); 
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 }
@@ -312,15 +311,15 @@ a {
   left: 50%;
   transform: translateX(-50%);
   padding: 10px;
-  background-color: var(--bs-danger); /* Green background color */
-  color: var(--bs-body-color); /* White text color */
+  background-color: var(--bs-danger); 
+  color: var(--bs-body-color); 
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 }
 
 
 #content {
-  width: 80%; /* You can adjust the width as needed */
+  width: 80%; 
   margin-left: auto; /* Center the textarea horizontally */
   margin-right: auto;
 }
@@ -346,8 +345,10 @@ a {
   border: 1px solid #888;
   background-color: rgba(0, 0, 0, 0.9);
   text-align: justify;
-  box-sizing: border-box; /* Include padding and border in the box's total width and height */
+  box-sizing: border-box;  /* Include padding and border in the box's total width and height */
+  white-space: pre-line;
 }
+
 
 .modal-btn{
   max-width: 80%;
