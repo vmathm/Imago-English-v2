@@ -28,8 +28,11 @@ A modular Flask-based language learning app designed to help students build voca
     ✅ creates search button within manage_student_flashcards (added to edit_cards also)   
 - ✅ Audiobook reader (with text parsing and flashcard addition)
 - 🛠 Progress tracking
+    - 🛠 Leaderboard table with ranking and top three ever.
+    - 🛠 Student level (A1 to C1), for later implementation of audiobooks and activities. 
 - 🛠 Google Translate integration
 - 🛠 Google Calendar integration (for teacher availability)
+- 🛠 Google Login integration  
 
 
 ---
