@@ -199,9 +199,6 @@ body.dark-mode .form-check-label {
 }
 
 
-
-
-
 .card {
   background-color: var(--bs-body-bg);
   padding: 10px;
@@ -595,4 +592,18 @@ html {
   border: 2px solid  #337ab7;
   background-color: rgba(255, 255, 0, 0.2);
   animation: flashcard-pop 0.5s ease;
+}
+
+
+.table-wrapper {
+    overflow-x: auto;
+    width: 100%;
+}
+
+
+
+.table, .table th, .table td {
+  background-color: transparent !important;
+  color: inherit !important;
+  text-align: center !important;
 }

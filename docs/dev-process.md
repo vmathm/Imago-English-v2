@@ -41,19 +41,13 @@
 
 ---
 
-## Step 5: Test + Commit
-
+## Step 5: Test
 - Test all routes and frontend behaviors locally
-- Use meaningful commit messages:
-  - `add model for <feature>`
-  - `add routes for <feature>`
-  - `create UI for <feature>`
 
----
 
-## Step 6: Update Documentation
+## Step 6: Update Documentation and Commit
 
 ✅ Update `README.md` project checklist  
 ✅ Add route info to `docs/api.md`  
 ✅ Add model structure (brief) to `docs/architecture.md`  
-✅ Add feature progress or plans to `docs/roadmap.md`
+✅ Add JS and CSS info to `docs/frontend.md`

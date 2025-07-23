@@ -168,5 +168,15 @@ This system blends spaced repetition with gamified rewards. While based on Super
 - Role-sensitive scoring: Teachers can review flashcards with students during class and rating will award the points to the student. 
 - Simplified ease/interval management: Intervals are days and not hours, as the goal is a daily review of available cards.
 
+## Ranking Page
 
+The `/ranking` route displays three leaderboards using DataTables:
+
+1. **Top 3 Students of All Time** – Sorted by each user’s highest `max_points`.
+2. **Student Ranking** – Lists all students ordered by a computed `Total` value (`points` × `study_streak` when `study_streak > 0`).
+3. **Teacher Ranking** – Same structure as the student table, but for users with the `teacher` role.
+
+`ranking.html` loads the DataTables CSS/JS and uses a helper
+function to initialize each table. The first column is auto-numbered whenever the
+table is sorted or searched. All tables disable searching, paging and info to the benefit of a cleaner page. 
 

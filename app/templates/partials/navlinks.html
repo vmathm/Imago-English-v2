@@ -7,7 +7,7 @@
             <li class="nav-item"><a class="nav-link" href="/tc_reviewcards">Review cards</a></li>
             <li class="nav-item"><a class="nav-link" href="/load">Audiobooks</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
-            <li class="nav-item"><a class="nav-link" href="/ranking">Ranking</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.ranking') }}">Ranking</a></li>
             <li class="nav-item"><a class="nav-link" href="/logout">Sair</a></li>
         </ul>
 
@@ -17,6 +17,7 @@
             
             <li class="nav-item"><a class="nav-link" href="/load">Audiobooks</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.ranking') }}">Ranking</a></li>
             <li class="nav-item"><a class="nav-link" href="/logout">Sair</a></li>
         </ul>
 
@@ -27,7 +28,7 @@
             <li class="nav-item"><a class="nav-link" href="/">Início</a></li>
             <li class="nav-item"><a class="nav-link" href="/load">Audiobooks</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
-            <li class="nav-item"><a class="nav-link" href="/ranking">Ranking</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.ranking') }}">Ranking</a></li>
             <li class="nav-item"><a class="nav-link" href="/logout">Log Out</a></li>
         </ul>
 
@@ -37,7 +38,7 @@
             <li class="nav-item"><a class="nav-link" href="/">Início</a></li>
             <li class="nav-item"><a class="nav-link" href="/load">Audiobooks</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
-            <li class="nav-item"><a class="nav-link" href="/ranking">Ranking</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.ranking') }}">Ranking</a></li>
             <li class="nav-item"><a class="nav-link" href="/logout">Log Out</a></li>
         </ul>
     {% endif %}

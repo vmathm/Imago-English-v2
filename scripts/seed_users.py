@@ -1,25 +1,18 @@
 from datetime import date
 import os
 import sys
+import random
 from dotenv import load_dotenv
 load_dotenv()
-# Add the parent directory of 'app/' to the Python path
-'''
--  os.path.join(os.path.dirname(__file__) - Returns the directory path where the current script (seed_users.py) lives
 
-- os.path.join(os.path.dirname(__file__), '..') - Joins the above path with '..' to go one level up, which is the root of the project
-
-- os.path.abspath() - Converts the relative path to an absolute path.
-
-- sys.path.append() - Adds the absolute path to the Python path so that modules in the parent directory can be imported.
-'''
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from app.models.user import User
 from app.database import db_session
 
-# Common fields
 today = date.today()
 
+# Keep existing admin
 users = [
     User(
         id="9990",
@@ -29,73 +22,57 @@ users = [
         role="@dmin!",
         join_date=today,
         active=True
-    ),
-    User(
-        id="9991",
-        name="teacher",
-        email="teacher@example.com",
-        google_access_token="fake-teacher-token",
-        role="teacher",
-        join_date=today,
-        active=True
-    ),
-
-        User(
-        id="9996",
-        name="ReverendTeacher",
-        email="teacher@example.com",
-        google_access_token="fake-teacher-token",
-        role="teacher",
-        join_date=today,
-        active=True
-    ),
-
-    User(
-        id="9992",
-        name="Alia",
-        email="student@example.com",
-        google_access_token="fake-student-token",
-        role="student",
-        join_date=today,
-        active=True
-    ),
-
-    User(
-        id="9993",
-        name="Duncan",
-        email="student@example.com",
-        google_access_token="fake-student-token",
-        role="student",
-        join_date=today,
-        active=True
-    ),
-
-    User(
-        id="9994",
-        name="MilesTeg",
-        email="student@example.com",
-        google_access_token="fake-student-token",
-        role="student",
-        join_date=today,
-        active=True
-    ),
-
-    User(
-        id="9995",
-        name="Stilgar",
-        email="student@example.com",
-        google_access_token="fake-student-token",
-        role="student",
-        join_date=today,
-        active=True
     )
 ]
 
-# Add and commit
+# Create 5 teachers
+for i in range(5):
+    users.append(
+        User(
+            id=f"900{i}",
+            name=f"teacher{i}",
+            email=f"teacher{i}@example.com",
+            google_access_token=f"fake-token-teacher{i}",
+            role="teacher",
+            join_date=today,
+            active=True,
+            points=random.randint(50, 500),
+            max_points=random.randint(50, 500),
+            study_streak=random.randint(0, 30),
+            study_max_streak=random.randint(5, 60)
+        )
+    )
+
+# Dune character names
+dune_names = [
+    "Paul", "Jessica", "Gurney", "Chani", "Baron",
+    "Feyd", "Irulan", "Leto", "Piter", "Thufir",
+    "Jamis", "Rabban", "Mapes", "Wellington", "Korba"
+]
+
+# Create 15 students
+for i, name in enumerate(dune_names):
+    users.append(
+        User(
+            id=f"800{i}",
+            name=name,
+            email=f"{name.lower()}@example.com",
+            google_access_token=f"fake-token-{name.lower()}",
+            role="student",
+            join_date=today,
+            active=True,
+            points=random.randint(50, 1000),
+            max_points=random.randint(50, 1000),
+            study_streak=random.randint(0, 50),
+            study_max_streak=random.randint(5, 100)
+        )
+    )
+
+# Add and commit if not already in DB
 for user in users:
     if not db_session.query(User).filter_by(id=user.id).first():
         db_session.add(user)
 
 db_session.commit()
 
-print("✅ Seeded test users.")
+print("✅ Seeded admin, 5 teachers, and 15 students with random leaderboard data.")
