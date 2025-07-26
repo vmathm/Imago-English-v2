@@ -28,8 +28,16 @@
           </div>
             <div class="mb-3">
                 Reptitions: {{ card.level }} <br>
-                Last: {{ card.last_review.strftime('%Y-%m-%d %H:%M') }} UTC<br>
+                {% if card.last_review %}
+                  Last: {{ card.last_review.strftime('%Y-%m-%d %H:%M') }} UTC<br>
+                {% else %}
+                  Last: never<br>
+                {% endif %}
+                {% if card.next_review %}
                 Next: {{ card.next_review.strftime('%Y-%m-%d %H:%M') }} UTC
+                {% else %}
+                Not reviewed yet
+                {% endif %}
             </div>
           <button name="action" value="edit" class="btn btn-primary">Edit</button>
           <button name="action" value="delete" class="btn btn-danger" onclick="return confirm('Delete this flashcard?');">Delete</button>

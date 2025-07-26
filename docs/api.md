@@ -42,6 +42,10 @@ More routes will be added as blueprints are developed.
 ### `POST /admin/toggle_active_status`
 - Toggles `user.active` (also affects is_active since it returns self.active)
 
+### `POST /admin/update_student_level`
+- Updates `user.level` (A1 to C2)
+
+
 ## Dashboard
 
 ### `GET /index`

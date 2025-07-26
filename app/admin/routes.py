@@ -1,10 +1,16 @@
-# app/admin/routes.py
 from flask import Blueprint, request, redirect, url_for, abort, flash
 from flask_login import login_required, current_user
 from app.models import User, Flashcard
 from app.database import db_session
 from functools import wraps
-from app.admin.forms import AssignStudentForm, UnassignStudentForm, ChangeRoleForm, DeleteUserForm, ToggleActiveStatusForm
+from app.admin.forms import (
+    AssignStudentForm, 
+    UnassignStudentForm, 
+    ChangeRoleForm, 
+    DeleteUserForm, 
+    ToggleActiveStatusForm, 
+    ChangeStudentLevelForm
+)
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -129,3 +135,28 @@ def toggle_active_status():
         flash("Invalid form submission", 'danger')
 
     return redirect(url_for('dashboard.index'))
+
+
+@bp.route("/update_student_level", methods=["POST"])
+@login_required
+def update_student_level():
+    form = ChangeStudentLevelForm()
+    if not (current_user.is_teacher() or current_user.is_admin()):
+        abort(403)
+
+    if form.validate_on_submit():
+        student = db_session.query(User).filter_by(id=form.student_id.data, role='student').first()
+        if not student:
+            flash("Student not found.", "danger")
+        elif current_user.is_teacher() and student.assigned_teacher_id != current_user.id:
+            abort(403)
+        else:
+            student.level = form.level.data
+            db_session.commit()
+            flash(f"{student.name}'s level updated to {form.level.data}", "success")
+    else:
+        print("DEBUG form.errors:", form.errors)
+        print("DEBUG form data:", form.data)
+        flash("Invalid form submission.", "danger")
+
+    return redirect(url_for("dashboard.index"))

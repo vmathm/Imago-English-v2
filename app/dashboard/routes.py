@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from app.flashcard.form import FlashcardForm
 from app.models import User            
 from app.database import db_session
-from app.admin.forms import AssignStudentForm, UnassignStudentForm, ChangeRoleForm, DeleteUserForm, ToggleActiveStatusForm
+from app.admin.forms import AssignStudentForm, UnassignStudentForm, ChangeRoleForm, DeleteUserForm, ToggleActiveStatusForm, ChangeStudentLevelForm
 bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 
 
@@ -12,8 +12,14 @@ bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 # Modular helper functions
 
 def get_teacher_data():
+    change_student_level_form = ChangeStudentLevelForm()
+    all_users = db_session.query(User).all()
+    change_student_level_form.student_id.choices = [(s.id, f"{s.name} ({s.email}) | Level: {s.level}") for s in all_users if s.role == 'student']
+
     return {
-        "assigned_students": current_user.assigned_students
+        
+        "assigned_students": current_user.assigned_students,
+        "change_student_level_form": change_student_level_form
     }
 
 def get_admin_data():
@@ -22,6 +28,7 @@ def get_admin_data():
     change_role_form = ChangeRoleForm()
     delete_user_form = DeleteUserForm()
     toggle_active_status_form = ToggleActiveStatusForm()
+    change_student_level_form = ChangeStudentLevelForm()
 
     all_users = db_session.query(User).all()
     teachers = db_session.query(User).filter_by(role='teacher').all()
@@ -39,6 +46,7 @@ def get_admin_data():
     change_role_form.user_id.choices = [(u.id, f"{u.name} ({u.email}) | role: {u.role} | ID: {u.id}") for u in all_users]
     delete_user_form.user_id.choices = [(u.id, f"{u.name} ({u.email}) | ID: {u.id}") for u in all_users]
     toggle_active_status_form.user_id.choices = [(u.id, f"{u.name} ({u.email}) | status: {'Active' if u.active else 'Inactive'} | ID: {u.id}") for u in all_users]
+    change_student_level_form.student_id.choices = [(s.id, f"{s.name} ({s.email}) | Level: {s.level}") for s in all_users if s.role == 'student']
     return {
         "assign_form": assign_form,
         "unassign_form": unassign_form,
@@ -49,7 +57,8 @@ def get_admin_data():
         "assigned_students_admin": assigned_students_admin,
         "change_role_form": change_role_form,
         "delete_user_form": delete_user_form,
-        "toggle_active_status_form": toggle_active_status_form
+        "toggle_active_status_form": toggle_active_status_form,
+        "change_student_level_form": change_student_level_form
     }
 
 # ──────────────────────────────────────────────
@@ -69,7 +78,8 @@ def index():
         "assign_form": None,
         "unassign_form": None,
         "change_role_form": None,
-        "toggle_active_status_form": None
+        "toggle_active_status_form": None,
+        "change_student_level_form": None
     }
 
     if current_user.is_teacher():
@@ -80,3 +90,5 @@ def index():
         
 
     return render_template('dashboard.html', **context)
+
+
