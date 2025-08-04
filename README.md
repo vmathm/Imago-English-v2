@@ -30,12 +30,58 @@ A modular Flask-based language learning app designed to help students build voca
 - ✅ Progress tracking
     - ✅ Leaderboard table with ranking and top three ever.
     - ✅ Student level (A1 to C1), for later implementation of audiobooks and activities. 
-- 🛠 Google Translate integration
 - 🛠 Google Calendar integration (for teacher availability)
+- 🛠 Google Translate integration
 - 🛠 Google Login integration  
 
 
 ---
+
+
+
+
+
+## How to run the app
+
+### 1. Clone and set up the environment
+```bash
+git clone https://github.com/vmathm/imago-english-v2.git
+cd imago-english-v2
+python3 -m venv venv
+source venv/bin/activate   
+pip install -r requirements.txt
+```
+
+### 2. Create a `.env` file in the project root:
+
+```env
+
+SECRET_KEY=your-secret-key
+ALLOW_DEV_LOGIN=True
+```
+Optional: 
+add DATABASE_URL=sqlite:///app.db= your_database.db to .env
+
+
+#### Seed users
+Run scripts/seed_users.py to create a user for each role for testing purposes. Production only allows users to login via Google API. 
+
+
+### 3. Run the app
+```bash
+export FLASK_APP=main.py
+flask run
+``` 
+
+
+
+
+## Project Start Date
+
+June 12, 2025
+
+See docs/ for architecture, API design, and roadmap.
+
 
 
 ## Flask-Login Authentication & Session Flow
@@ -100,13 +146,6 @@ This enables:
 
 - integration with Jinja templates
 
-Main fields:
-
-front: Required text field (question/prompt)
-
-back: Required text area (answer/explanation)
-
-submit: Button to submit the form
 
 Template Usage Example:
 <form method="post" action="{{ url_for('flashcards.add_card') }}">
@@ -115,51 +154,11 @@ Template Usage Example:
     {{ form.back.label }} {{ form.back() }}
     {{ form.submit() }}
 </form>
+
+
 form.hidden_tag() ensures CSRF tokens are submitted properly.
 
 ## Folder Structure
 Refer to docs/architecture.md ## Project Structure
 
-
-## How to run the app
-
-### 1. Clone and set up the environment
-```bash
-git clone https://github.com/vmathm/imago-english-v2.git
-cd imago-english-v2
-python3 -m venv venv
-source venv/bin/activate   
-pip install -r requirements.txt
-```
-
-### 2. Create a `.env` file in the project root:
-
-```env
-
-SECRET_KEY=your-secret-key
-ALLOW_DEV_LOGIN=True
-```
-Optional: 
-add DATABASE_URL=sqlite:///app.db= your_database.db to .env
-
-
-#### Seed users
-Run scripts/seed_users.py to create a user for each role for testing purposes. Production only allows users to login via Google API. 
-
-
-### 3. Run the app
-```bash
-export FLASK_APP=main.py
-flask run
-``` 
-
-
-
-
-## Project Start Date
-
-June 12, 2025
-
-See docs/ for architecture, API design, and roadmap.
-
-
+## Google Calendar Integration

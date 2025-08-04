@@ -12,10 +12,10 @@ bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 # Modular helper functions
 
 def get_teacher_data():
-    change_student_level_form = ChangeStudentLevelForm()
+    
     all_users = db_session.query(User).all()
-    change_student_level_form.student_id.choices = [(s.id, f"{s.name} ({s.email}) | Level: {s.level}") for s in all_users if s.role == 'student']
-
+    change_student_level_form = ChangeStudentLevelForm()
+    
     return {
         
         "assigned_students": current_user.assigned_students,

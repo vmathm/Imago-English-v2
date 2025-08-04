@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+{% block title %}Calendar Settings{% endblock %}
+
+{% block main %}
+<div class="section-box d-flex flex-column">
+  <h4>Set Your Calendar Preferences {{ current_user.name }} | {{ current_user.id }}</h2>
+  <form method="POST">
+    {{ form.hidden_tag() }}
+
+  <div class="mb-3 d-flex align-items-center">
+    <label class="me-2 mb-0">{{ form.start_hour.label.text }}</label>
+    {{ form.start_hour(class="form-control shrink-input") }}
+  </div>
+
+  <div class="mb-3 d-flex align-items-center">
+    <label class="me-2 mb-0">{{ form.end_hour.label.text }}</label>
+    {{ form.end_hour(class="form-control shrink-input") }}
+  </div>
+
+<div class="form-check mb-2 d-flex align-items-center justify-content-start">
+  {{ form.available_saturday(class="form-check-input me-2") }}
+  {{ form.available_saturday.label(class="form-check-label text-start mb-0") }}
+</div>
+
+<div class="form-check mb-2 d-flex align-items-center justify-content-start">
+  {{ form.available_sunday(class="form-check-input me-2") }}
+  {{ form.available_sunday.label(class="form-check-label text-start mb-0") }}
+</div>
+
+<div class="form-check mb-3 d-flex align-items-center justify-content-start">
+  {{ form.show_today(class="form-check-input me-2") }}
+  {{ form.show_today.label(class="form-check-label text-start mb-0") }}
+</div>
+
+
+    {{ form.submit(class="btn btn-primary") }}
+  </form>
+
+  {% if calendar_url %}
+    <hr>
+    <p>You can share your calendar using this link:</p>
+    <div>
+      <input type="text" id="calendarLink" class="form-control shrink-input" style="width: fit-content; min-width: max-content; flex: 0 1 auto;" value="{{ calendar_url }}" readonly>
+      <button class="btn btn-outline-secondary" type="button" onclick="copyCalendarLink()">Copy</button>
+    </div>
+    <p id="copyMsg" class="text-success" style="display:none;">✅ Link copied!</p>
+  {% endif %}
+</div>
+
+<script>
+function copyCalendarLink() {
+  const input = document.getElementById("calendarLink");
+  input.select();
+  input.setSelectionRange(0, 99999); // for mobile
+
+  document.execCommand("copy");
+
+  const msg = document.getElementById("copyMsg");
+  msg.style.display = "block";
+  setTimeout(() => {
+    msg.style.display = "none";
+  }, 2000);
+}
+</script>
+{% endblock %}

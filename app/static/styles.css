@@ -607,3 +607,10 @@ html {
   color: inherit !important;
   text-align: center !important;
 }
+
+
+/* Being used for inputs at settings.html */
+.shrink-input {
+  width: fit-content;
+  margin-right: 5px;
+}

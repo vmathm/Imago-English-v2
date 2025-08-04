@@ -1,3 +1,13 @@
+
+
+
+<form action="{{ url_for('calendar.teacher_calendar', user_name=current_user.user_name) }}" method="get">
+  <button type="submit" class="btn btn-primary">
+    Check Calendar
+  </button>
+</form>
+
+
 {% if assigned_students %}
     <div class="section-box">
         <h3 class="mt-4">Assigned Students</h3>

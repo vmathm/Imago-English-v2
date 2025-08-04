@@ -38,8 +38,8 @@ class User(Base, UserMixin):
 
     # 🔗 Relationships to other tables
     flashcards = relationship('Flashcard', back_populates='user')
-
-
+    calendar_settings = relationship("CalendarSettings", uselist=False, back_populates="teacher")
+    
 
     @property
     def is_active(self):

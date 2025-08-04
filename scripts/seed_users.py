@@ -31,7 +31,8 @@ for i in range(5):
         User(
             id=f"900{i}",
             name=f"teacher{i}",
-            email=f"teacher{i}@example.com",
+            user_name=f"u_name_teacher{i}",
+            email=f"vitornorace@gmail.com",
             google_access_token=f"fake-token-teacher{i}",
             role="teacher",
             join_date=today,

@@ -1,14 +1,28 @@
 ## 📁 Project Structure
-├── app/ # Main Flask application package
-│ ├── init.py # App factory + config loader + DB init
-│ ├── database.py #sets up the SQLAlchemy database.
-│ ├── auth/ #User-related routes and logic
-│ ├── admin/#routes and logic
-│ ├── audiobook/#routes and logic
-│ ├── dashboard/#routes and logic
-│ ├── models/ # All database models
-│ │ ├── init.py # Aggregates all models for easy import
-│ │ ├── base.py # SQLAlchemy declarative base
-│ │ ├── user.py # User model (with roles)
-│ │ └── flashcard.py # Flashcard model (TBD)
-│ └── templates/ # HTML templates
+├── app/                    # Main Flask application
+│   ├── __init__.py         # App factory
+│   ├── extensions.py       # LoginManager, CSRF setup
+│   ├── database.py         # SQLAlchemy engine/session
+│   ├── admin/              # Admin routes and forms
+│   ├── auth/               # Authentication routes
+│   ├── audiobook/          # Audiobook feature
+│   ├── dashboard/          # Dashboard views
+│   ├── flashcard/          # Flashcard routes and forms
+│   ├── home/               # Landing page
+│   ├── progress/           # Leaderboard routes
+│   ├── models/             # Database models
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── user.py
+│   │   └── flashcard.py
+│   ├── services/           # External integrations
+│   ├── static/             # JS and CSS
+│   │   └── js/
+│   └── templates/          # HTML/Jinja templates
+│       ├── flashcards/
+│       ├── partials/
+│       └── progress/
+├── scripts/                # Utility scripts
+├── config.py               # Config class
+├── main.py                 # App entry point
+└── requirements.txt        # Dependencies

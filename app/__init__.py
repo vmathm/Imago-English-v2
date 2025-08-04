@@ -36,6 +36,7 @@ def create_app():
     from .admin.routes import bp as admin_bp
     from .audiobook.routes import bp as audiobook_bp
     from .progress.routes import bp as progress_bp
+    from .calendar.routes import bp as calendar_bp
 
 
     app.register_blueprint(auth_bp)
@@ -45,6 +46,6 @@ def create_app():
     app.register_blueprint(admin_bp)
     app.register_blueprint(audiobook_bp)
     app.register_blueprint(progress_bp)
+    app.register_blueprint(calendar_bp)
    
-
     return app  

@@ -203,3 +203,5 @@ app/static/*
 !app/static/js/         
 # Un-ignore theme-toggle.js
 !app/static/js/theme-toggle.js
+
+secrets/
