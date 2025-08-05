@@ -93,3 +93,26 @@ Serves `audiobook/audiobooks.html`, allowing the user to upload an audio file an
 ### `POST /translate`
 Receives JSON `{"text": "<selected string>"}` and currently returns `{"translation": "api call"}`.  
 Later this will integrate with Google Translate to return a real translation.
+
+
+## Calendar
+
+### `GET /calendar/<user_name>`
+- Looks up a teacher by `user_name` and renders a public page with the teacher’s available slots.
+- Returns **404** if the teacher is not found.  
+ 
+
+### `GET /calendar/settings` *(teachers only)*
+- Shows the `CalendarSettingsForm` for the logged‑in teacher to adjust working hours, lesson duration and weekend availability.
+- Requires authentication and `teacher` role.  
+  
+### `POST /calendar/settings` *(teachers only)*
+- Save form changes to `CalendarSettings` in the database, flashes a success message, and redirects back to the settings page.  
+ 
+
+## Services
+
+### `google_calendar.get_teacher_availability(user_id, days=5)`
+- Loads Google service‑account credentials (expects `GOOGLE_APPLICATION_CREDENTIALS` in the environment).
+- Combines the teacher’s `CalendarSettings` with Google Calendar **free/busy** data.
+- Generates half‑hour slots within the configured working window, skipping busy periods, and returns a dictionary keyed by date.  

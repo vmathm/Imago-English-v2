@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import SelectField, SubmitField, HiddenField
-from wtforms.validators import DataRequired
+from wtforms import SelectField, SubmitField, HiddenField, StringField
+from wtforms.validators import DataRequired, Optional, Regexp
 
 class AssignStudentForm(FlaskForm):
     student_id = SelectField("Student", validators=[DataRequired()], coerce=int, choices=[])
@@ -32,3 +32,10 @@ class ChangeStudentLevelForm(FlaskForm):
         validators=[DataRequired()]
     )
     submit = SubmitField('Update level')
+
+class UpdatePhoneForm(FlaskForm):
+    phone = StringField("phone", validators=[
+        Optional(),
+        Regexp(r'^\d{10,13}$', message="Digite o DDD seguido do número, sem espaços ou caracteres especiais (ex: 11987654321)")
+    ])
+    submit = SubmitField("Update Phone")

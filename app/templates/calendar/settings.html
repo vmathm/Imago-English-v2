@@ -2,35 +2,57 @@
 {% block title %}Calendar Settings{% endblock %}
 
 {% block main %}
+
+ <h3>Set Your Calendar Preferences {{ current_user.name }} | {{ current_user.id }}</h2>
+  <hr>
 <div class="section-box d-flex flex-column">
-  <h4>Set Your Calendar Preferences {{ current_user.name }} | {{ current_user.id }}</h2>
-  <form method="POST">
+  <h5>Update WhatsApp Number</h5>
+  <form method="POST" action="{{ url_for('calendar.update_phone') }}">
+    {{ phone_form.hidden_tag() }}
+
+    <div class="mb-3 d-flex align-items-center">
+      <label class="me-2 mb-0" for="phone">WhatsApp:</label>
+      {{ phone_form.phone(class="form-control shrink-input", placeholder=current_user.phone or 'None') }}
+    </div>
+
+    {{ phone_form.submit(class="btn btn-primary") }}
+  </form>
+</div>
+
+<div class="section-box d-flex flex-column">
+   <form method="POST">
     {{ form.hidden_tag() }}
 
   <div class="mb-3 d-flex align-items-center">
     <label class="me-2 mb-0">{{ form.start_hour.label.text }}</label>
-    {{ form.start_hour(class="form-control shrink-input") }}
+    {{ form.start_hour(class="form-control shrink-input", type="number", placeholder="07") }}
   </div>
 
   <div class="mb-3 d-flex align-items-center">
     <label class="me-2 mb-0">{{ form.end_hour.label.text }}</label>
-    {{ form.end_hour(class="form-control shrink-input") }}
+    {{ form.end_hour(class="form-control shrink-input", type="number",  placeholder="21") }}
   </div>
 
-<div class="form-check mb-2 d-flex align-items-center justify-content-start">
-  {{ form.available_saturday(class="form-check-input me-2") }}
-  {{ form.available_saturday.label(class="form-check-label text-start mb-0") }}
-</div>
+  <div class="mb-3 d-flex align-items-center">
+    <label class="me-2 mb-0">{{ form.lesson_duration.label.text }}</label>
+    {{ form.lesson_duration(class="form-control shrink-input", type="number", placeholder="30") }}
+    <span class="ms-2">minutes</span>
+  </div>
 
-<div class="form-check mb-2 d-flex align-items-center justify-content-start">
-  {{ form.available_sunday(class="form-check-input me-2") }}
-  {{ form.available_sunday.label(class="form-check-label text-start mb-0") }}
-</div>
+  <div class="form-check mb-2 d-flex align-items-center justify-content-start">
+    {{ form.available_saturday(class="form-check-input me-2") }}
+    {{ form.available_saturday.label(class="form-check-label text-start mb-0") }}
+  </div>
 
-<div class="form-check mb-3 d-flex align-items-center justify-content-start">
-  {{ form.show_today(class="form-check-input me-2") }}
-  {{ form.show_today.label(class="form-check-label text-start mb-0") }}
-</div>
+  <div class="form-check mb-2 d-flex align-items-center justify-content-start">
+    {{ form.available_sunday(class="form-check-input me-2") }}
+    {{ form.available_sunday.label(class="form-check-label text-start mb-0") }}
+  </div>
+
+  <div class="form-check mb-3 d-flex align-items-center justify-content-start">
+    {{ form.show_today(class="form-check-input me-2") }}
+    {{ form.show_today.label(class="form-check-label text-start mb-0") }}
+  </div>
 
 
     {{ form.submit(class="btn btn-primary") }}

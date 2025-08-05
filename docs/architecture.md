@@ -19,6 +19,7 @@ This project uses the Flask **app factory pattern** and **blueprints** to keep t
 │ ├── auth/ #User-related routes and logic
 │ │ ├── user_loader.py #Defines @login_manager.user_loader decorator to load User objects from session on request
 │ ├── admin/#routes and logic
+| ├── calendar/#routes and logic
 │ ├── dashboard/#routes and logic
 │ ├── flashcard/#routes and logic
 | ├── home/  # root endpoint (landing page)
@@ -27,7 +28,10 @@ This project uses the Flask **app factory pattern** and **blueprints** to keep t
 │ │ ├── base.py # SQLAlchemy declarative base
 │ │ ├── user.py # User model (with roles)
 │ │ └── flashcard.py # Flashcard model (TBD)
-│ └── templates/ # HTML templates
+| ├── progress/# routes and logic
+│ ├── services/# routes and logic
+│ ├── static/# Static files
+│ ├── templates/ # HTML templates
 │   └── partials/ # JINJA logic such as in navlinks being included in HTML via `{% include 'partials/navlinks.html' %}`
 ├── scripts/
 │ └── seed_users.py # Adds test users for dev login
@@ -51,13 +55,14 @@ This project uses the Flask **app factory pattern** and **blueprints** to keep t
 ## Blueprints
 
 Each major feature has its own blueprint:
-- `home` handles the root endpoint
-- `auth` for login/signup routes
-- `flashcard` for vocabulary build up and spaced repetition studying.
-- `audiobook` for text/audio display + text selection for translation
-- `dashboard` for student, teachers and admin dashboards. 
 - `admin` for student assignment and role management
-
+- `audiobook` for text/audio display + text selection for translation
+- `auth` for login/signup routes
+- `calendar` for teacher's to share their availability
+- `dashboard` for student, teachers and admin dashboards. 
+- `flashcard` for vocabulary build up and spaced repetition studying.
+- `home` handles the root endpoint
+- `progress` for students and teachers points and study sequence, which define the leaderboards. 
 
 
 ## Configuration System

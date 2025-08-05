@@ -18,7 +18,7 @@ def get_teacher_availability(user_id, days=5):
     credentials = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
     service = build('calendar', 'v3', credentials=credentials)
 
-    # 🧠 Get teacher + their calendar settings
+    # Get teacher + their calendar settings
     teacher = db_session.query(User).filter_by(id=user_id, role='teacher').first()
     print(f"Teacher found for {user_id}: {teacher}")
     if not teacher:
@@ -32,7 +32,7 @@ def get_teacher_availability(user_id, days=5):
     if not settings:
         return {}
 
-    # 🕓 Timezone and range start
+    # Timezone and range start
     sao_paulo = tz.gettz("America/Sao_Paulo")
     today = datetime.now(tz=sao_paulo).replace(hour=0, minute=0, second=0, microsecond=0)
     end = today
@@ -56,7 +56,7 @@ def get_teacher_availability(user_id, days=5):
 
     end = working_days[-1] + timedelta(days=1)
 
-    # 📅 Query Google Calendar busy times
+    # Query Google Calendar busy times
     freebusy_query = {
         "timeMin": today.isoformat(),
         "timeMax": end.isoformat(),
@@ -66,17 +66,17 @@ def get_teacher_availability(user_id, days=5):
     busy_res = service.freebusy().query(body=freebusy_query).execute()
     busy_periods = busy_res["calendars"][teacher.email]["busy"]
 
-    # ⏰ Generate available slots
+    # Generate available slots
     slots_by_day = {}
-    slot_start = time(settings.start_hour, 0)
-    slot_end = time(settings.end_hour, 0)
+    slot_start = time(settings.start_hour)
+    slot_end = time(settings.end_hour, 21)
 
     for day in working_days:
         current = datetime.combine(day.date(), slot_start, tzinfo=sao_paulo)
         end_of_day = datetime.combine(day.date(), slot_end, tzinfo=sao_paulo)
         slots = []
         while current < end_of_day:
-            next_slot = current + timedelta(minutes=30)
+            next_slot = current + timedelta(minutes=settings.lesson_duration)
             # Skip if any busy block overlaps
             if not any(b["start"] < next_slot.isoformat() and b["end"] > current.isoformat() for b in busy_periods):
                 slots.append((current, next_slot))

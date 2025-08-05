@@ -30,7 +30,7 @@ A modular Flask-based language learning app designed to help students build voca
 - ✅ Progress tracking
     - ✅ Leaderboard table with ranking and top three ever.
     - ✅ Student level (A1 to C1), for later implementation of audiobooks and activities. 
-- 🛠 Google Calendar integration (for teacher availability)
+- ✅ Google Calendar integration (for teacher availability)
 - 🛠 Google Translate integration
 - 🛠 Google Login integration  
 
@@ -162,3 +162,38 @@ form.hidden_tag() ensures CSRF tokens are submitted properly.
 Refer to docs/architecture.md ## Project Structure
 
 ## Google Calendar Integration
+
+Allows teachers to publish their availability through Google Calendar.  
+- teachers manage their own time window.
+- Students see a list of free slots. 
+- 
+### 1. Prerequisites
+1. Enable the **Google Calendar API** in a Google Cloud project.
+2. Create a **service account** and download its JSON credentials.
+3. Set the environment variable in `.env`:
+
+### 2. Model
+The `CalendarSettings` model stores each teacher’s preferences for availability and lesson duration, outputing a personalized calendar based on their Google Calendar availability. 
+
+### 3. Routes
+Refer to the Calendar section of `documents/api.md`
+
+
+### 4. How it works
+`app/services/google_calendar.get_teacher_availability()`:
+1. Uses the service-account credentials to query Google Calendar for busy blocks.
+2. Applies the teacher’s `CalendarSettings.
+3. Generates slots and removes any overlapping busy periods.
+4. Returns a dictionary keyed by date, each containing a list of free time ranges.
+
+### 5. Sharing
+After saving settings, a copyable link is displayed on the settings page: /calendar 
+<teacher_user_name>
+Share this URL with students so they can select an available time.
+
+### 6. Dependencies
+The feature relies on the following packages (already listed in `requirements.txt`):
+- `google-api-python-client`
+- `google-auth`
+- `google-auth-oauthlib`
+- `python-dateutil`
