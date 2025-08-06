@@ -46,7 +46,6 @@ def get_admin_data():
     change_role_form.user_id.choices = [(u.id, f"{u.name} ({u.email}) | role: {u.role} | ID: {u.id}") for u in all_users]
     delete_user_form.user_id.choices = [(u.id, f"{u.name} ({u.email}) | ID: {u.id}") for u in all_users]
     toggle_active_status_form.user_id.choices = [(u.id, f"{u.name} ({u.email}) | status: {'Active' if u.active else 'Inactive'} | ID: {u.id}") for u in all_users]
-    change_student_level_form.student_id.choices = [(s.id, f"{s.name} ({s.email}) | Level: {s.level}") for s in all_users if s.role == 'student']
     return {
         "assign_form": assign_form,
         "unassign_form": unassign_form,
@@ -57,8 +56,7 @@ def get_admin_data():
         "assigned_students_admin": assigned_students_admin,
         "change_role_form": change_role_form,
         "delete_user_form": delete_user_form,
-        "toggle_active_status_form": toggle_active_status_form,
-        "change_student_level_form": change_student_level_form
+        "toggle_active_status_form": toggle_active_status_form
     }
 
 # ──────────────────────────────────────────────

@@ -45,6 +45,10 @@ More routes will be added as blueprints are developed.
 ### `POST /admin/update_student_level`
 - Updates `user.level` (A1 to C2)
 
+### `POST /admin/update_phone`
+- Updates `user.phone` 
+
+
 
 ## Dashboard
 
@@ -91,8 +95,8 @@ Handles flashcards being added to current_user or to student by using a hidden i
 Serves `audiobook/audiobooks.html`, allowing the user to upload an audio file and a matching text transcript.
 
 ### `POST /translate`
-Receives JSON `{"text": "<selected string>"}` and currently returns `{"translation": "api call"}`.  
-Later this will integrate with Google Translate to return a real translation.
+Receives JSON `{"text": "<selected string>"}` 
+
 
 
 ## Calendar
@@ -116,3 +120,16 @@ Later this will integrate with Google Translate to return a real translation.
 - Loads Google service‑account credentials (expects `GOOGLE_APPLICATION_CREDENTIALS` in the environment).
 - Combines the teacher’s `CalendarSettings` with Google Calendar **free/busy** data.
 - Generates half‑hour slots within the configured working window, skipping busy periods, and returns a dictionary keyed by date.  
+
+### `translate.translate_text(text, target_language="pt")`
+ Receives a text string when it's called from audiobook/translate, sends it to the Google Translate API and returns its Portuguese translation.
+
+Notes:
+- Uses the Google Cloud Translate v2 API.
+- Authenticated via service account loaded from GOOGLE_APPLICATION_CREDENTIALS in .env.
+- Default target language is pt (Portuguese).
+- Input is safely parsed and sanitized via Google’s API; no user input is executed.
+
+
+
+

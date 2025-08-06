@@ -31,7 +31,7 @@ A modular Flask-based language learning app designed to help students build voca
     - ✅ Leaderboard table with ranking and top three ever.
     - ✅ Student level (A1 to C1), for later implementation of audiobooks and activities. 
 - ✅ Google Calendar integration (for teacher availability)
-- 🛠 Google Translate integration
+- ✅ Google Translate integration
 - 🛠 Google Login integration  
 
 
@@ -197,3 +197,15 @@ The feature relies on the following packages (already listed in `requirements.tx
 - `google-auth`
 - `google-auth-oauthlib`
 - `python-dateutil`
+
+
+
+## Google Translate API
+
+This project integrates with the [Google Cloud Translate API](https://cloud.google.com/translate) to provide English-to-Portuguese translation.
+
+- The prerequisites for this API are similar to Google Calendar. 
+
+- The logic is implemented in [`services/translate.py`](./app/services/translate.py).
+
+See [`docs/api.md`](./docs/api.md) for request/response details on the `/audiobook/translate` endpoint.
