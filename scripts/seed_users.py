@@ -18,7 +18,6 @@ users = [
         id="9990",
         name="admin",
         email="admin@example.com",
-        google_access_token="fake-admin-token",
         role="@dmin!",
         join_date=today,
         active=True
@@ -33,7 +32,6 @@ for i in range(5):
             name=f"teacher{i}",
             user_name=f"u_name_teacher{i}",
             email=f"vitornorace@gmail.com",
-            google_access_token=f"fake-token-teacher{i}",
             role="teacher",
             join_date=today,
             active=True,
@@ -58,7 +56,6 @@ for i, name in enumerate(dune_names):
             id=f"800{i}",
             name=name,
             email=f"{name.lower()}@example.com",
-            google_access_token=f"fake-token-{name.lower()}",
             role="student",
             join_date=today,
             active=True,

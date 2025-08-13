@@ -29,7 +29,7 @@ def create_app():
     
 
     # Register blueprints
-    from .auth.routes import bp as auth_bp
+    from .auth.routes import bp as auth_bp, google_bp
     from .dashboard.routes import bp as dashboard_bp
     from .flashcard.routes import bp as flashcard_bp
     from .home.routes import bp as home_bp
@@ -47,5 +47,6 @@ def create_app():
     app.register_blueprint(audiobook_bp)
     app.register_blueprint(progress_bp)
     app.register_blueprint(calendar_bp)
+    app.register_blueprint(google_bp, url_prefix="/login")
    
     return app  

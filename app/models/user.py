@@ -10,7 +10,6 @@ class User(Base, UserMixin):
     id = Column(String(50), primary_key=True)
     name = Column(String(15), nullable=False)
     user_name = Column(String(20), nullable=True)
-    google_access_token = Column(String, nullable=False)
     email = Column(String(254), nullable=False, server_default='none')
     phone = Column(String(15), nullable=True)
     profilepic = Column(String(300), nullable=False, server_default='none')

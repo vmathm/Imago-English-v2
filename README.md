@@ -32,7 +32,9 @@ A modular Flask-based language learning app designed to help students build voca
     - ✅ Student level (A1 to C1), for later implementation of audiobooks and activities. 
 - ✅ Google Calendar integration (for teacher availability)
 - ✅ Google Translate integration
-- 🛠 Google Login integration  
+- ✅ Google Login integration 
+    
+    
 
 
 ---
@@ -209,3 +211,52 @@ This project integrates with the [Google Cloud Translate API](https://cloud.goog
 - The logic is implemented in [`services/translate.py`](./app/services/translate.py).
 
 See [`docs/api.md`](./docs/api.md) for request/response details on the `/audiobook/translate` endpoint.
+
+
+## Google Login Integration
+Allows users to authenticate using their Google account via OAuth 2.0, handled by Flask-Dance.
+
+- New users are automatically created on first login.
+
+- Existing users are matched by email and logged in.
+
+- Sessions are managed using Flask-Login.
+
+### 1. Prerequisites:
+- Enable the Google OAuth 2.0 API in a Google Cloud project.
+
+- Create OAuth 2.0 Client Credentials for a Web App.
+
+- Add an Authorized redirect URI in Google Console:
+`http://127.0.0.1:5000/auth/login/google/complete`
+
+Add the following to  .env file:
+
+```
+GOOGLE_OAUTH_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_OAUTH_CLIENT_SECRET=your-client-secret
+OAUTHLIB_INSECURE_TRANSPORT=1  # Only for development
+```
+
+### 2. Logic & Flow:
+- `auth/routes.py` registers the Flask-Dance Google blueprint (google_bp).
+
+- `auth/login/google/complete` receives the final redirect from Google.
+
+- `User info is retrieved` via the Google People API.
+
+- The user is logged in or created, and redirected to `/dashboard`.
+
+### 3. Routes:
+- `GET /auth/login/google` – starts the login flow (optional wrapper)
+
+- `GET /login/google` – internal Flask-Dance route to Google OAuth
+
+- `GET /auth/login/google/complete` – final login logic after Google redirects back
+
+- Refer to docs/api.md for full details.
+
+### 4. Dependencies
+- flask-dance[google]
+
+- flask-login

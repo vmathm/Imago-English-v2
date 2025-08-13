@@ -2,7 +2,6 @@
 
 ## Auth
 
-
 ### `GET /auth/test`
 - Returns: `"Auth route is working!"`
 - Purpose: Test that the auth blueprint is registered and working properly
@@ -23,6 +22,22 @@ More routes will be added as blueprints are developed.
 - Returns `403` if disabled or not in debug mode
 - Returns `404` if the user does not exist
 
+### `GET /auth/login/google`
+- Starts the OAuth login process via Google.
+- Redirects to Google’s OAuth 2.0 authorization screen.
+
+### `GET /auth/login/google/complete`
+- Callback endpoint after Google authorization completes.
+- Fetches user profile info from Google
+- Logs in the user if already registered
+- Creates a new user if email is not found in the database
+
+#### Response: 
+- redirects to `/dashboard` if successful
+- Returns `403` if the user cancels login or token is invalid.
+
+### `GET /auth/logout`
+- Logs out a user and redirects to `/`.
 
 
 ## Admin

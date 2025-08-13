@@ -3,32 +3,36 @@
 {% block title %}Dashboard - Imago English{% endblock %}
 
 {% block main %}
-  <div class="container mt-5">
-    <h1 class="mb-4">Welcome, {{ current_user.name }} | {{current_user.id}}</h1>
-    <p class="lead">Your role: <strong>{{ current_user.role }}</strong></p>
 
-    {% if current_user.role == 'student' %}
+
+    <div class="container mt-5">
+    {% if current_user.is_authenticated %}
       
-      {% include "partials/add-card-form.html" %}
+        <h1 class="mb-4">Welcome, {{ current_user.name }} | {{current_user.id}}</h1>
+        <p class="lead">Your role: <strong>{{ current_user.role }}</strong></p>
+        {% if current_user.role == 'student' %}
+        
+          {% include "partials/add-card-form.html" %}
 
-    {% elif current_user.role == 'teacher' %}
+        {% elif current_user.role == 'teacher' %}
 
-      {% include "partials/teacher_dashboard.html" %}
+          {% include "partials/teacher_dashboard.html" %}
 
-    {% elif current_user.role == '@dmin!' %}
+        {% elif current_user.role == '@dmin!' %}
 
-      {% include "partials/admin_dashboard.html" %}
+          {% include "partials/admin_dashboard.html" %}
 
+        {% endif %}
+
+            <hr>
     {% endif %}
 
-  
-    <hr>
+      <p>By logging in you will soon be able to:</p>
+      <ul class="list-group">
+        <li class="list-group-item">📝 Create and manage flashcards</li>
+        <li class="list-group-item">🎧 Practice with audio</li>
+        <li class="list-group-item">📈 Track your study streak</li>
+      </ul>
+      </div>
 
-    <p>This is your dashboard. Soon you’ll be able to:</p>
-    <ul class="list-group">
-      <li class="list-group-item">📝 Create and manage flashcards</li>
-      <li class="list-group-item">🎧 Practice with audio</li>
-      <li class="list-group-item">📈 Track your study streak</li>
-    </ul>
-  </div>
 {% endblock %}

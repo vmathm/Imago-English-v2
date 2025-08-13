@@ -1,6 +1,6 @@
 # app/dashboard/routes.py
-from flask import Blueprint, render_template
-from flask_login import login_required, current_user
+from flask import Blueprint, render_template, redirect, url_for, abort
+from flask_login import current_user
 from app.flashcard.form import FlashcardForm
 from app.models import User            
 from app.database import db_session
@@ -64,8 +64,9 @@ def get_admin_data():
 # ──────────────────────────────────────────────
 
 @bp.route('/')
-@login_required
 def index():
+    if not current_user.is_authenticated:
+        return render_template('dashboard.html')
     context = {
         "form": FlashcardForm(),
         "assigned_students": [],
