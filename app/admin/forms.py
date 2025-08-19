@@ -3,25 +3,25 @@ from wtforms import SelectField, SubmitField, HiddenField, StringField
 from wtforms.validators import DataRequired, Optional, Regexp
 
 class AssignStudentForm(FlaskForm):
-    student_id = SelectField("Student", validators=[DataRequired()], coerce=int, choices=[])
-    teacher_id = SelectField("Teacher", validators=[DataRequired()], coerce=int, choices=[])
+    student_id = SelectField("Student", validators=[DataRequired()], coerce=str, choices=[])
+    teacher_id = SelectField("Teacher", validators=[DataRequired()], coerce=str, choices=[])
     submit = SubmitField("Assign")
 
 class UnassignStudentForm(FlaskForm):
-    student_id = SelectField("Student", validators=[DataRequired()], coerce=int, choices=[])
+    student_id = SelectField("Student", validators=[DataRequired()], coerce=str, choices=[])
     submit = SubmitField("Unassign")
 
 class ChangeRoleForm(FlaskForm):
-    user_id = SelectField("User", validators=[DataRequired()], coerce=int, choices=[])
+    user_id = SelectField("User", validators=[DataRequired()], coerce=str, choices=[])
     role = SelectField("Role", choices=[("student", "student"), ("teacher", "teacher"), ("@dmin!", "@dmin!")], validators=[DataRequired()])
     submit = SubmitField("Change Role")
 
 class DeleteUserForm(FlaskForm):
-    user_id = SelectField("User", validators=[DataRequired()], coerce=int, choices=[])
+    user_id = SelectField("User", validators=[DataRequired()], coerce=str, choices=[])
     submit = SubmitField("Delete")
 
 class ToggleActiveStatusForm(FlaskForm):
-    user_id = SelectField("User", validators=[DataRequired()], coerce=int, choices=[])
+    user_id = SelectField("User", validators=[DataRequired()], coerce=str, choices=[])
     submit = SubmitField("Toggle Status")
 
 class ChangeStudentLevelForm(FlaskForm):

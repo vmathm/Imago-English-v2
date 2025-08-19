@@ -72,31 +72,64 @@ Handles asynchronous submission of the "Add Flashcard" form.
 - Shows the returned message inside `#flash-message-container`
 - Reset form
 
-### Edit/Delete Flashcard Script
-Provides asynchronous editing and deleting of flashcards.
+### Edit/Delete/Review Flashcard Script
+
+Provides asynchronous editing, deleting, and teacher review of flashcards without page reload.
 
 - File: `app/static/js/edit-delete-card.js`
-- Loaded from `layout.html`
-- Listens for `submit` events on elements with the `.flashcard-form` class
-- Adds the clicked button’s `name` and `value` to the `FormData` so Flask receives the `action` field
-- Sends the request to `form.getAttribute('action')` via `fetch`
-- Shows the returned message inside `#flash-message-container`
-- If deletion succeeds, removes the corresponding card element from the page
+- Loaded from: `layout.html`
+- Targets: each `<form class="flashcard-form" …>` rendered per flashcard
+
+#### What it does
+
+- Attaches listeners after `DOMContentLoaded`, ensuring forms exist.
+- Adds a document-level **click delegation** fallback for `button[name="action"]` (Defensive coding for unlikely old browser usage or future features that allows attaching flashcards to the DOM via js)
+- Uses a `data-busy` flag to block duplicate form submissions.
+- Ensures the clicked button’s `name`/`value` are included in `FormData` so Flask receives the `action` field
+- Sends `POST` to `form.getAttribute('action')` via `fetch`
+- Expects JSON `{ status: "success"|"error", message: "...", ... }`
+- Shows the server message inside `#flash-message-container` 
+- Applies per-action UI updates:
+  - `action="edit"` → on success, if `reviewed_by_tc: true` is returned (i.e. the teacher edited it) , flips the on-card status to *✅Teacher reviewed*, otherwise removes a previously *✅Teacher reviewed* status.
+  - `action="delete"` → removes the card container from the DOM
+  - `action="mark_reviewed_tc"` → flips the on-card status to *✅Teacher reviewed* and removes clicked button  
+
+#### Required HTML hooks
+
+- Each flashcard form:
+  - Has class `flashcard-form` and an `action` pointing to the edit endpoint
+  - Includes CSRF via `{{ forms[card.id].hidden_tag() }}`
+  - Contains buttons with `name="action"` and values: `edit`, `delete`, `mark_reviewed_tc`
+
+- Each card container includes a status element:
+  - `Teacher reviewed: <span class="tc-status">{{ '✅Teacher reviewed' if card.reviewed_by_tc }}</span>`
+- Global flash host:
+  - `<div id="flash-message-container"></div>` 
+
+
+#### Backend contract (expected responses)
+
+* Success (any action): `{"status":"success","message":"...", "card_id": <int>, "reviewed_by_tc": <bool optional>}`
+* Error (validation/authorization/not found): `{"status":"error","message":"..."}` with appropriate HTTP status code
+
+
+
+
 
 ### Search & Highlight Flashcard Script
 Enables real-time search filtering, highlighting, and bringing forward matched cards.
 
-- File: app/static/js/flashcard-search.js
+- File: `app/static/js/flashcard-search.js`
 
-- Loaded from: manage_student_cards.html and edit_cards.html
+- Loaded from: `manage_student_cards.html` and `edit_cards.html`
 
 - Selects:
 
-  #flashcard-search-input (the main search text input)
+  `#flashcard-search-input` (the main search text input)
 
-  #search-question and #search-answer (checkboxes to include question and/or answer in search)
+  `#search-question` and `#search-answer` (checkboxes to include question and/or answer in search)
 
-  .flashcard (cards to be searched and reordered)
+  `.flashcard` (cards to be searched and reordered)
 
 - Listens for input and change events to trigger filtering
 
@@ -106,7 +139,7 @@ Enables real-time search filtering, highlighting, and bringing forward matched c
 
 - Reorders flashcards so matches appear first, by appending them back into the container
 
-- Displays match count in the #match-count element below the search bar
+- Displays match count in the `#match-count` element below the search bar
 
 ### Study Mode Script
 
@@ -179,4 +212,16 @@ The `/ranking` route displays three leaderboards using DataTables:
 `ranking.html` loads the DataTables CSS/JS and uses a helper
 function to initialize each table. The first column is auto-numbered whenever the
 table is sorted or searched. All tables disable searching, paging and info to the benefit of a cleaner page. 
+
+
+
+
+
+
+
+
+
+
+
+
 

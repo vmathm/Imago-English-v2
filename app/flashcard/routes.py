@@ -4,7 +4,7 @@ from app.database import db_session
 from app.flashcard.form import FlashcardForm
 from app.models import Flashcard, User
 from datetime import datetime, timezone, timedelta
-from sqlalchemy import or_
+from sqlalchemy import or_, asc
 import math
 from app.extensions import csrf
 from os import abort
@@ -31,6 +31,7 @@ def addcards():
         print(f"Student ID: {student_id}")
         if student_id:
             student = db_session.query(User).filter_by(id=student_id).first()
+            
             if not student:
                 flash("Student not found.", "danger")
                 return redirect(url_for("dashboard.index"))
@@ -56,14 +57,19 @@ def addcards():
         if existing:
             message = "Flashcard already exists!"
             return jsonify({"status": "error", "message": message})
+        
 
+        unreviewed_limit = True if db_session.query(Flashcard).filter_by(user_id=flashcard_owner_id, reviewed_by_tc=False).count() >= 5 else False
+        if unreviewed_limit:
+            message = "Você não pode ter mais de 5 cartões não revisados."
+            return jsonify({"status": "error", "message": message})
 
         # Create the new flashcard
         new_flashcard = Flashcard(
             question=question,
             answer=answer,
-            user_id=flashcard_owner_id
-            
+            user_id=flashcard_owner_id,
+            reviewed_by_tc= True if current_user.is_teacher() else False
         )
 
         db_session.add(new_flashcard)
@@ -130,7 +136,6 @@ def edit_cards():
 
 
 
-
 @bp.route("/edit_card/<int:card_id>", methods=["POST"])
 @login_required
 def edit_card(card_id):
@@ -149,15 +154,41 @@ def edit_card(card_id):
         return jsonify({"status": "error", "message": "Not authorized."}), 403
 
     form = FlashcardForm()
+    action = request.form.get("action")
+
+    # Allow mark_reviewed_tc without validating question/answer fields
+    if action == "mark_reviewed_tc":
+        if not (is_teacher_of_student or current_user.is_admin()):
+            return jsonify({"status": "error", "message": "Not authorized."}), 403
+        # CSRF already included via hidden_tag(); if you want extra safety, validate the token:
+        # form.csrf_token.validate(form)
+        flashcard.reviewed_by_tc = True
+        db_session.commit()
+        return jsonify({
+            "status": "success",
+            "message": "Marked as reviewed by teacher.",
+            "card_id": flashcard.id,
+            "reviewed_by_tc": True
+        })
 
     if form.validate_on_submit():
-        action = request.form.get("action")
-
         if action == "edit":
             flashcard.question = form.question.data
-            flashcard.answer = form.answer.data
+            flashcard.answer  = form.answer.data
+
+           
+            if is_teacher_of_student or current_user.is_admin():
+                flashcard.reviewed_by_tc = True
+            else:
+                flashcard.reviewed_by_tc = False
+
             db_session.commit()
-            return jsonify({"status": "success", "message": "Flashcard updated!"})
+            return jsonify({
+                "status": "success",
+                "message": "Flashcard updated!",
+                "card_id": flashcard.id,
+                "reviewed_by_tc": flashcard.reviewed_by_tc
+            })
 
         elif action == "delete":
             db_session.delete(flashcard)
@@ -288,7 +319,7 @@ def review_flashcard():
     return jsonify({"status": "success"})
 
 
-@bp.route("/manage/<int:student_id>", methods=["GET"])
+@bp.route("/manage/<student_id>", methods=["GET"])
 @login_required
 def manage_student(student_id):
     if not current_user.is_teacher() and not current_user.is_admin():
@@ -302,7 +333,7 @@ def manage_student(student_id):
 
     form = FlashcardForm()
     form.student_id.data = student.id
-    flashcards = db_session.query(Flashcard).filter_by(user_id=student_id).all()
+    flashcards = db_session.query(Flashcard).filter_by(user_id=student_id).order_by(asc(Flashcard.reviewed_by_tc)).all()
     forms = {c.id: FlashcardForm(obj=c) for c in flashcards}
 
     return render_template(

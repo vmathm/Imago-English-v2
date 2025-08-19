@@ -5,6 +5,11 @@ from app.flashcard.form import FlashcardForm
 from app.models import User            
 from app.database import db_session
 from app.admin.forms import AssignStudentForm, UnassignStudentForm, ChangeRoleForm, DeleteUserForm, ToggleActiveStatusForm, ChangeStudentLevelForm
+from app.models.flashcard import Flashcard 
+from sqlalchemy import func
+
+
+
 bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 
 
@@ -12,14 +17,24 @@ bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 # Modular helper functions
 
 def get_teacher_data():
-    
-    all_users = db_session.query(User).all()
     change_student_level_form = ChangeStudentLevelForm()
+
+    assigned = list(current_user.assigned_students)
+    student_ids = [s.id for s in assigned]
+
     
+    unreviewed = (
+        db_session.query(Flashcard.user_id, func.count(Flashcard.id))
+        .filter(Flashcard.reviewed_by_tc.is_(False))
+        .group_by(Flashcard.user_id)
+        .all()
+    )
+    unreviewed_counts = {user_id: cnt for user_id, cnt in unreviewed}
+
     return {
-        
-        "assigned_students": current_user.assigned_students,
-        "change_student_level_form": change_student_level_form
+        "assigned_students": assigned,
+        "change_student_level_form": change_student_level_form,
+        "unreviewed_counts": unreviewed_counts,
     }
 
 def get_admin_data():

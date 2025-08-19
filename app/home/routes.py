@@ -1,16 +1,13 @@
-from flask import Blueprint, redirect, url_for
+from flask import Blueprint, redirect, url_for, current_app
 
 bp = Blueprint("home", __name__)
 
 
-'''
+
 @bp.route("/", defaults={"user_id": "9001"})
 @bp.route("/<user_id>")
 def index(user_id):
-    return redirect(url_for("auth.dev_login", user_id=user_id))
-'''
-
-
-@bp.route("/")
-def index():
-    return redirect(url_for("dashboard.index"))
+    if current_app.config["ALLOW_DEV_LOGIN"]:
+        return redirect(url_for("auth.dev_login", user_id=user_id))
+    else:
+        return redirect(url_for("dashboard.index"))

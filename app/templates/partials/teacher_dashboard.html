@@ -9,23 +9,29 @@
 
 
 {% if assigned_students %}
-    <div class="section-box">
-        <h3 class="mt-4">Assigned Students</h3>
-        <ul class="list-group mb-4">
-          {% for student in assigned_students %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              <a href="{{ url_for('flashcard.manage_student', student_id=student.id) }}">
-                {{ student.name }} ({{ student.email }} | Level: {{ student.level }})
-              </a>
-              <form action="{{ url_for('admin.update_student_level') }}" method="post" class="d-inline-block ms-2">
-                
-                  {{ change_student_level_form.csrf_token }}
-                  {{ change_student_level_form.student_id(value=student.id) }}
-                  {{ change_student_level_form.level(class="form-select-sm me-2") }}
-                  {{ change_student_level_form.submit(class="btn btn-secondary btn-sm") }}             
-              </form>
-            </li>
-          {% endfor %}
-        </ul>
-    </div>
+  <div class="section-box">
+    <h3 class="mt-4">Assigned Students</h3>
+    <ul class="list-group mb-4">
+      {% for student in assigned_students %}
+        {% set unrev = unreviewed_counts.get(student.id) %}
+        <li class="list-group-item d-flex justify-content-between align-items-center {% if unrev %}list-group-item-warning{% endif %}">
+          <div class="d-flex align-items-center">
+            <a href="{{ url_for('flashcard.manage_student', student_id=student.id) }}">
+              {{ student.name }} ({{ student.email }} | {{ student.role }} {{ student.id }} | Level: {{ student.level }})
+            </a>
+            {% if unrev %}
+              <span class="badge bg-danger ms-2">{{ unrev }} unreviewed</span>
+            {% endif %}
+          </div>
+
+          <form action="{{ url_for('admin.update_student_level') }}" method="post" class="d-inline-block ms-2">
+            {{ change_student_level_form.csrf_token }}
+            {{ change_student_level_form.student_id(value=student.id) }}
+            {{ change_student_level_form.level(class="form-select-sm me-2") }}
+            {{ change_student_level_form.submit(class="btn btn-secondary btn-sm") }}
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
 {% endif %}

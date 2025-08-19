@@ -20,6 +20,12 @@
             {{ forms[card.id].answer(class="form-control auto-expand") }}
         </div>
 
+        <div class="mb-3"> 
+        <span class="tc-status">
+              {% if card.reviewed_by_tc %}✅Reviewed by teacher{% endif %}
+        </span>
+        </div>
+
         <button type="submit" name="action" value="edit" class="btn btn-primary">Editar</button>
         <button type="submit" name="action" value="delete" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja excluir este flashcard?');">Excluir</button>
     </form>

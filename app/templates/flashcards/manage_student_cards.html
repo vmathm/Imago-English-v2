@@ -14,7 +14,7 @@
   {% include "partials/search_bar.html" %}
    
 <div>
-  {% for card in flashcards %}
+{% for card in flashcards %}
   <div id="card-{{ card.id }}" class="section-box flashcard">
       <form class="flashcard-form" data-card-id="{{ card.id }}" method="POST" action="{{ url_for('flashcard.edit_card', card_id=card.id) }}">
           {{ forms[card.id].hidden_tag() }}
@@ -26,23 +26,37 @@
               {{ forms[card.id].answer.label }}
               {{ forms[card.id].answer(class="form-control auto-expand") }}
           </div>
-            <div class="mb-3">
-                Reptitions: {{ card.level }} <br>
-                {% if card.last_review %}
-                  Last: {{ card.last_review.strftime('%Y-%m-%d %H:%M') }} UTC<br>
-                {% else %}
-                  Last: never<br>
-                {% endif %}
-                {% if card.next_review %}
+          <div class="mb-3">
+              Repetitions: {{ card.level }} <br>
+              {% if card.last_review %}
+                Last: {{ card.last_review.strftime('%Y-%m-%d %H:%M') }} UTC<br>
+              {% else %}
+                Last: never<br>
+              {% endif %}
+              {% if card.next_review %}
                 Next: {{ card.next_review.strftime('%Y-%m-%d %H:%M') }} UTC
-                {% else %}
-                Not reviewed yet
-                {% endif %}
-            </div>
+              {% else %}
+                Next: Never
+              {% endif %}
+              <br>
+              {% if card.reviewed_by_tc == False %}
+                  <button name="action" value="mark_reviewed_tc" class="btn btn-success">
+                    Review
+                  </button>
+              {% endif %}
+            
+              <span class="tc-status">
+              {% if card.reviewed_by_tc %}✅ Teacher reviewed{% endif %}
+              </span>
+          </div>
+
+          
           <button name="action" value="edit" class="btn btn-primary">Edit</button>
           <button name="action" value="delete" class="btn btn-danger" onclick="return confirm('Delete this flashcard?');">Delete</button>
+        
       </form>
   </div>
-  {% endfor %}
+{% endfor %}
+
 {% endblock %}
 </div>
