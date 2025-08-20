@@ -633,3 +633,33 @@ html {
   box-sizing: border-box;
   display: block;
 }
+
+
+/* speaker button at study mode */
+.speak-btn {
+  background: none;
+  border: none;
+  padding: 0 4px;
+  font-size: 1.2rem; 
+  cursor: pointer;
+  color: inherit; 
+}
+
+.speak-btn:focus {
+  outline: none; 
+}
+
+/* speaking state: gentle scale + glow */
+.speak-btn.speaking {
+  animation: tts-pulse 900ms ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform, text-shadow;
+}
+
+@keyframes tts-pulse {
+  0%   { transform: scale(1);   text-shadow: none; }
+  35%  { transform: scale(1.14); text-shadow: 0 0 6px rgba(255,255,255,.35); }
+  70%  { transform: scale(1.08); text-shadow: 0 0 3px rgba(255,255,255,.25); }
+  100% { transform: scale(1);   text-shadow: none; }
+}
+

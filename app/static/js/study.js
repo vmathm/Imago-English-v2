@@ -11,6 +11,51 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+
+
+let selectedVoice;
+
+// Initialize voices
+function initializeVoices() {
+  const voices = window.speechSynthesis.getVoices();
+  selectedVoice = voices.find(voice => voice.lang.startsWith('en')) || null;
+}
+
+window.speechSynthesis.onvoiceschanged = initializeVoices;
+if (window.speechSynthesis.getVoices().length > 0) {
+  initializeVoices();
+}
+
+// Speak helper
+function speakText(text, element) {
+  const speechSynthesis = window.speechSynthesis;
+
+  // Cancel any current speech
+  if (speechSynthesis.speaking || speechSynthesis.pending) {
+    speechSynthesis.cancel();
+  }
+
+  let speechText = new SpeechSynthesisUtterance(text);
+  speechText.lang = 'en-GB';
+  speechText.rate = 0.8;
+  speechText.pitch = 1.1;
+
+  if (selectedVoice) {
+    speechText.voice = selectedVoice;
+  }
+
+  // Add visual feedback
+  if (element) {
+    element.classList.add('speaking');
+    speechText.onend = () => element.classList.remove('speaking');
+  }
+
+  speechSynthesis.speak(speechText);
+}
+
+
+
+
 if (typeof studentId !== 'undefined' && studentId !== null) {
   container.innerHTML = ""; // Clear the container
 
@@ -20,15 +65,17 @@ if (typeof studentId !== 'undefined' && studentId !== null) {
     cardElement.dataset.cardId = card.id;
 
     cardElement.innerHTML = `
-      <p><strong>Q:</strong> ${card.question}</p>
-      <p><strong>A:</strong> ${card.answer}</p>
-      <p><strong>Nível:</strong> ${card.level || "—"}</p>
-      <div>
-        <button class="btn btn-danger rate-btn" data-value="1">1</button>
-        <button class="btn btn-warning rate-btn" data-value="2">2</button>
-        <button class="btn btn-success rate-btn" data-value="3">3</button>
-      </div>
-    `;
+  <p><strong>Q:</strong> ${card.question} 
+     <button class="speak-btn" data-text="${card.question}">🔊</button></p>
+  <p><strong>A:</strong> ${card.answer} 
+     <button class="speak-btn" data-text="${card.answer}">🔊</button></p>
+  <p><strong>Nível:</strong> ${card.level || "—"}</p>
+  <div>
+    <button class="btn btn-danger rate-btn" data-value="1">1</button>
+    <button class="btn btn-warning rate-btn" data-value="2">2</button>
+    <button class="btn btn-success rate-btn" data-value="3">3</button>
+  </div>
+`;
 
     container.appendChild(cardElement);
   });
@@ -66,18 +113,20 @@ if (typeof studentId !== 'undefined' && studentId !== null) {
     setTimeout(() => {
       const card = queue[index];
 
-      container.innerHTML = `
-        <div class="section-box">
-          <p>${card.question}</p>
-          <button id="toggle-answer" class="btn btn-secondary mb-3">Mostrar Resposta</button>
-          <p id="answer" style="display:none;">${card.answer}</p>
-          <div>
-            <button class="btn btn-danger rate-btn" data-value="1">1</button>
-            <button class="btn btn-warning rate-btn" data-value="2">2</button>
-            <button class="btn btn-success rate-btn" data-value="3">3</button>
-          </div>
+    container.innerHTML = `
+      <div class="section-box">
+        <p>${card.question} 
+          <button class="speak-btn" data-text="${card.question}">🔊</button></p>
+        <button id="toggle-answer" class="btn btn-secondary mb-3">Mostrar Resposta</button>
+        <p id="answer" style="display:none;">${card.answer}
+          <button class="speak-btn" data-text="${card.answer}">🔊</button></p>
+        <div>
+          <button class="btn btn-danger rate-btn" data-value="1">1</button>
+          <button class="btn btn-warning rate-btn" data-value="2">2</button>
+          <button class="btn btn-success rate-btn" data-value="3">3</button>
         </div>
-      `;
+      </div>
+    `;
 
       container.classList.remove("fade-out");
       void container.offsetWidth;
@@ -104,7 +153,6 @@ if (typeof studentId !== 'undefined' && studentId !== null) {
           if (rating === "1") {
             queue.push(card);
           }
-
           index++;
           showNext();
         };
@@ -114,4 +162,11 @@ if (typeof studentId !== 'undefined' && studentId !== null) {
 
   showNext();
 }
+
+  document.addEventListener("click", (e) => {
+    if (e.target.classList.contains("speak-btn")) {
+      const text = e.target.dataset.text;
+      speakText(text, e.target);
+    }
+  });
 });
