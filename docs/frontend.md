@@ -196,11 +196,20 @@ Used to auto-resize textarea inputs in flashcard forms based on their content.
 
 * Disables manual resize (resize: none) and hides scrollbars
 
-### Audiobook Script
+### Audiobook Script 
 * File: `app/static/js/audiobook.js`
-* Loaded by: `audiobook/audiobooks.html`
-* Handles text selection on the audiobook page, calls `/translate` for a dummy translation (`{"translation": "api call"}`), and prompts the user to create a flashcard.
 
+* Loaded by: `audiobook/audiobooks.html`
+
+* Handles text selection on the audiobook page, calls the `/audiobook/translate` endpoint (which uses `services/translate.py → translate_text(text, target_language="pt")`), and prompts the user to create a flashcard.
+
+* Opens a modal with two editable fields (`Question` and `Answer`).
+
+* Provides a **Flip** button to swap the contents of question and answer.
+
+* On confirm, posts the values to `/flashcard/addcards`.
+
+* Shows success/error messages in `#flash-message-container`.
 
 
 ## Spaced Repitition Algorithm

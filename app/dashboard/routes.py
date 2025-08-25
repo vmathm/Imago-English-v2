@@ -27,7 +27,7 @@ def get_teacher_data():
         db_session.query(Flashcard.user_id, func.count(Flashcard.id))
         .filter(Flashcard.reviewed_by_tc.is_(False))
         .group_by(Flashcard.user_id)
-        .all()
+        .all()  
     )
     unreviewed_counts = {user_id: cnt for user_id, cnt in unreviewed}
 

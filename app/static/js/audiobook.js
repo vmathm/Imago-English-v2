@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   textContent.addEventListener("mouseup", handleSelection);
-  textContent.addEventListener("touchend", handleSelection);R
+  textContent.addEventListener("touchend", handleSelection); // ← removed stray "R"
 
   async function handleSelection() {
     const selection = window.getSelection().toString().trim();
@@ -37,8 +37,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
     const response = await fetch("/audiobook/translate", {
       method: "POST",
-      headers: { "Content-Type": "application/json",
-        "X-CSRFToken": csrfToken 
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken
       },
       body: JSON.stringify({ text: selection })
     });
@@ -49,19 +50,46 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function showModal(original, translation) {
     const modal = document.getElementById("custom-modal");
-    const content = document.getElementById("modal-content");
+    const qEl = document.getElementById("modal-question");
+    const aEl = document.getElementById("modal-answer");
     const yesBtn = document.getElementById("yesBtn");
     const noBtn = document.getElementById("noBtn");
+    const flipBtn = document.getElementById("flipBtn");
 
-    content.textContent = `English → ${original}\n\nPortuguese → ${translation}\n\nAdicionar flashcard?`;
+    // Pre-fill fields
+    qEl.value = `${original}`;
+    aEl.value = `${translation}`;
+
     modal.style.display = "block";
+    // Focus question for quick edits
+    setTimeout(() => qEl.focus(), 0);
+
+    // Wire up actions (overwrites previous handlers safely)
+    flipBtn.onclick = () => {
+      const q = qEl.value;
+      qEl.value = aEl.value;
+      aEl.value = q;
+      qEl.focus();
+    };
 
     yesBtn.onclick = () => {
-      addFlashcard(original, translation);
+      const question = qEl.value.trim();
+      const answer = aEl.value.trim();
+      if (!question || !answer) {
+        showFlash("Both question and answer are required.", "error");
+        return;
+      }
+      addFlashcard(question, answer);
       modal.style.display = "none";
     };
+
     noBtn.onclick = () => {
       modal.style.display = "none";
+    };
+
+    // Optional: close on outside click
+    window.onclick = (evt) => {
+      if (evt.target === modal) modal.style.display = "none";
     };
   }
 
@@ -69,7 +97,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const formData = new FormData();
     formData.append("question", question);
     formData.append("answer", answer);
-
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
     const response = await fetch("/flashcard/addcards", {
@@ -79,9 +106,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const result = await response.json();
+    showFlash(result.message, result.status === "success" ? "success" : "error");
+  }
+
+  function showFlash(msg, kind = "success") {
     const flashDiv = document.createElement("div");
-    flashDiv.className = `flashcard-${result.status}-message`;
-    flashDiv.textContent = result.message;
+    flashDiv.className = `flashcard-${kind}-message`;
+    flashDiv.textContent = msg;
     document.getElementById("flash-message-container").appendChild(flashDiv);
     setTimeout(() => flashDiv.remove(), 3000);
   }
