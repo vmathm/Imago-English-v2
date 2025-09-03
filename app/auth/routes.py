@@ -23,7 +23,7 @@ google_bp = make_google_blueprint(
 )
 
 
-@bp.route('/dev-login/<user_id>')
+@bp.route('/dev_login/<user_id>')
 def dev_login(user_id):
     print("Attempting dev login for user:", user_id)
     # Secure: Only allowed in debug mode AND if explicitly enabled

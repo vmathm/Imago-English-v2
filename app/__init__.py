@@ -15,7 +15,6 @@ def create_app():
     load_dotenv()
 
     app = Flask(__name__)
-    # Dynamically load config based on FLASK_CONFIG env variable
     app.config.from_object("config.Config")
     csrf.init_app(app)
     login_manager.init_app(app)
