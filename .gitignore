@@ -196,12 +196,10 @@ cython_debug/
 .cursorindexingignore
 
 # Ignore everything in static
-app/static/*        
-# Un-ignore styles.css
-!app/static/styles.css  
-# Un-ignore the js folder
-!app/static/js/         
-# Un-ignore theme-toggle.js
-!app/static/js/theme-toggle.js
+app/static/*
+
+!app/static/js/
+!app/static/**/*.js
+!app/static/**/*.css
 
 secrets/

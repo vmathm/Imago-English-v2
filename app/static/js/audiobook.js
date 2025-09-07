@@ -87,7 +87,7 @@ document.addEventListener("DOMContentLoaded", () => {
       modal.style.display = "none";
     };
 
-    // Optional: close on outside click
+    // close on outside click
     window.onclick = (evt) => {
       if (evt.target === modal) modal.style.display = "none";
     };
