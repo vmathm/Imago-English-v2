@@ -33,7 +33,7 @@ def calendar_settings():
     settings = db_session.query(CalendarSettings).filter_by(teacher_id=current_user.id).first()
     print(f"Calendar settings: {settings}")
 
-    # If no settings exist yet, create one in memory (not committed yet)
+    
     if not settings:
         settings = CalendarSettings(
             teacher_id=current_user.id,
@@ -52,7 +52,7 @@ def calendar_settings():
         print("✅ Form submitted successfully")
         form.populate_obj(settings)
 
-        db_session.add(settings)  # Works whether it's new or existing
+        db_session.add(settings)  
         db_session.commit()
 
         flash("Calendar settings saved!", "success")
