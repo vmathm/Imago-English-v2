@@ -154,6 +154,7 @@ card list available to JavaScript at `app/static/js/study.js`.
 * Toggles the answer when the user clicks **“Mostrar Resposta”**.
 
 * Buttons **1, 2, and 3** send the chosen rating to `/flashcard/review_flashcard`.
+Note: The review logic follows the customized spaced repetition algorithm (see `docs/architecture.md`).
 
 * A rating of **1** moves the card to the end of the queue; otherwise it is removed.
 
@@ -212,12 +213,7 @@ Used to auto-resize textarea inputs in flashcard forms based on their content.
 * Shows success/error messages in `#flash-message-container`.
 
 
-## Spaced Repitition Algorithm
-This system blends spaced repetition with gamified rewards. While based on SuperMemo(SM*2), it has been customized to support:
 
-* Real-time retry logic: cards rated 1 go back to the end of the queue. 
-* Role-sensitive scoring: Teachers can review flashcards with students during class and rating will award the points to the student. 
-* Simplified ease/interval management: Intervals are days and not hours, as the goal is a daily review of available cards.
 
 ## Ranking Page
 
@@ -232,14 +228,18 @@ function to initialize each table. The first column is auto-numbered whenever th
 table is sorted or searched. All tables disable searching, paging and info to the benefit of a cleaner page. 
 
 
+## Calendar
 
+  The calendar section uses a custom Jinja filter for **dateformat** `@bp.app_template_filter('dateformat')`
+  *File:* `app/calendar/routes.py`  
+  *Usage:* `{{ start|dateformat }} - {{ end|dateformat }}`
+  Formats Python `datetime` objects inside calendar templates.  
+  Default format is `'%H:%M'` (hour:minute).  
 
+## CSRF Protection
+All Flask-WTF forms include:
+ {{ form.hidden_tag() }} - ensures CSRF tokens are submitted properly in forms.
 
-
-
-
-
-
-
-
-
+JS (AJAX) requests:  
+<meta name="csrf-token" content="{{ csrf_token() }}">  
+This exposes the CSRF token to JavaScript so it can be included in the `X-CSRFToken` header when making `fetch` (AJAX) calls.

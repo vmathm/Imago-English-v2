@@ -55,7 +55,7 @@ This project uses the Flask **app factory pattern** and **blueprints** to keep t
 ## Blueprints
 
 Each major feature has its own blueprint:
-- `admin` for student assignment and role management
+- `admin` for users management
 - `audiobook` for text/audio display + text selection for translation
 - `auth` for login/signup routes
 - `calendar` for teacher's to share their availability
@@ -209,4 +209,33 @@ def to_dict(self):
 
 
 
+## Spaced Repitition Algorithm
+The flashcard review system blends spaced repetition with gamified rewards. While based on SuperMemo(SM*2), it has been customized to support:
 
+* Real-time retry logic: cards rated 1 go back to the end of the queue. 
+* Role-sensitive scoring: Teachers can review flashcards with students during class and rating will award the points to the student. 
+* Simplified ease/interval management: Intervals are days and not hours, as the goal is a daily review of available cards.
+
+## User Roles & Permissions
+
+The system supports three main roles:
+
+- **Student**
+  - Can create, edit and study their own flashcards. 
+  - Has a personal ranking score. 
+  - Can use the audiobook section.
+
+- **Teacher**
+  - Inherits student permissions. 
+  - Can create, edit, and review their students flashcards and level.
+  - Manages lesson availability via `/calendar/settings`.
+  
+
+- **Admin**
+  - Has access to `admin/` routes
+  - Manages all users settings: assigning roles, assigning students to teachers, deleting users.
+ 
+
+### Authentication
+- Development mode: seeded test users (created via `scripts/seed_users.py`). 
+- Production: only Google OAuth login is enabled

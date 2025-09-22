@@ -39,13 +39,14 @@ A modular Flask-based language learning app designed to help students build voca
 
 ---
 
-
+ 
 
 
 
 ## How to run the app
 
-### 1. Clone and set up the environment
+### Option 1 (Default)
+#### 1. Clone and set up the environment:
 ```bash
 git clone https://github.com/vmathm/imago-english-v2.git
 cd imago-english-v2
@@ -54,8 +55,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Create a `.env` file in the project root:
-
+#### 2. Create a `.env` file in the project root:
 ```env
 
 SECRET_KEY=your-secret-key
@@ -65,17 +65,35 @@ Optional:
 add DATABASE_URL=sqlite:///app.db= your_database.db to .env
 
 
-#### Seed users
+##### Seed users
 Run scripts/seed_users.py to create a user for each role for testing purposes. Production only allows users to login via Google API. 
 
 
-### 3. Run the app
+#### 3. Run the app
 ```bash
 export FLASK_APP=main.py
 flask run
 ``` 
 
 
+### Option 2 - Run with Docker (no need to setup virtual environment) 
+
+#### 1. Clone the project:
+```bash
+git clone https://github.com/vmathm/imago-english-v2.git
+```
+
+#### 2. Build the image:
+`docker compose up --build`
+
+This will: 
+* Build the image
+* Start the Flask app on http://localhost:5053
+* Mount code (.:/app) for live reloads
+* Persist SQLite database inside a named volume (db_data)
+
+#### 3. Seed users
+Run scripts/seed_users.py to create a user for each role for testing purposes. Production only allows users to login via Google API. 
 
 
 ## Project Start Date
@@ -132,14 +150,13 @@ Now in any route:
     🔹 protect views with `@login_required`
 
 
-## FlashcardForm: Flask-WTF Form Structure
-This app uses Flask-WTF for secure and structured form handling.
+## Form Handling
+This app uses **Flask-WTF** for secure and structured form handling.
 
-FlashcardForm is used to let students and teachers create flashcards.
-
-Location: app/flashcard/form.py
-
+* Blueprints that use Flask-WTF (forms are at given_blueprint/form.py): admin, calendar and flashcard.
+ 
 Inherits from: FlaskForm
+
 This enables:
 
 - automatic CSRF protection
@@ -148,17 +165,7 @@ This enables:
 
 - integration with Jinja templates
 
-
-Template Usage Example:
-<form method="post" action="{{ url_for('flashcards.add_card') }}">
-    {{ form.hidden_tag() }}
-    {{ form.front.label }} {{ form.front() }}
-    {{ form.back.label }} {{ form.back() }}
-    {{ form.submit() }}
-</form>
-
-
-form.hidden_tag() ensures CSRF tokens are submitted properly.
+More on **CSFR Protection** at docs/frontend.md
 
 ## Folder Structure
 Refer to docs/architecture.md ## Project Structure
