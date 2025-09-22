@@ -16,7 +16,7 @@
         {# Admin view #}
         <ul class="navbar-nav ms-auto mt-2">
             
-            <li class="nav-item"><a class="nav-link" href="/load">Audiobooks</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.audiobooks') }}">Audiobooks</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.ranking') }}">Ranking</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Sair</a></li>
