@@ -100,8 +100,6 @@ Run scripts/seed_users.py to create a user for each role for testing purposes. P
 
 June 12, 2025
 
-See docs/ for architecture, API design, and roadmap.
-
 
 
 ## Flask-Login Authentication & Session Flow

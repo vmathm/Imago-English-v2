@@ -239,3 +239,13 @@ The system supports three main roles:
 ### Authentication
 - Development mode: seeded test users (created via `scripts/seed_users.py`). 
 - Production: only Google OAuth login is enabled
+
+
+### Dashboard Context Flow
+
+The dashboard route (`dashboard/index`) uses two helper functions to assemble role-specific context:
+
+- `get_teacher_data()` → returns assigned students, level-change form, and counts of unreviewed flashcards per student (users with unreviewed flashcards are highlighted to the teacher).
+- `get_admin_data()` → returns all admin forms and user lists, with WTForms choices pre-populated.
+
+

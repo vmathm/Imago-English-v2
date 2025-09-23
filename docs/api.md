@@ -1,4 +1,4 @@
-# API Endpoints (so far)
+# API Endpoints
 
 ## Auth
 
@@ -69,6 +69,30 @@ More routes will be added as blueprints are developed.
 
 ### `GET /index`
 - Loads `dashboard.html` according to user type, rendering necessary forms and partials. 
+
+### `GET /index`
+- Loads `dashboard.html` according to user type.
+- The route builds a base context and merges role-specific data via two helpers:
+
+| Key                        | Type                     | Provided by         | Purpose                                        |
+|----------------------------|--------------------------|---------------------|------------------------------------------------|
+| form                       | FlashcardForm            | base route          | Quick-add flashcard form                       |
+| assigned_students          | list[User]               | get_teacher_data    | Teacher’s students                             |
+| change_student_level_form  | ChangeStudentLevelForm   | get_teacher_data    | Teacher: change a student’s level              |
+| unreviewed_counts          | dict[int,int]            | get_teacher_data    | `{user_id → unreviewed_flashcards}`            |
+| assign_form                | AssignStudentForm        | get_admin_data      | Admin: assign students to teachers             |
+| unassign_form              | UnassignStudentForm      | get_admin_data      | Admin: unassign students                       |
+| change_role_form           | ChangeRoleForm           | get_admin_data      | Admin: change user roles                       |
+| delete_user_form           | DeleteUserForm           | get_admin_data      | Admin: delete users                            |
+| toggle_active_status_form  | ToggleActiveStatusForm   | get_admin_data      | Admin: activate/deactivate users               |
+| all_users                  | list[User]               | get_admin_data      | Admin overview                                 |
+| teachers                   | list[User]               | get_admin_data      | Admin: teacher options                         |
+| unassigned_students        | list[User]               | get_admin_data      | Admin: students with no teacher                |
+| assigned_students_admin    | list[User]               | get_admin_data      | Admin: students currently assigned             |
+
+**Notes**
+- Helpers are internal; not endpoints themselves.
+- Templates decide what to show based on which keys exist.
 
 
 ## Flashcards
