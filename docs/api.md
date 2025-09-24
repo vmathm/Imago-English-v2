@@ -9,13 +9,13 @@
 More routes will be added as blueprints are developed.
 
 
-### `GET /auth/dev-login/<user_id>`
+### `GET /auth/demo-login/<user_id>`
 - Simulates logging in as an existing user. Useful for testing features without going through the Google OAuth flow.
 - Returns `404` if the user does not exist
 
 #### Requirements:
 - Flask app must be running in **debug mode**  
-- `ALLOW_DEV_LOGIN = True` in .env
+- `ALLOW_SEEDED_USERS = True` in .env
 
 #### Response:
 - Redirects the user to the dashboard (`/dashboard`) after logging them in

@@ -4,10 +4,10 @@ bp = Blueprint("home", __name__)
 
 
 
-@bp.route("/", defaults={"user_id": "9001"})
+@bp.route("/", defaults={"user_id": None})
 @bp.route("/<user_id>")
 def index(user_id):
-    if current_app.config["ALLOW_DEV_LOGIN"]:
-        return redirect(url_for("auth.dev_login", user_id=user_id))
+    if current_app.config["ALLOW_SEEDED_USERS"]:
+        return redirect(url_for("auth.demo_login", user_id=user_id))
     else:
         return redirect(url_for("dashboard.index"))

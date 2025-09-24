@@ -77,7 +77,7 @@ The app uses a centralized `config.py` module to manage settings based on .env v
 | `SECRET_KEY`              | Flask session encryption and CSRF protection |
 | `SQLALCHEMY_DATABASE_URI` | Database connection string (SQLite) |
 | `SQLALCHEMY_TRACK_MODIFICATIONS` | Performance optimization (set to `False`) |
-| `ALLOW_DEV_LOGIN`         | Custom flag that enables `/auth/dev-login/<user_id>` |
+| `ALLOW_SEEDED_USERS`         | Custom flag that enables `/auth/demo-login/<user_id>` |
 
 
 ### Switching Environments
@@ -248,4 +248,4 @@ The dashboard route (`dashboard/index`) uses two helper functions to assemble ro
 - `get_teacher_data()` → returns assigned students, level-change form, and counts of unreviewed flashcards per student (users with unreviewed flashcards are highlighted to the teacher).
 - `get_admin_data()` → returns all admin forms and user lists, with WTForms choices pre-populated.
 
-
+  

@@ -7,7 +7,6 @@ class Config:
         raise ValueError("No SECRET_KEY set! Set it in the environment.")
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", "sqlite:///app.db")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    ALLOW_DEV_LOGIN = os.environ.get("ALLOW_DEV_LOGIN")
-
+    ALLOW_SEEDED_USERS = os.environ.get("ALLOW_SEEDED_USERS", "false").lower() in ("true", "1", "t")
     GOOGLE_OAUTH_CLIENT_ID = os.getenv("GOOGLE_OAUTH_CLIENT_ID")
     GOOGLE_OAUTH_CLIENT_SECRET = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")

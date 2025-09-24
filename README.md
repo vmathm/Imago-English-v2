@@ -33,9 +33,8 @@ A modular Flask-based language learning app designed to help students build voca
 - ✅ Google Calendar integration (for teacher availability)
 - ✅ Google Translate integration
 - ✅ Google Login integration 
+- NEXT: Stripe integration    
     
-    
-
 
 ---
 
@@ -59,7 +58,7 @@ pip install -r requirements.txt
 ```env
 
 SECRET_KEY=your-secret-key
-ALLOW_DEV_LOGIN=True
+ALLOW_SEEDED_USERS=True
 ```
 Optional: 
 add DATABASE_URL=sqlite:///app.db= your_database.db to .env
@@ -82,17 +81,27 @@ flask run
 ```bash
 git clone https://github.com/vmathm/imago-english-v2.git
 ```
+#### 2. Create a `.env` file in the project root:
+```env
 
-#### 2. Build the image:
+SECRET_KEY=your-secret-key
+ALLOW_SEEDED_USERS=True
+```
+Optional: 
+add DATABASE_URL=sqlite:///app.db= your_database.db to .env
+
+
+
+#### 3. Build the image:
 `docker compose up --build`
 
 This will: 
 * Build the image
-* Start the Flask app on http://localhost:5053
+* Start the Flask app on http://localhost:5000
 * Mount code (.:/app) for live reloads
 * Persist SQLite database inside a named volume (db_data)
 
-#### 3. Seed users
+#### 4. Seed users
 Run scripts/seed_users.py to create a user for each role for testing purposes. Production only allows users to login via Google API. 
 
 
@@ -101,16 +110,15 @@ Run scripts/seed_users.py to create a user for each role for testing purposes. P
 June 12, 2025
 
 
-
 ## Flask-Login Authentication & Session Flow
                ┌──────────────────────────────┐
                │   User submits login form    │
                └────────────┬─────────────────┘
                             │
                             ▼
-           ┌──────────────────────────────────────┐
-           │   Your view calls `login_user(user)` │
-           └────────────┬─────────────────────────┘
+           ┌──────────────────────────────────────────┐ 
+           │   View function calls `login_user(user)` │
+           └────────────┬─────────────────────────────┘
                         │
                         ▼
         ┌────────────────────────────────────────────┐
@@ -133,7 +141,7 @@ June 12, 2025
         └────────────┬───────────────────────────────┘
                      │
                      ▼
-      Calls your `@login_manager.user_loader` function:
+      Calls `@login_manager.user_loader` function:
      ┌───────────────────────────────────────────────┐
      │  @login_manager.user_loader                   │
      │  def load_user(user_id):                      │

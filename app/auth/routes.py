@@ -1,4 +1,4 @@
-from flask import Blueprint, redirect, abort, current_app, url_for, session
+from flask import Blueprint, redirect, abort, current_app, url_for, session, render_template
 from flask_login import login_user, logout_user
 from app.models import User
 from app.database import db_session
@@ -23,21 +23,26 @@ google_bp = make_google_blueprint(
 )
 
 
-@bp.route('/dev_login/<user_id>')
-def dev_login(user_id):
-    print("Attempting dev login for user:", user_id)
-    # Secure: Only allowed in debug mode AND if explicitly enabled
-    if not (current_app.config.get("ALLOW_DEV_LOGIN", False) and current_app.debug):
+@bp.route('/demo_login/', defaults={"user_id": None})
+@bp.route('/demo_login/<user_id>')
+def demo_login(user_id):
+    print("Attempting demo login for user:", user_id)
+
+    if not current_app.config.get("ALLOW_SEEDED_USERS", False):
         abort(403)
+
+    if not user_id:
+        # No user id supplied → show a role-picker template
+        return render_template("demo_login.html")
 
     user = db_session.query(User).filter_by(id=user_id).first()
     if not user:
-        print("User not found:", user_id)
-        abort(404)
+        # Invalid id → still show picker
+        return render_template("demo_login.html")
 
     login_user(user)
     print("User logged in:", user_id)
-    return redirect("/dashboard")   
+    return redirect("/dashboard")
 
 
 
