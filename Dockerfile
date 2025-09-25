@@ -22,5 +22,3 @@ COPY . .
 # 6) Document the port the app uses
 EXPOSE 5000
 
-# 7) Default command (dev server)
-CMD ["flask", "run"]

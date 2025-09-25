@@ -58,19 +58,26 @@ pip install -r requirements.txt
 ```env
 
 SECRET_KEY=your-secret-key
-ALLOW_SEEDED_USERS=True
+ALLOW_SEEDED_USERS=True  #False for production
 ```
 Optional: 
 add DATABASE_URL=sqlite:///app.db= your_database.db to .env
 
 
-##### Seed users
+#### 3. Create a `.flaskenv` file in the project root:
+```flaskenv
+
+FLASK_APP=main.py
+FLASK_DEBUG=1    #0 for production
+```
+
+
+#### 4. Seed users
 Run scripts/seed_users.py to create a user for each role for testing purposes. Production only allows users to login via Google API. 
 
 
-#### 3. Run the app
+#### 5. Run the app
 ```bash
-export FLASK_APP=main.py
 flask run
 ``` 
 
