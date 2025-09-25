@@ -26,6 +26,7 @@ google_bp = make_google_blueprint(
 @bp.route('/demo_login/', defaults={"user_id": None})
 @bp.route('/demo_login/<user_id>')
 def demo_login(user_id):
+    logout_user()
     print("Attempting demo login for user:", user_id)
 
     if not current_app.config.get("ALLOW_SEEDED_USERS", False):
