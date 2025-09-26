@@ -48,7 +48,7 @@ def addcards():
         else:
             flashcard_owner_id = current_user.id
 
-        # Check if this user already has a card with the same question
+        
         existing = db_session.query(Flashcard).filter_by(
             question=question,
             user_id=flashcard_owner_id
@@ -64,7 +64,7 @@ def addcards():
             message = "Você não pode ter mais de 5 cartões não revisados."
             return jsonify({"status": "error", "message": message})
 
-        # Create the new flashcard
+       
         new_flashcard = Flashcard(
             question=question,
             answer=answer,
@@ -112,13 +112,13 @@ def edit_cards():
             flash("Please select a student to view their flashcards.", "warning")
             return redirect(url_for("dashboard.index"))
 
-        # Verify the student exists
+        
         student = db_session.query(User).filter_by(id=student_id).first()
         if not student:
             flash("Student not found.", "danger")
             return redirect(url_for("dashboard.index"))
 
-        # Teachers can only access their own students
+        
         if current_user.is_teacher() and student.assigned_teacher_id != current_user.id:
             flash("You are not authorized to view this student's flashcards.", "danger")
             return redirect(url_for("dashboard.index"))
@@ -130,7 +130,7 @@ def edit_cards():
         )
         return render_template("edit.html", flashcards=flashcards)   
 
-    # Fallback for unrecognized roles
+    
     flash("Access denied.", "danger")
     return redirect(url_for("dashboard.index"))
 
@@ -156,12 +156,12 @@ def edit_card(card_id):
     form = FlashcardForm()
     action = request.form.get("action")
 
-    # Allow mark_reviewed_tc without validating question/answer fields
+    
     if action == "mark_reviewed_tc":
         if not (is_teacher_of_student or current_user.is_admin()):
             return jsonify({"status": "error", "message": "Not authorized."}), 403
-        # CSRF already included via hidden_tag(); if you want extra safety, validate the token:
-        # form.csrf_token.validate(form)
+       
+       
         flashcard.reviewed_by_tc = True
         db_session.commit()
         return jsonify({
@@ -255,9 +255,9 @@ def study():
 def review_flashcard():
     """
     Update flashcard scheduling when a rating (1, 2, or 3) is submitted from study.js.
+    Also update study streak if this was the last due flashcard of the day.
     """
-    
-    data = request.get_json() or {}
+    data = request.get_json() or {} 
     card_id = data.get("card_id")
     rating = int(data.get("rating"))
 
@@ -280,6 +280,7 @@ def review_flashcard():
 
     recipient = get_recipient()
 
+    
     if rating == 1:
         flashcard.level += 1
         flashcard.ease = 1.3
@@ -316,8 +317,39 @@ def review_flashcard():
         flashcard.next_review = next_review.replace(hour=0, minute=0, second=0, microsecond=0)
 
     db_session.commit()
+
+    
+    due_left = db_session.query(Flashcard).filter(
+        Flashcard.user_id == flashcard.user_id,
+        or_(
+            Flashcard.next_review == None,
+            Flashcard.next_review <= datetime.now(timezone.utc)
+        )
+    ).count()
+
+    if due_left == 0:
+        update_study_streak(recipient)
+        db_session.commit()
+
     return jsonify({"status": "success"})
 
+def update_study_streak(user):
+    
+    today = datetime.now(timezone.utc).date()
+    yesterday = today - timedelta(days=1)
+
+    if user.streak_last_date == yesterday:
+        user.study_streak = (user.study_streak or 0) + 1
+        user.streak_last_date = today
+    elif user.streak_last_date not in (today, yesterday):
+        user.study_streak = 1
+        user.streak_last_date = today
+
+    if user.study_streak and user.study_streak > user.study_max_streak:
+        user.study_max_streak = user.study_streak
+
+    if user.max_points is None or user.points > user.max_points:
+        user.max_points = user.points or 0
 
 @bp.route("/manage/<student_id>", methods=["GET"])
 @login_required

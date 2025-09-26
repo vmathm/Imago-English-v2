@@ -11,10 +11,19 @@
         <h1 class="mb-4">Welcome, {{ current_user.name }} | {{current_user.id}}</h1>
         <p class="lead">Your role: <strong>{{ current_user.role }}</strong></p>
         {% if current_user.role == 'student' %}
+        <div>
+          <p>
+            Study streak: {{ current_user.study_streak }}
+            {{ "day" if current_user.study_streak == 1 else "days" }} 🔥<br>
+            Max Study Streak: {{ current_user.study_max_streak }} 
+            {{ "day" if current_user.study_max_streak == 1 else "days" }} 🏆<br>
+          </p>
+        </div>
+        
         
           {% include "partials/add-card-form.html" %}
 
-        {% elif current_user.role == 'teacher' %}
+        {% elif current_user.role == 'teacher' %} 
 
           {% include "partials/teacher_dashboard.html" %}
 

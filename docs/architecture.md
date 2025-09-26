@@ -216,6 +216,16 @@ The flashcard review system blends spaced repetition with gamified rewards. Whil
 * Role-sensitive scoring: Teachers can review flashcards with students during class and rating will award the points to the student. 
 * Simplified ease/interval management: Intervals are days and not hours, as the goal is a daily review of available cards.
 
+### Study Streak Support
+
+The flashcard review route (`/review_flashcard`) also manages daily streaks.  
+When a user reviews their **last due flashcard of the day**, the helper function `update_study_streak(user)` is called.
+
+Rules:
+- If `streak_last_date == yesterday` → increment `study_streak` by 1  
+- If `streak_last_date` is neither today nor yesterday → reset `study_streak` to 1  
+- If `streak_last_date == today` or user didn't have a card to study on the day → no change  
+
 ## User Roles & Permissions
 
 The system supports three main roles:

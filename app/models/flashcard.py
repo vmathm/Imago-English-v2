@@ -24,6 +24,7 @@ class Flashcard(Base):
     reviewed_by_tc = Column(Boolean, nullable=False, default=False)
     add_by_tc = Column(Boolean, nullable=False, default=False)
     add_by_user = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, nullable=False)
 
     # Relationship to User
     user_id = Column(String(50), ForeignKey('users.id'), nullable=False)

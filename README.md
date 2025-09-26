@@ -71,12 +71,7 @@ FLASK_APP=main.py
 FLASK_DEBUG=1    #0 for production
 ```
 
-
-#### 4. Seed users
-Run scripts/seed_users.py to create a user for each role for testing purposes. Production only allows users to login via Google API. 
-
-
-#### 5. Run the app
+#### 4. Run the app
 ```bash
 flask run
 ``` 
@@ -108,8 +103,7 @@ This will:
 * Mount code (.:/app) for live reloads
 * Persist SQLite database inside a named volume (db_data)
 
-#### 4. Seed users
-Run scripts/seed_users.py to create a user for each role for testing purposes. Production only allows users to login via Google API. 
+
 
 
 ## Project Start Date

@@ -11,7 +11,7 @@ from .auth import user_loader
 
 
 def create_app():
-    # Load environment variables from .env file
+    
     load_dotenv()
 
     app = Flask(__name__)
@@ -20,14 +20,20 @@ def create_app():
     login_manager.init_app(app)
 
     
-   # Initialize DB
+   
     engine, db_session = init_engine(app)
     Base.metadata.create_all(engine)
 
-
+      
+    if app.config.get("ALLOW_SEEDED_USERS", False):
+        try:
+            from scripts.seed_users import main as seed_main
+            seed_main()
+        except Exception as e:
+            print("⚠️ Seeding skipped or failed:", e)
     
 
-    # Register blueprints
+    
     from .auth.routes import bp as auth_bp, google_bp
     from .dashboard.routes import bp as dashboard_bp
     from .flashcard.routes import bp as flashcard_bp
