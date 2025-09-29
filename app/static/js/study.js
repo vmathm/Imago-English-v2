@@ -1,8 +1,14 @@
 document.addEventListener("DOMContentLoaded", () => {
+  if (!flashcards || flashcards.length === 0) {
+    const container = document.getElementById("flashcard-container");
+    
+    return; 
+  }
+
   shuffle(flashcards);
   const queue = flashcards;
   const container = document.getElementById("flashcard-container");
-  let index = 0;
+  let index = 0; 
 
   function shuffle(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
@@ -102,7 +108,7 @@ if (typeof studentId !== 'undefined' && studentId !== null) {
   
   function showNext() {
     if (index >= queue.length) {
-      container.innerHTML = "<p>Você estudou todos os flashcards!</p>";
+      container.innerHTML = "<p>Você estudou todos os flashcards!🔥</p>";
       return;
     }
 
