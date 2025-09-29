@@ -31,6 +31,7 @@ This project uses the Flask **app factory pattern** and **blueprints** to keep t
 | ├── progress/# routes and logic
 │ ├── services/# routes and logic
 │ ├── static/# Static files
+│ ├── staticpages/# terms and privacy (future FAQ etc.)
 │ ├── templates/ # HTML templates
 │   └── partials/ # JINJA logic such as in navlinks being included in HTML via `{% include 'partials/navlinks.html' %}`
 ├── scripts/

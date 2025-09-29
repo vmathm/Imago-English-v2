@@ -140,8 +140,8 @@
     <!-- Footer -->
     <footer class="mb-5 small text-center footer">
         Copyright © 2023 by Imago English |
-        <a href="/termosdeuso">Termos de Uso</a> |
-        <a href="/politicadeprivacidade">Política de Privacidade</a> |
+        <a href="{{ url_for('staticpages.terms') }}">Termos de Uso</a> |
+        <a href="{{ url_for('staticpages.privacy') }}">Política de Privacidade</a> |
         <a href="https://wa.me/message/T7TR2RSIXT7YA1" target="_blank" rel="noopener noreferrer">
             Fale Conosco
             <img src="{{ url_for('static', filename='Whatsapp.png') }}" alt="WhatsApp" style="max-width: 30px; max-height: 30px; display: inline-block;">

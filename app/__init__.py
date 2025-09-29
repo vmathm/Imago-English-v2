@@ -42,7 +42,8 @@ def create_app():
     from .audiobook.routes import bp as audiobook_bp
     from .progress.routes import bp as progress_bp
     from .calendar.routes import bp as calendar_bp
-
+    from .staticpages.routes import bp as staticpages_bp
+    
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -53,5 +54,6 @@ def create_app():
     app.register_blueprint(progress_bp)
     app.register_blueprint(calendar_bp)
     app.register_blueprint(google_bp, url_prefix="/login")
+    app.register_blueprint(staticpages_bp)
    
     return app  
