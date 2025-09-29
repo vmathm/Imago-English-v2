@@ -14,25 +14,34 @@ bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 
 
 
-# Modular helper functions
-
 def get_teacher_data():
     change_student_level_form = ChangeStudentLevelForm()
 
     assigned = list(current_user.assigned_students)
     student_ids = [s.id for s in assigned]
 
-    
+    # query counts of unreviewed cards
     unreviewed = (
         db_session.query(Flashcard.user_id, func.count(Flashcard.id))
         .filter(Flashcard.reviewed_by_tc.is_(False))
         .group_by(Flashcard.user_id)
-        .all()  
+        .all()
     )
     unreviewed_counts = {user_id: cnt for user_id, cnt in unreviewed}
 
+    # split students into two groups
+    needs_review = [s for s in assigned if unreviewed_counts.get(s.id, 0) > 0]
+    cleared = [s for s in assigned if unreviewed_counts.get(s.id, 0) == 0]
+
+    # sort both groups alphabetically by name
+    needs_review.sort(key=lambda s: (s.name or "").lower())
+    cleared.sort(key=lambda s: (s.name or "").lower())
+
+    # merged list: unreviewed first, then cleared
+    ordered_students = needs_review + cleared
+
     return {
-        "assigned_students": assigned,
+        "assigned_students": ordered_students,
         "change_student_level_form": change_student_level_form,
         "unreviewed_counts": unreviewed_counts,
     }
