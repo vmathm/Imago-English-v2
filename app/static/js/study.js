@@ -106,18 +106,34 @@ if (typeof studentId !== 'undefined' && studentId !== null) {
   
 }else {
   
-  function showNext() {
-    if (index >= queue.length) {
-      container.innerHTML = "<p>Você estudou todos os flashcards!🔥</p>";
-      return;
+let reviewPool = []; // Cards rated 1 go here
+
+function showNext() {
+  // Decide the source of the next card
+  let source;
+  if (reviewPool.length >= 5) {
+    source = reviewPool;
+  } else {
+    source = queue;
+  }
+
+  // If nothing left in both queues
+  if (index >= queue.length && reviewPool.length === 0) {
+    container.innerHTML = "<p>Você estudou todos os flashcards!🔥</p>";
+    return;
+  }
+
+  container.classList.remove("fade-in");
+  container.classList.add("fade-out");
+
+  setTimeout(() => {
+    // Pick card depending on mode
+    let card;
+    if (source === reviewPool) {
+      card = reviewPool[0]; // cycle from front
+    } else {
+      card = queue[index];
     }
-
-    
-    container.classList.remove("fade-in");
-    container.classList.add("fade-out");
-
-    setTimeout(() => {
-      const card = queue[index];
 
     container.innerHTML = `
       <div class="section-box">
@@ -134,40 +150,55 @@ if (typeof studentId !== 'undefined' && studentId !== null) {
       </div>
     `;
 
-      container.classList.remove("fade-out");
-      void container.offsetWidth;
-      container.classList.add("fade-in");
+    container.classList.remove("fade-out");
+    void container.offsetWidth;
+    container.classList.add("fade-in");
 
-      const answer = document.getElementById("answer");
-      document.getElementById("toggle-answer").onclick = () => {
-        const showing = answer.style.display === "block";
-        answer.style.display = showing ? "none" : "block";
-      };
+    const answer = document.getElementById("answer");
+    document.getElementById("toggle-answer").onclick = () => {
+      const showing = answer.style.display === "block";
+      answer.style.display = showing ? "none" : "block";
+    };
 
-      document.querySelectorAll(".rate-btn").forEach((btn) => {
-        btn.onclick = async () => {
-          const rating = btn.dataset.value;
+    document.querySelectorAll(".rate-btn").forEach((btn) => {
+      btn.onclick = async () => {
+        const rating = btn.dataset.value;
 
-      
-        
-          await fetch("/flashcard/review_flashcard", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ card_id: card.id, rating: rating })
-          });
+        await fetch("/flashcard/review_flashcard", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ card_id: card.id, rating: rating })
+        });
 
-          if (rating === "1") {
-            queue.push(card);
+        if (rating === "1") {
+          // Add to reviewPool if not already
+          if (!reviewPool.some(c => c.id === card.id)) {
+            reviewPool.push(card);
           }
-          index++;
-          showNext();
-        };
-      });
-    }, 150);
-  }
+          // If we were in reviewPool, move card to end
+          if (source === reviewPool) {
+            reviewPool.push(reviewPool.shift());
+          } else {
+            index++;
+          }
+        } else {
+          // rating 2 or 3 → remove from reviewPool if exists
+          reviewPool = reviewPool.filter(c => c.id !== card.id);
 
-  showNext();
-}
+          if (source === reviewPool) {
+            reviewPool.shift(); // remove current card
+          } else {
+            index++;
+          }
+        }
+
+        showNext();
+      };
+    });
+  }, 150);
+} 
+showNext();
+} 
 
   document.addEventListener("click", (e) => {
     if (e.target.classList.contains("speak-btn")) {
