@@ -1,4 +1,3 @@
-# app/dashboard/routes.py
 from flask import Blueprint, render_template, redirect, url_for, abort
 from flask_login import current_user
 from app.flashcard.form import FlashcardForm
@@ -20,7 +19,7 @@ def get_teacher_data():
     assigned = list(current_user.assigned_students)
     student_ids = [s.id for s in assigned]
 
-    # query counts of unreviewed cards
+    
     unreviewed = (
         db_session.query(Flashcard.user_id, func.count(Flashcard.id))
         .filter(Flashcard.reviewed_by_tc.is_(False))
@@ -29,15 +28,15 @@ def get_teacher_data():
     )
     unreviewed_counts = {user_id: cnt for user_id, cnt in unreviewed}
 
-    # split students into two groups
+    
     needs_review = [s for s in assigned if unreviewed_counts.get(s.id, 0) > 0]
     cleared = [s for s in assigned if unreviewed_counts.get(s.id, 0) == 0]
 
-    # sort both groups alphabetically by name
+    
     needs_review.sort(key=lambda s: (s.name or "").lower())
     cleared.sort(key=lambda s: (s.name or "").lower())
 
-    # merged list: unreviewed first, then cleared
+    
     ordered_students = needs_review + cleared
 
     return {
@@ -63,7 +62,7 @@ def get_admin_data():
         User.role == 'student', User.assigned_teacher_id.isnot(None)
     ).all()
 
-    # Populate form choices
+    
     assign_form.student_id.choices = [(s.id, f"{s.name} ({s.email}) | ID: {s.id}") for s in unassigned_students]
     assign_form.teacher_id.choices = [(t.id, f"{t.name} ({t.email}) | ID: {t.id}") for t in teachers]
     unassign_form.student_id.choices = [(s.id, f"{s.name} ({s.email}) | Teacher: {s.assigned_teacher.name}") for s in assigned_students_admin]
@@ -83,9 +82,6 @@ def get_admin_data():
         "toggle_active_status_form": toggle_active_status_form
     }
 
-# ──────────────────────────────────────────────
-# Dashboard route
-# ──────────────────────────────────────────────
 
 @bp.route('/')
 def index():

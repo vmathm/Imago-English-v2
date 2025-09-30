@@ -31,11 +31,11 @@ class User(Base, UserMixin):
     flashcards_studied_today = Column(Integer, nullable=True, default=0)
     rate_three_count = Column(Integer, nullable=True, default=0)
 
-    # 🔗 Teacher assignment (self-referencing FK)
+    # Self-referential relationship for assigned teacher
     assigned_teacher_id = Column(String(50), ForeignKey('users.id'), nullable=True)
     assigned_teacher = relationship('User', remote_side=[id], backref='assigned_students')
 
-    # 🔗 Relationships to other tables
+    # Relationships to other tables
     flashcards = relationship('Flashcard', back_populates='user')
     calendar_settings = relationship("CalendarSettings", uselist=False, back_populates="teacher")
     
@@ -44,7 +44,6 @@ class User(Base, UserMixin):
     def is_active(self):
         return self.active
 
-    # Role helpers
     def is_student(self):
         return self.role in ('teacher', '@dmin!', 'student')
 

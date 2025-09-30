@@ -58,7 +58,7 @@ def calendar_settings():
         flash("Calendar settings saved!", "success")
         return redirect(url_for("calendar.calendar_settings"))
 
-    # Debug info
+    
     print("Form errors:", form.errors)
     print("Form data:", form.data)
 

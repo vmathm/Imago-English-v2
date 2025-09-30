@@ -33,16 +33,13 @@ def demo_login(user_id):
         abort(403)
 
     if not user_id:
-        # No user id supplied → show a role-picker template
         return render_template("demo_login.html")
-
+    
     user = db_session.query(User).filter_by(id=user_id).first()
     if not user:
-        # Invalid id → still show picker
         return render_template("demo_login.html")
 
     login_user(user)
-    print("User logged in:", user_id)
     return redirect("/dashboard")
 
 

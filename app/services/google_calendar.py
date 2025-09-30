@@ -7,10 +7,7 @@ from app.models import User, CalendarSettings
 from app.database import db_session
 
 def get_teacher_availability(user_id, days=5):
-    """Return a list of available half-hour slots grouped by day,
-    based on the teacher's CalendarSettings.
-    """
-    # 🔐 Load service account credentials
+    
     SERVICE_ACCOUNT_FILE = getenv("GOOGLE_APPLICATION_CREDENTIALS")
     if not SERVICE_ACCOUNT_FILE:
         raise EnvironmentError("GOOGLE_APPLICATION_CREDENTIALS is not set")
@@ -18,21 +15,18 @@ def get_teacher_availability(user_id, days=5):
     credentials = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
     service = build('calendar', 'v3', credentials=credentials)
 
-    # Get teacher + their calendar settings
+    
     teacher = db_session.query(User).filter_by(id=user_id, role='teacher').first()
-    print(f"Teacher found for {user_id}: {teacher}")
     if not teacher:
         return {}
 
-    print(f"Teacher ID: {teacher.id}")
+    
 
     settings = db_session.query(CalendarSettings).filter_by(teacher_id=teacher.id).first()
-    print(f"calendar settings:  {settings}")
-   
     if not settings:
         return {}
 
-    # Timezone and range start
+
     sao_paulo = tz.gettz("America/Sao_Paulo")
     today = datetime.now(tz=sao_paulo).replace(hour=0, minute=0, second=0, microsecond=0)
     end = today
