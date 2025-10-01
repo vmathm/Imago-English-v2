@@ -5,9 +5,9 @@
         <ul class="navbar-nav ms-auto mt-2">
             <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.audiobooks') }}">Audiobooks</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.ranking') }}">Ranking</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('calendar.calendar_settings') }}">Calendário</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Sair</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.leaderboard') }}">Learderboard</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('calendar.calendar_settings') }}">Calendar</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Log out</a></li>
         </ul>
 
     {% elif current_user.role == '@dmin!' %}
@@ -16,8 +16,8 @@
             
             <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.audiobooks') }}">Audiobooks</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.ranking') }}">Ranking</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Sair</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.leaderboard') }}">Learderboard</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Log out</a></li>
         </ul>
 
 
@@ -27,7 +27,7 @@
             <li class="nav-item"><a class="nav-link" href="/">Início</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.audiobooks') }}">Audiobooks</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.ranking') }}">Ranking</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.learderboard') }}">Learderboard</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Log Out</a></li>
         </ul>
 
@@ -37,7 +37,7 @@
             <li class="nav-item"><a class="nav-link" href="/">Início</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.audiobooks') }}">Audiobooks</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.ranking') }}">Ranking</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.leaderboard') }}">Learderboard</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Log Out</a></li>
         </ul>
     {% endif %}
@@ -45,7 +45,7 @@
 {% else %}
     {# Not authenticated (visitor) #}
     <ul class="navbar-nav ms-auto mt-2">
-        <li class="nav-item"><a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Login com Google</a></li>
+        <li class="nav-item"><a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Login with Google</a></li>
     </ul>
 {% endif %}
 

@@ -215,9 +215,9 @@ Used to auto-resize textarea inputs in flashcard forms based on their content.
 
 
 
-## Ranking Page
+## Leaderboard Page
 
-The `/ranking` route displays three leaderboards using DataTables:
+The `/leaderboard` route displays three rankings using DataTables:
 
 1. **Top 3 Students of All Time** – Sorted by each user’s highest `max_points`.
 2. **Student Ranking** – Lists all students ordered by a computed `Total` value (`points` × `study_streak` when `study_streak > 0`).

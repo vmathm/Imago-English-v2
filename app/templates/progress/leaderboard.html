@@ -1,10 +1,9 @@
 {% extends "layout.html" %}
 
-{% block title %}Ranking{% endblock %}
+{% block title %}Rankings{% endblock %}
 
 {% block main %}
 <div class="container mt-5">
-    <h1 class="mb-4">Leaderboards</h1>
 
     <div class="container section-box my-4">
         <h3>Top 3 Students of All Time</h3>
@@ -13,9 +12,9 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Name</th>
-                        <th>Sequência (dias)</th>
-                        <th>Pontos</th>
+                        <th>Name (Nome)</th>
+                        <th>Highest Streak (Maior sequência de dias)</th>
+                        <th>Highest Score (Maior pontuação)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -23,8 +22,8 @@
                     <tr>
                         <td></td>
                         <td>{{ student.name }}</td>
-                        <td>{{ student.study_streak if student.study_streak else 0 }}</td>
-                        <td>{{ student.points }}</td>
+                        <td>{{ student.max_study_streak if student.max_study_streak else 0 }}</td>
+                        <td>{{ student.max_points }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -39,9 +38,9 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Nome</th>
-                        <th>Pontos</th>
-                        <th>Sequência (dias)</th>
+                        <th>Name (Nome)</th>
+                        <th>Points (Pontos)</th>
+                        <th>Streak (Sequência de dias)</th>
                         <th>Total</th>
                     </tr>
                 </thead>
@@ -67,9 +66,9 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Nome</th>
-                        <th>Pontos</th>
-                        <th>Sequência (dias)</th>
+                        <th>Name (Nome)</th>
+                        <th>Points (Pontos)</th>
+                        <th>Streak (Sequência de dias)</th>
                         <th>Total</th>
                     </tr>
                 </thead>

@@ -16,12 +16,11 @@ today = datetime.now(timezone.utc).date()
 
 
 def main():
-    
     if db_session.query(User).count() > 0:
         print("⚠️ Database already has users, skipping seed.")
         return
 
-   
+    # Admin user
     users = [
         User(
             id="9990",
@@ -33,34 +32,41 @@ def main():
         )
     ]
 
-  
+        # Teachers
     for i in range(5):
+        p = random.randint(50, 500)        # current points
+        s = random.randint(0, 30)          # current streak
+        max_s = max(s, s + random.randint(0, 10))
+
         users.append(
             User(
                 id=f"900{i}",
                 name=f"teacher{i}",
                 user_name=f"u_name_teacher{i}",
-                email=f"vitornorace@gmail.com",
+                email="vitornorace@gmail.com",
                 role="teacher",
                 join_date=today,
                 active=True,
-                points=random.randint(50, 500),
-                max_points=random.randint(50, 500),
-                study_streak=random.randint(0, 30),
-                study_max_streak=random.randint(5, 60)
+                points=p,
+                study_streak=s,
+                max_study_streak=max_s,
+                max_points=p * max_s   # <-- formula
             )
         )
+        
 
+    # Students
 
-    dune_names = [
-        "Paul", "Jessica", "Gurney", "Chani", "Baron",
-        "Feyd", "Irulan", "Leto", "Piter", "Thufir",
-        "Jamis", "Rabban", "Mapes", "Wellington", "Korba"
-    ]
-
+    dune_names = [ "Paul", "Jessica", "Gurney", "Chani", "Baron", "Feyd", "Irulan",
+     "Leto", "Piter", "Thufir", "Jamis", "Rabban", "Mapes", "Wellington", "Korba" ]
+    
     
     students = []
     for i, name in enumerate(dune_names):
+        p = random.randint(50, 1000)
+        s = random.randint(0, 50)
+        max_s = max(s, s + random.randint(0, 15))
+
         student = User(
             id=f"800{i}",
             name=name,
@@ -68,22 +74,23 @@ def main():
             role="student",
             join_date=today,
             active=True,
-            points=random.randint(50, 1000),
-            max_points=random.randint(50, 1000),
-            study_streak=random.randint(0, 50),
-            study_max_streak=random.randint(5, 100)
+            points=p,
+            study_streak=s,
+            max_study_streak=max_s,
+            max_points=p * max_s   # <-- formula
         )
         users.append(student)
         students.append(student)
 
-   
+
+    # Commit users
     for user in users:
         if not db_session.query(User).filter_by(id=user.id).first():
             db_session.add(user)
 
     db_session.commit()
 
-
+    # Fixed flashcards for students
     dune_lore_map = {
         "Crysknife": "Faca cristal",
         "Sandworm": "Verme da areia",
@@ -101,8 +108,8 @@ def main():
         for eng_term, pt_term in dune_lore_map.items():
             flashcard = Flashcard(
                 user_id=student.id,
-                question=pt_term,   
-                answer=eng_term,   
+                question=pt_term,   # Portuguese term
+                answer=eng_term,    # English term
                 next_review=today,
                 created_at=today
             )

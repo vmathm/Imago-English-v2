@@ -23,10 +23,10 @@ class User(Base, UserMixin):
 
     active = Column(Boolean, nullable=False, default=True)  # replaces is_active
     study_streak = Column(Integer, nullable=True, default=0)
-    study_max_streak = Column(Integer, nullable=True, default=0)
+    max_study_streak = Column(Integer, nullable=True, default=0)
     streak_last_date = Column(Date, nullable=True)
     points = Column(Integer, nullable=True, default=0)
-    max_points = Column(Integer, nullable=True, default=0)
+    max_points = Column(Integer, nullable=True, default=0) # points * max_study_streak
     flashcards_studied = Column(Integer, nullable=True, default=0)
     flashcards_studied_today = Column(Integer, nullable=True, default=0)
     rate_three_count = Column(Integer, nullable=True, default=0)

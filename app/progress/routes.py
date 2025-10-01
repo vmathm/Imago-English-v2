@@ -5,9 +5,8 @@ from app.database import db_session
 
 bp = Blueprint('progress', __name__)
 
-@bp.route('/ranking')
-@login_required
-def ranking():
+@bp.route('/leaderboard')
+def leaderboard():
     students = (
         db_session.query(User)
         .filter_by(role='student')
@@ -26,7 +25,7 @@ def ranking():
     )
 
     return render_template(
-        'progress/ranking.html',
+        'progress/leaderboard.html',
         students=students,
         teachers=teachers,
         total_students=total_students,

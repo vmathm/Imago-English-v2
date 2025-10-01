@@ -173,3 +173,20 @@ Notes:
 
 
 
+
+## Progress
+
+### `GET /progress/leaderboard`
+- Renders `progress/leaderboard.html`, showing leaderboard data for students and teachers.  
+- Requires authentication (`@login_required`).  
+
+#### Response Context:
+| Key              | Type        | Description                                    |
+|------------------|-------------|------------------------------------------------|
+| `students`       | list[User]  | All users with role `"student"`                |
+| `teachers`       | list[User]  | All users with role `"teacher"`                |
+| `total_students` | int         | Total number of students                       |
+| `total_teachers` | int         | Total number of teachers                       |
+| `top_students`   | list[User]  | Top 3 students ordered by `max_points` (max_study streak * max_points)  |
+
+

@@ -345,11 +345,12 @@ def update_study_streak(user):
         user.study_streak = 1
         user.streak_last_date = today
 
-    if user.study_streak and user.study_streak > user.study_max_streak:
-        user.study_max_streak = user.study_streak
+    # Update max_study_streak
+    if user.study_streak and user.study_streak > (user.max_study_streak or 0):
+        user.max_study_streak = user.study_streak
 
-    if user.max_points is None or user.points > user.max_points:
-        user.max_points = user.points or 0
+    # Always recompute max_points as points × max_study_streak
+    user.max_points = (user.points or 0) * (user.max_study_streak or 0)
 
 @bp.route("/manage/<student_id>", methods=["GET"])
 @login_required
