@@ -3,7 +3,8 @@
 
 {% block main %}
 
- <h3>Set Your Calendar Preferences {{ current_user.name }} | {{ current_user.id }}</h2>
+ <h4>Calendar Preferences for: {{ current_user.name }} | ID: {{ current_user.id }}</h4>
+<p>This section uses your Google Calendar availability to generate a public URL that displays your schedule and allows students to contact you via WhatsApp.</p>
   <hr>
 <div class="section-box d-flex flex-column">
   <h5>Update WhatsApp Number</h5>
