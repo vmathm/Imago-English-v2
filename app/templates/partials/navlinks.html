@@ -3,6 +3,7 @@
     {% if current_user.role == 'teacher' %}
         {# Teacher view #}
         <ul class="navbar-nav ms-auto mt-2">
+            <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.audiobooks') }}">Audiobooks</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.leaderboard') }}">Learderboard</a></li>
@@ -13,7 +14,7 @@
     {% elif current_user.role == '@dmin!' %}
         {# Admin view #}
         <ul class="navbar-nav ms-auto mt-2">
-            
+            <<li class="nav-item"><a class="nav-link" href="/">Home</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.audiobooks') }}">Audiobooks</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.leaderboard') }}">Learderboard</a></li>
@@ -24,7 +25,7 @@
     {% elif current_user.teacher %}
         {# Student assigned to a teacher #}
         <ul class="navbar-nav ms-auto mt-2">
-            <li class="nav-item"><a class="nav-link" href="/">Início</a></li>
+            <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.audiobooks') }}">Audiobooks</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.learderboard') }}">Learderboard</a></li>
@@ -34,7 +35,7 @@
     {% else %}
         {# Unassigned student or fallback case #}
         <ul class="navbar-nav ms-auto mt-2">
-            <li class="nav-item"><a class="nav-link" href="/">Início</a></li>
+            <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.audiobooks') }}">Audiobooks</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.leaderboard') }}">Learderboard</a></li>
