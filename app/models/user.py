@@ -28,7 +28,6 @@ class User(Base, UserMixin):
     points = Column(Integer, nullable=True, default=0)
     max_points = Column(Integer, nullable=True, default=0) # points * max_study_streak
     flashcards_studied = Column(Integer, nullable=True, default=0)
-    flashcards_studied_today = Column(Integer, nullable=True, default=0)
     rate_three_count = Column(Integer, nullable=True, default=0)
 
     # Self-referential relationship for assigned teacher

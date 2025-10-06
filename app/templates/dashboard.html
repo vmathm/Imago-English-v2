@@ -15,8 +15,9 @@
           <p>
             Study streak: {{ current_user.study_streak }}
             {{ "day" if current_user.study_streak == 1 else "days" }} 🔥<br>
-            Max Study Streak: {{ current_user.study_max_streak }} 
-            {{ "day" if current_user.study_max_streak == 1 else "days" }} 🏆<br>
+            Max Study Streak: {{ current_user.max_study_streak }}
+            {{ "day" if current_user.max_study_streak == 1 else "days" }} 🏅<br>
+            Total Cards Studied: {{ current_user.flashcards_studied }} 🃏<br>
           </p>
         </div>
         

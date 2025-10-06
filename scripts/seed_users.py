@@ -37,6 +37,7 @@ def main():
         p = random.randint(50, 500)        # current points
         s = random.randint(0, 30)          # current streak
         max_s = max(s, s + random.randint(0, 10))
+        fc_studied = random.randint(150, 600) + p // 3 + s * 2
 
         users.append(
             User(
@@ -50,7 +51,8 @@ def main():
                 points=p,
                 study_streak=s,
                 max_study_streak=max_s,
-                max_points=p * max_s   # <-- formula
+                max_points=p * max_s,   # <-- formula
+                flashcards_studied=fc_studied
             )
         )
         
@@ -66,7 +68,8 @@ def main():
         p = random.randint(50, 1000)
         s = random.randint(0, 50)
         max_s = max(s, s + random.randint(0, 15))
-
+        fc_studied = random.randint(50, 1000) + p // 2 + s * 3
+        
         student = User(
             id=f"800{i}",
             name=name,
@@ -77,7 +80,8 @@ def main():
             points=p,
             study_streak=s,
             max_study_streak=max_s,
-            max_points=p * max_s   # <-- formula
+            max_points=p * max_s,   
+            flashcards_studied=fc_studied
         )
         users.append(student)
         students.append(student)

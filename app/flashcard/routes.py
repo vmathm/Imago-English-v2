@@ -299,6 +299,7 @@ def review_flashcard():
 
     else:
         recipient.rate_three_count = (recipient.rate_three_count or 0) + 1
+        recipient.flashcards_studied = (recipient.flashcards_studied or 0) + 1
 
         flashcard.level += 1
         new_ease = min(
