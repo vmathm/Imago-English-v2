@@ -7,10 +7,10 @@
     <title>Imago English - {% block title %}{% endblock %}</title>
 
     <!-- Favicon & Icons -->
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}"> 
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
-    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}"> 
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='img/manifest.json') }}">
 
     <!-- Stylesheets -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -104,7 +104,7 @@
         <div class="container-fluid">
             <!-- Logo -->
             <a class="nav-link" href="/">
-                <img src="{{ url_for('static', filename='Imagologo.png') }}" alt="Logo" style="max-width: 200px; max-height: 150px;">
+                <img src="{{ url_for('static', filename='img/Imagologo.png') }}" alt="Logo" style="max-width: 200px; max-height: 150px;">
             </a>
 
             <!-- Toggler -->
@@ -144,7 +144,7 @@
         <a href="{{ url_for('staticpages.privacy') }}">Política de Privacidade</a> |
         <a href="https://wa.me/message/T7TR2RSIXT7YA1" target="_blank" rel="noopener noreferrer">
             Fale Conosco
-            <img src="{{ url_for('static', filename='Whatsapp.png') }}" alt="WhatsApp" style="max-width: 30px; max-height: 30px; display: inline-block;">
+            <img src="{{ url_for('static', filename='img/Whatsapp.png') }}" alt="WhatsApp" style="max-width: 30px; max-height: 30px; display: inline-block;">
         </a>
     </footer>
 
