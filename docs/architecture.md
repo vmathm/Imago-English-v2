@@ -34,6 +34,7 @@ This project uses the Flask **app factory pattern** and **blueprints** to keep t
 │ ├── staticpages/# terms and privacy (future FAQ etc.)
 │ ├── templates/ # HTML templates
 │   └── partials/ # JINJA logic such as in navlinks being included in HTML via `{% include 'partials/navlinks.html' %}`
+├── docs/ #project documentation
 ├── scripts/
 │ └── seed_users.py # Adds test users for dev login
 │
@@ -45,12 +46,6 @@ This project uses the Flask **app factory pattern** and **blueprints** to keep t
 ├── requirements.txt # Python dependencies
 └── README.md # Project overview and setup instructions
 
-| Folder   / File      | Purpose |
-|----------------------|---------|
-| `app/__init__.py`    | Initializes Flask app, loads config, connects DB |
-| `models/user.py`     | Defin
-| `config.py`          | Defines settings based on .env variables |
-| `scripts/seed_users.py` | Adds sample users to the DB for testing |
 
 
 ## Blueprints
@@ -64,7 +59,8 @@ Each major feature has its own blueprint:
 - `flashcard` for vocabulary build up and spaced repetition studying.
 - `home` handles the root endpoint
 - `progress` for students and teachers points and study sequence, which define the leaderboards. 
-
+- `services` contains reusable integrations and background logic used across blueprints.
+  
 
 ## Configuration System
 
@@ -121,12 +117,11 @@ The `User` model represents all types of users in the system: students, teachers
 | join_date            | Date         | First registration date |
 | last_payment_date    | Date         | Most recent successful payment |
 | study_streak         | Integer      | How many days in a row the user has studied |
-| study_max_streak     | Integer      | The biggest sequence of days in a row the user has studied |
+| max_study_streak     | Integer      | The biggest sequence of days in a row the user has studied |
 | streak_last_date     | Date         | Date of last study session |
 | points               | Integer      | Total user points |
-| max_points           | Integer      | The highest number of points ever achieved |
+| max_points           | Integer      | The highest number of points ever achieved (points * max_study_streak) |
 | flashcards_studied   | Integer      | Total flashcards reviewed |
-| flashcards_studied_today | Integer  | Flashcards reviewed today |
 | rate_three_count     | Integer      | Number of "3" ratings received for flashcards |
 | assigned_teacher_id  | FK → users.id | Reference to the user’s assigned teacher |
 
@@ -168,7 +163,7 @@ The Flashcard model represents a language learning flashcard created by a user o
 | question           | String       | The front side of the|
 | answer             | String       | The back side of the                                                                  |
 | identify_language | Integer    | Language orientation: `0` = answer in English, `1` = question in English, `2` = bothEnglish |
-| part_of_speech   | String(20)   | Grammatcal category (e.g., `'noun'`, `'verb'`,etc.) |
+| part_of_speech   | String(20)   | Grammatical category (e.g., `'noun'`, `'verb'`,etc.) |
 | level              | Integer      | Number of successful reviews|
 | ease               | Integer      | Ease factor used in spaced  |
 | interval           | Integer      | Days until the next review  |

@@ -3,6 +3,10 @@
 
 A modular Flask-based language learning app designed to help students build vocabulary using flashcards, study streak tracking, text-to-speech, and an interactive audiobook feature. This is a rewrite of the original Imago English app, structured for clarity and maintainability.
 
+
+**TL;DR:** Flask + SQLAlchemy + Google APIs + modular blueprints.  
+Core features: flashcards with spaced repetition, admin/teacher/student dashboards, Google Calendar availability sync, and an integrated e-reader with Google Translate and instant flashcard creation.
+
 ---
 
 ## ✅ Features (Planned and Implemented)
@@ -27,7 +31,7 @@ A modular Flask-based language learning app designed to help students build voca
     ✅ adds form for adding card for student
     ✅ creates search button within manage_student_flashcards (added to edit_cards also)   
     ✅ Student level (A1 to C1), for later implementation of audiobooks and activities. 
-- ✅ Audiobook reader (with dicitonary and flashcard addition)
+- ✅ Audiobook reader (with dictionary and flashcard addition)
 - ✅ Progress tracking
     - ✅ Leaderboard table with ranking and top three ever.
 - ✅ Google Calendar integration (for teacher availability)
@@ -186,7 +190,7 @@ Allows teachers to publish their availability through Google Calendar.
 3. Set the environment variable in `.env`:
 
 ### 2. Model
-The `CalendarSettings` model stores each teacher’s preferences for availability and lesson duration, outputing a personalized calendar based on their Google Calendar availability. 
+The `CalendarSettings` model stores each teacher’s preferences for availability and lesson duration, outputting a personalized calendar based on their Google Calendar availability. 
 
 ### 3. Routes
 Refer to the Calendar section of `documents/api.md`

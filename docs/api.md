@@ -131,7 +131,7 @@ Handles flashcards being added to current_user or to student by using a hidden i
 
 ## Audiobook
 
-### `GET /load`
+### `GET /audiobooks`
 Serves `audiobook/audiobooks.html`, allowing the user to upload an audio file and a matching text transcript.
 
 ### `POST /translate`
