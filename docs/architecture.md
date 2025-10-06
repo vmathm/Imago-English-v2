@@ -11,6 +11,8 @@ This project uses the Flask **app factory pattern** and **blueprints** to keep t
 - `app/services/`: Contains reusable service functions like Google Translate and Google Calendar
 
 ## Project Structure
+
+```text
 ├── app/ # Main Flask application package
 │ ├── init.py # App factory + config loader + DB init
 │ ├── database.py #sets up the SQLAlchemy database.
@@ -45,6 +47,7 @@ This project uses the Flask **app factory pattern** and **blueprints** to keep t
 ├── extensions.py # Defines LoginManager()
 ├── requirements.txt # Python dependencies
 └── README.md # Project overview and setup instructions
+```
 
 
 

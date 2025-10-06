@@ -14,31 +14,30 @@ Core features: flashcards, spaced repetition, admin/teacher/student dashboards, 
 - ✅ Modular Flask blueprint architecture
 - ✅ User authentication module (auth blueprint)
 - ✅ Initial route test (`/auth/test`)
-- ✅ User model
-  ✅ Role-based access: `student`, `teacher`, `@dmin!`
-  ✅ Self-referencing relationship for teacher assignment
-  ✅ Integrated with Flask-Login (via `UserMixin`)
-  ✅ Overrides `is_active` based on DB value
-  ✅ Documented in `docs/architecture.md`
+- ✅ User model  
+  - ✅ Role-based access: `student`, `teacher`, `@dmin!`
+  - ✅ Self-referencing relationship for teacher assignment
+  - ✅ Integrated with Flask-Login (via `UserMixin`)
+  - ✅ Overrides `is_active` based on DB value
+  - ✅ Documented in `docs/architecture.md`
 - ✅ Flashcard creation and study flow
-- ✅ Admin dashboard
-    ✅ Routes: Assign students, Unassign students, Change roles, Hard delete, Activate/Deactivate user
-    ✅ Dashboard
-- ✅ Teacher features
-    - Dashboard with private information and assigned_students list
-    ✅ manage_student_flashcards.html
-    ✅ Test student flashcards management routes (edit / delete/ add) 
-    ✅ adds form for adding card for student
-    ✅ creates search button within manage_student_flashcards (added to edit_cards also)   
-    ✅ Student level (A1 to C1), for later implementation of audiobooks and activities. 
-- ✅ Audiobook reader (with dicitonary and flashcard addition)
-- ✅ Progress tracking
-    - ✅ Leaderboard table with ranking and top three ever.
+- ✅ Admin dashboard  
+  - ✅ Routes: Assign students, Unassign students, Change roles, Hard delete, Activate/Deactivate user  
+  - ✅ Dashboard
+- ✅ Teacher features  
+  - ✅ Dashboard with private information and assigned_students list  
+  - ✅ `manage_student_flashcards.html`  
+  - ✅ Test student flashcards management routes (edit / delete / add)  
+  - ✅ Adds form for adding card for student  
+  - ✅ Creates search button within `manage_student_flashcards` (added to edit_cards also)  
+  - ✅ Student level (A1 to C1), for later implementation of audiobooks and activities
+- ✅ Audiobook reader (with dictionary and flashcard addition)
+- ✅ Progress tracking  
+  - ✅ Leaderboard table with ranking and top three ever
 - ✅ Google Calendar integration (for teacher availability)
 - ✅ Google Translate integration
-- ✅ Google Login integration 
-- NEXT: Stripe integration    
-    
+- ✅ Google Login integration
+- ⏭️ NEXT: Stripe integration
 
 ---
 
