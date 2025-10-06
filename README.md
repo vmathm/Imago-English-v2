@@ -113,15 +113,7 @@ June 12, 2025
 
 
 ## Flask-Login Authentication & Session Flow
-  A[User submits login form] --> B[View calls `login_user(user)`]
-  B --> C[Flask stores user.id in session (securely)]
-  C --> D[Browser stores session in a signed cookie]
-  D --> E[New request comes in]
-  E --> F[Flask reads signed cookie and loads session]
-  F --> G[Flask-Login finds user_id in session]
-  G --> H[Calls @login_manager.user_loader]
-  H --> I[def load_user(user_id): return User.query.get(user_id)]
-  I --> J[Sets current_user to that user]
+<pre> ```mermaid flowchart TD A[User submits login form] --> B[View calls `login_user(user)`] B --> C[Flask stores user.id in session (securely)] C --> D[Browser stores session in a signed cookie] D --> E[New request comes in] E --> F[Flask reads signed cookie and loads session] F --> G[Flask-Login finds user_id in session] G --> H[Calls @login_manager.user_loader] H --> I[def load_user(user_id): return User.query.get(user_id)] I --> J[Sets current_user to that user] ``` </pre>
 
 Now in any route:
     🔹 current_user is available
