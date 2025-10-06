@@ -113,35 +113,18 @@ June 12, 2025
 
 
 ## Flask-Login Authentication & Session Flow
-User submits login form
-        │
-        ▼
-View function calls `login_user(user)`
-        │
-        ▼
-Flask stores `user.id` in session (securely)
-        │
-        ▼
-Browser stores session in a signed cookie
-        │
-        ▼
-A new request comes in
-        │
-        ▼
-Flask reads the signed cookie and loads session
-        │
-        ▼
-Flask-Login finds `user_id` in session
-        │
-        ▼
-Calls `@login_manager.user_loader` function:
-        │
-        ▼
-def load_user(user_id):
-    return User.query.get(user_id)
-        │
-        ▼
-Sets `current_user` to that user
+```mermaid
+flowchart TD
+  A["User submits login form"] --> B["View calls login_user(user)"]
+  B --> C["Flask stores user.id in session securely"]
+  C --> D["Browser stores session in a signed cookie"]
+  D --> E["New request comes in"]
+  E --> F["Flask reads signed cookie and loads session"]
+  F --> G["Flask-Login finds user_id in session"]
+  G --> H["Calls @login_manager.user_loader"]
+  H --> I["Function load_user(user_id) returns the user"]
+  I --> J["Flask sets current_user to that user"]
+```
 
 Now in any route:
     🔹 current_user is available
