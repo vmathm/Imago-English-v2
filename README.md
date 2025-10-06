@@ -5,7 +5,7 @@ A modular Flask-based language learning app designed to help students build voca
 
 
 **TL;DR:** Flask + SQLAlchemy + Google APIs + modular blueprints.  
-Core features: flashcards with spaced repetition, admin/teacher/student dashboards, Google Calendar availability sync, and an integrated e-reader with Google Translate and instant flashcard creation.
+Core features: flashcards, spaced repetition, admin/teacher/student dashboards, Google Calendar sync, built in E-reader with Google Translate and flashcard creation.
 
 ---
 
@@ -31,7 +31,7 @@ Core features: flashcards with spaced repetition, admin/teacher/student dashboar
     ✅ adds form for adding card for student
     ✅ creates search button within manage_student_flashcards (added to edit_cards also)   
     ✅ Student level (A1 to C1), for later implementation of audiobooks and activities. 
-- ✅ Audiobook reader (with dictionary and flashcard addition)
+- ✅ Audiobook reader (with dicitonary and flashcard addition)
 - ✅ Progress tracking
     - ✅ Leaderboard table with ranking and top three ever.
 - ✅ Google Calendar integration (for teacher availability)
@@ -113,7 +113,35 @@ June 12, 2025
 
 
 ## Flask-Login Authentication & Session Flow
-<pre> ```mermaid flowchart TD A[User submits login form] --> B[View calls `login_user(user)`] B --> C[Flask stores user.id in session (securely)] C --> D[Browser stores session in a signed cookie] D --> E[New request comes in] E --> F[Flask reads signed cookie and loads session] F --> G[Flask-Login finds user_id in session] G --> H[Calls @login_manager.user_loader] H --> I[def load_user(user_id): return User.query.get(user_id)] I --> J[Sets current_user to that user] ``` </pre>
+User submits login form
+        │
+        ▼
+View function calls `login_user(user)`
+        │
+        ▼
+Flask stores `user.id` in session (securely)
+        │
+        ▼
+Browser stores session in a signed cookie
+        │
+        ▼
+A new request comes in
+        │
+        ▼
+Flask reads the signed cookie and loads session
+        │
+        ▼
+Flask-Login finds `user_id` in session
+        │
+        ▼
+Calls `@login_manager.user_loader` function:
+        │
+        ▼
+def load_user(user_id):
+    return User.query.get(user_id)
+        │
+        ▼
+Sets `current_user` to that user
 
 Now in any route:
     🔹 current_user is available
@@ -152,7 +180,7 @@ Allows teachers to publish their availability through Google Calendar.
 3. Set the environment variable in `.env`:
 
 ### 2. Model
-The `CalendarSettings` model stores each teacher’s preferences for availability and lesson duration, outputting a personalized calendar based on their Google Calendar availability. 
+The `CalendarSettings` model stores each teacher’s preferences for availability and lesson duration, outputing a personalized calendar based on their Google Calendar availability. 
 
 ### 3. Routes
 Refer to the Calendar section of `documents/api.md`
