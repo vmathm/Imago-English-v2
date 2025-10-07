@@ -22,3 +22,5 @@ COPY . .
 # 6) Document the port the app uses
 EXPOSE 5000
 
+# For Render demo deployment:
+CMD ["sh", "-c", "mkdir -p instance && flask run --host=0.0.0.0 --port=${PORT:-8080}"]
