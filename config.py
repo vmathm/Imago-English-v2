@@ -10,3 +10,4 @@ class Config:
     ALLOW_SEEDED_USERS = os.environ.get("ALLOW_SEEDED_USERS", "false").lower() in ("true", "1", "t")
     GOOGLE_OAUTH_CLIENT_ID = os.getenv("GOOGLE_OAUTH_CLIENT_ID")
     GOOGLE_OAUTH_CLIENT_SECRET = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
+    PREFERRED_URL_SCHEME = "https" 

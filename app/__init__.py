@@ -1,5 +1,6 @@
 from flask import Flask
 from dotenv import load_dotenv
+from werkzeug.middleware.proxy_fix import ProxyFix
 import os
 
 from config import Config
@@ -16,6 +17,7 @@ def create_app():
 
     app = Flask(__name__)
     app.config.from_object("config.Config")
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
     csrf.init_app(app)
     login_manager.init_app(app)
 
