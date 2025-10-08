@@ -16,6 +16,6 @@ class CalendarSettings(Base):
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     lesson_duration = Column(Integer, default=30)  # in minutes 
 
-    teacher_id = Column(String, ForeignKey("users.id"), unique=True)
+    teacher_id = Column(String(50), ForeignKey("users.id"), unique=True)
     teacher = relationship("User", back_populates="calendar_settings")
     
