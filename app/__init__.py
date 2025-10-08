@@ -9,13 +9,17 @@ from .database import init_engine
 from .extensions import login_manager
 from .extensions import csrf
 from .auth import user_loader
+from pathlib import Path
 
 
 def create_app():
     
     load_dotenv()
 
-    app = Flask(__name__)
+    package_root = Path(__file__).resolve().parent       # -> /app/app
+    static_dir = package_root / "static"                 # -> /app/app/static
+
+    app = Flask(__name__, static_folder=str(static_dir), static_url_path="/static")
     app.config.from_object("config.Config")
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
     csrf.init_app(app)
