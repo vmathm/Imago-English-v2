@@ -1,5 +1,5 @@
 from .base import Base
-from sqlalchemy import Column, Integer, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 
@@ -16,6 +16,6 @@ class CalendarSettings(Base):
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     lesson_duration = Column(Integer, default=30)  # in minutes 
 
-    teacher_id = Column(Integer, ForeignKey("users.id"), unique=True)
+    teacher_id = Column(String, ForeignKey("users.id"), unique=True)
     teacher = relationship("User", back_populates="calendar_settings")
     
