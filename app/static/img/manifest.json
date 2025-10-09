@@ -1,0 +1,21 @@
+{
+  "name": "Imago English",
+  "short_name": "Imago English",
+  "description": "Inglês Online",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4285f4",
+  "icons": [
+      {
+          "src": "appicon_192px.png",
+          "sizes": "192x192",
+          "type": "image/png"
+      },
+      {
+          "src": "appicon_512px.png",
+          "sizes": "512x512",
+          "type": "image/png"
+      }
+  ]
+}

@@ -195,11 +195,6 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
-# Ignore everything in static
-app/static/*
 
-!app/static/js/
-!app/static/**/*.js
-!app/static/**/*.css
 
 secrets/
