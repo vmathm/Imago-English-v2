@@ -8,7 +8,7 @@ function runSearch() {
   const query = input.value.trim().toLowerCase();
   let matchCount = 0;
 
-  const container = cards[0]?.parentElement; // assuming all cards share the same parent
+  const container = cards[0]?.parentElement; 
   const matchedCards = [];
   const unmatchedCards = [];
 

@@ -46,7 +46,13 @@
 {% else %}
     {# Not authenticated (visitor) #}
     <ul class="navbar-nav ms-auto mt-2">
-        <li class="nav-item"><a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Login with Google</a></li>
+        <li class="nav-item my-1">
+        <a href="{{ url_for('auth.login') }}" class="btn btn-google d-flex align-items-center justify-content-center gap-2 m-0">
+            <img src="{{ url_for('static', filename='img/google_logo.png') }}" alt="Google Logo" class="google-icon">
+            <span>Login with Google</span>
+        </a>
+        </li>
+
     </ul>
 {% endif %}
 

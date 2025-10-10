@@ -1,4 +1,3 @@
-// Handle AJAX add-card form submission
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('add-card-form');
   if (!form) return;

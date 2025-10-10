@@ -28,8 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   textContent.addEventListener("mouseup", handleSelection);
-  textContent.addEventListener("touchend", handleSelection); // ← removed stray "R"
-
+  textContent.addEventListener("touchend", handleSelection); 
   async function handleSelection() {
     const selection = window.getSelection().toString().trim();
     if (!selection) return;
