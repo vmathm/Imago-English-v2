@@ -69,7 +69,8 @@ def addcards():
             question=question,
             answer=answer,
             user_id=flashcard_owner_id,
-            reviewed_by_tc= True if current_user.is_teacher() else False
+            reviewed_by_tc= True if current_user.is_teacher() else False,
+            created_at=datetime.now(timezone.utc)
         )
 
         db_session.add(new_flashcard)
