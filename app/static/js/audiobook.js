@@ -6,6 +6,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const audioPlayer = document.getElementById("audio-player");
   const textContent = document.getElementById("text-content");
 
+  // --- Utility: enable or disable native text selection ---
+  function toggleSelection(disabled) {
+    const value = disabled ? "none" : "text";
+    textContent.style.userSelect = value;
+    textContent.style.touchAction = disabled ? "manipulation" : "auto";
+    textContent.style.webkitTouchCallout = disabled ? "none" : "default";
+  }
+
+  // Default: selection enabled (so user can highlight normally)
+  toggleSelection(false);
+
+  // Optional: prevent long-press menu but still allow highlighting
+  const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+  if (isTouchDevice) {
+    // This stops the “Copy / Share / Web Search” popup, but not highlighting itself
+    textContent.addEventListener("contextmenu", e => e.preventDefault());
+  }
+
+  // File upload logic
   audioBtn.addEventListener("click", () => audioInput.click());
   textBtn.addEventListener("click", () => textInput.click());
 
@@ -27,11 +46,16 @@ document.addEventListener("DOMContentLoaded", () => {
     reader.readAsText(file);
   });
 
+  // Selection event for desktop and mobile
   textContent.addEventListener("mouseup", handleSelection);
-  textContent.addEventListener("touchend", handleSelection); 
+  textContent.addEventListener("touchend", handleSelection, { passive: true });
+
   async function handleSelection() {
     const selection = window.getSelection().toString().trim();
     if (!selection) return;
+
+    // disable selection temporarily to avoid flicker
+    toggleSelection(true);
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
     const response = await fetch("/audiobook/translate", {
@@ -55,19 +79,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const noBtn = document.getElementById("noBtn");
     const flipBtn = document.getElementById("flipBtn");
 
-    // Pre-fill fields
-    qEl.value = `${original}`;
-    aEl.value = `${translation}`;
+    // re-enable selection inside modal for editing
+    toggleSelection(false);
 
+    qEl.value = original;
+    aEl.value = translation;
     modal.style.display = "block";
-    // Focus question for quick edits
     setTimeout(() => qEl.focus(), 0);
 
-    // Wire up actions (overwrites previous handlers safely)
     flipBtn.onclick = () => {
-      const q = qEl.value;
-      qEl.value = aEl.value;
-      aEl.value = q;
+      [qEl.value, aEl.value] = [aEl.value, qEl.value];
       qEl.focus();
     };
 
@@ -80,15 +101,19 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       addFlashcard(question, answer);
       modal.style.display = "none";
+      toggleSelection(false); // keep enabled for next highlight
     };
 
     noBtn.onclick = () => {
       modal.style.display = "none";
+      toggleSelection(false);
     };
 
-    // close on outside click
     window.onclick = (evt) => {
-      if (evt.target === modal) modal.style.display = "none";
+      if (evt.target === modal) {
+        modal.style.display = "none";
+        toggleSelection(false);
+      }
     };
   }
 
