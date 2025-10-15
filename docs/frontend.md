@@ -212,6 +212,12 @@ Used to auto-resize textarea inputs in flashcard forms based on their content.
 
 * Shows success/error messages in `#flash-message-container`.
 
+#### Extra features:
+
+* Mobile touch support with contextmenu prevention to hide the copy/share popup on Chrome and iOS.
+
+* Dynamically enable/disable text selection depending on whether the modal is open using toggleSelection()
+
 
 
 
