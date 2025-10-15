@@ -68,8 +68,20 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const { translation } = await response.json();
-    showModal(selection, translation);
+
+    // ✅ Decode escaped characters
+    const cleanTranslation = decodeHtmlEntities(translation);
+
+    // Use the decoded version when showing modal
+    showModal(selection, cleanTranslation);
   }
+
+  function decodeHtmlEntities(text) {
+    const txt = document.createElement("textarea");
+    txt.innerHTML = text;
+    return txt.value;
+  }
+
 
   function showModal(original, translation) {
     const modal = document.getElementById("custom-modal");
