@@ -9,9 +9,13 @@
     {% if current_user.is_authenticated %}
 
         <h2 class="mb-4">Welcome, {{ current_user.name }} | ID: {{current_user.id}}</h2>
-        <p class="lead">Your role: <strong>{{ current_user.role }}</strong></p>
+        <p>Your role: <strong>{{ current_user.role }}</strong></p>
         {% if current_user.role == 'student' %}
         <div>
+          {% if current_user.assigned_teacher_id %} 
+            <p> Teacher: {{ current_user.assigned_teacher.name }}</p>
+          {% endif %}
+         
           <p>
             Study streak: {{ current_user.study_streak }}
             {{ "day" if current_user.study_streak == 1 else "days" }} 🔥<br>

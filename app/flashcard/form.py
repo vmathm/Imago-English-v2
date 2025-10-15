@@ -7,4 +7,4 @@ class FlashcardForm(FlaskForm):
     question = TextAreaField("Question", validators=[DataRequired()])
     answer = TextAreaField("Answer", validators=[DataRequired()])
     student_id = HiddenField()  
-    submit = SubmitField("Adicionar")
+    submit = SubmitField("Add (Adicionar)")
