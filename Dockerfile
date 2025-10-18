@@ -5,7 +5,8 @@ FROM python:3.10-slim
 
 # 2) Create a working directory inside the image
 WORKDIR /app
-
+RUN mkdir -p /app/data
+ENV DATABASE_URL=sqlite:////app/data/app.db
 # 3) OS packages (keep minimal; combine in one RUN for layer efficiency)
 # - build-essential only if your pip wheels need compilation
 RUN apt-get update && apt-get install -y --no-install-recommends \
