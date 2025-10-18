@@ -1,27 +1,25 @@
-# Dockerfile (at repo root)
-
-# 1) Base image with Python 3.10, lean Debian
+# Dockerfile (root)
 FROM python:3.10-slim
 
-# 2) Create a working directory inside the image
+# Set working directory to /app (matches your repo structure)
 WORKDIR /app
-RUN mkdir -p /app/data
-ENV DATABASE_URL=sqlite:////app/data/app.db
-# 3) OS packages (keep minimal; combine in one RUN for layer efficiency)
-# - build-essential only if your pip wheels need compilation
-RUN apt-get update && apt-get install -y --no-install-recommends \
- && rm -rf /var/lib/apt/lists/* 
 
-# 4) Install Python deps separately for better caching
-#    Copy only requirements first so Docker can cache `pip install`
+# Create SQLite data directory
+RUN mkdir -p /app/instance
+
+# Set default DB path (SQLite)
+ENV DATABASE_URL=sqlite:////app/instance/app.db
+
+# Install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 5) Now copy your app code
+# Copy app code
 COPY . .
 
-# 6) Document the port the app uses
+# Expose port
 EXPOSE 5000
 
-# For Render demo deployment:
-CMD ["sh", "-c", "mkdir -p instance && flask run --host=0.0.0.0 --port=${PORT:-8080}"]
+# Run Flask
+CMD ["sh", "-c", "flask run --host=0.0.0.0 --port=${PORT:-8080}"]
+
