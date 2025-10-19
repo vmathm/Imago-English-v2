@@ -2,87 +2,113 @@
 {% block title %}Calendar Settings{% endblock %}
 
 {% block main %}
+<h4 class="mb-2">Calendar Preferences for: {{ current_user.name }} | ID: {{ current_user.id }}</h4>
+<p class="text-muted">
+  This section uses your Google Calendar availability to generate a public URL that displays your schedule and allows students to contact you via WhatsApp.
+</p>
+<hr>
 
- <h4>Calendar Preferences for: {{ current_user.name }} | ID: {{ current_user.id }}</h4>
-<p>This section uses your Google Calendar availability to generate a public URL that displays your schedule and allows students to contact you via WhatsApp.</p>
-  <hr>
-<div class="section-box d-flex flex-column">
-  <h5>Update WhatsApp Number</h5>
-  <form method="POST" action="{{ url_for('calendar.update_phone') }}">
-    {{ phone_form.hidden_tag() }}
+<div class="section-box bg-body-secondary p-4 rounded-3 shadow-sm mx-auto" style="max-width: 650px;">
+  <div class="accordion" id="calendarAccordion">
 
-    <div class="mb-3 d-flex align-items-center">
-      <label class="me-2 mb-0" for="phone">WhatsApp:</label>
-      {{ phone_form.phone(class="form-control shrink-input", placeholder=current_user.phone or 'None') }}
+    <!-- Update WhatsApp Number -->
+    <div class="accordion-item mb-2 border-0">
+      <h2 class="accordion-header" id="headingPhone">
+        <button class="accordion-button collapsed w-100 py-3 fw-semibold" type="button"
+                data-bs-toggle="collapse" data-bs-target="#collapsePhone"
+                aria-expanded="false" aria-controls="collapsePhone">
+          Update WhatsApp Number
+        </button>
+      </h2>
+      <div id="collapsePhone" class="accordion-collapse collapse" aria-labelledby="headingPhone"
+           data-bs-parent="#calendarAccordion">
+        <div class="accordion-body">
+          <form method="POST" action="{{ url_for('calendar.update_phone') }}">
+            {{ phone_form.hidden_tag() }}
+            <div class="mb-3 d-flex align-items-center">
+              <label class="me-2 mb-0" for="phone">WhatsApp:</label>
+              {{ phone_form.phone(class="form-control shrink-input w-100", placeholder=current_user.phone or 'None') }}
+            </div>
+            {{ phone_form.submit(class="btn btn-primary w-100") }}
+          </form>
+        </div>
+      </div>
     </div>
 
-    {{ phone_form.submit(class="btn btn-primary") }}
-  </form>
-</div>
+    <!-- Update Calendar Settings -->
+    <div class="accordion-item mb-2 border-0">
+      <h2 class="accordion-header" id="headingCalendar">
+        <button class="accordion-button collapsed w-100 py-3 fw-semibold" type="button"
+                data-bs-toggle="collapse" data-bs-target="#collapseCalendar"
+                aria-expanded="false" aria-controls="collapseCalendar">
+          Update Calendar Settings
+        </button>
+      </h2>
+      <div id="collapseCalendar" class="accordion-collapse collapse" aria-labelledby="headingCalendar"
+           data-bs-parent="#calendarAccordion">
+        <div class="accordion-body">
+          <form method="POST">
+            {{ form.hidden_tag() }}
 
-<div class="section-box d-flex flex-column">
-   <form method="POST">
-    {{ form.hidden_tag() }}
+            <div class="mb-3 d-flex align-items-center">
+              <label class="me-2 mb-0">{{ form.start_hour.label.text }}</label>
+              {{ form.start_hour(class="form-control shrink-input w-100", type="number", placeholder="07") }}
+            </div>
 
-  <div class="mb-3 d-flex align-items-center">
-    <label class="me-2 mb-0">{{ form.start_hour.label.text }}</label>
-    {{ form.start_hour(class="form-control shrink-input", type="number", placeholder="07") }}
-  </div>
+            <div class="mb-3 d-flex align-items-center">
+              <label class="me-2 mb-0">{{ form.end_hour.label.text }}</label>
+              {{ form.end_hour(class="form-control shrink-input w-100", type="number", placeholder="21") }}
+            </div>
 
-  <div class="mb-3 d-flex align-items-center">
-    <label class="me-2 mb-0">{{ form.end_hour.label.text }}</label>
-    {{ form.end_hour(class="form-control shrink-input", type="number",  placeholder="21") }}
-  </div>
+            <div class="mb-3 d-flex align-items-center">
+              <label class="me-2 mb-0">{{ form.lesson_duration.label.text }}</label>
+              {{ form.lesson_duration(class="form-control shrink-input w-100", type="number", placeholder="30") }}
+              <span class="ms-2">minutes</span>
+            </div>
 
-  <div class="mb-3 d-flex align-items-center">
-    <label class="me-2 mb-0">{{ form.lesson_duration.label.text }}</label>
-    {{ form.lesson_duration(class="form-control shrink-input", type="number", placeholder="30") }}
-    <span class="ms-2">minutes</span>
-  </div>
+            <div class="form-check mb-2 d-flex align-items-center justify-content-start">
+              {{ form.available_saturday(class="form-check-input me-2") }}
+              {{ form.available_saturday.label(class="form-check-label text-start mb-0") }}
+            </div>
 
-  <div class="form-check mb-2 d-flex align-items-center justify-content-start">
-    {{ form.available_saturday(class="form-check-input me-2") }}
-    {{ form.available_saturday.label(class="form-check-label text-start mb-0") }}
-  </div>
+            <div class="form-check mb-2 d-flex align-items-center justify-content-start">
+              {{ form.available_sunday(class="form-check-input me-2") }}
+              {{ form.available_sunday.label(class="form-check-label text-start mb-0") }}
+            </div>
 
-  <div class="form-check mb-2 d-flex align-items-center justify-content-start">
-    {{ form.available_sunday(class="form-check-input me-2") }}
-    {{ form.available_sunday.label(class="form-check-label text-start mb-0") }}
-  </div>
+            <div class="form-check mb-3 d-flex align-items-center justify-content-start">
+              {{ form.show_today(class="form-check-input me-2") }}
+              {{ form.show_today.label(class="form-check-label text-start mb-0") }}
+            </div>
 
-  <div class="form-check mb-3 d-flex align-items-center justify-content-start">
-    {{ form.show_today(class="form-check-input me-2") }}
-    {{ form.show_today.label(class="form-check-label text-start mb-0") }}
-  </div>
+            {{ form.submit(class="btn btn-primary w-100") }}
+          </form>
 
-
-    {{ form.submit(class="btn btn-primary") }}
-  </form>
-
-  {% if calendar_url %}
-    <hr>
-    <p>You can share your calendar using this link:</p>
-    <div>
-      <input type="text" id="calendarLink" class="form-control shrink-input" style="width: fit-content; min-width: max-content; flex: 0 1 auto;" value="{{ calendar_url }}" readonly>
-      <button class="btn btn-outline-secondary" type="button" onclick="copyCalendarLink()">Copy</button>
+          {% if calendar_url %}
+            <hr>
+            <p>You can share your calendar using this link:</p>
+            <div class="d-flex align-items-center gap-2">
+              <input type="text" id="calendarLink" class="form-control shrink-input flex-grow-1" 
+                     value="{{ calendar_url }}" readonly>
+              <button class="btn btn-outline-secondary" type="button" onclick="copyCalendarLink()">Copy</button>
+            </div>
+            <p id="copyMsg" class="text-success mt-2" style="display:none;">✅ Link copied!</p>
+          {% endif %}
+        </div>
+      </div>
     </div>
-    <p id="copyMsg" class="text-success" style="display:none;">✅ Link copied!</p>
-  {% endif %}
+  </div>
 </div>
 
 <script>
 function copyCalendarLink() {
   const input = document.getElementById("calendarLink");
   input.select();
-  input.setSelectionRange(0, 99999); // for mobile
-
+  input.setSelectionRange(0, 99999);
   document.execCommand("copy");
-
   const msg = document.getElementById("copyMsg");
   msg.style.display = "block";
-  setTimeout(() => {
-    msg.style.display = "none";
-  }, 2000);
+  setTimeout(() => { msg.style.display = "none"; }, 2000);
 }
 </script>
 {% endblock %}

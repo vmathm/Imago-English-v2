@@ -717,3 +717,47 @@ html[data-bs-theme="light"] .btn-google:active {
   background-color: #e8eaed;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
+
+
+
+/* softer background and spacing between panels */
+.accordion-button {
+  background-color: var(--bs-dark-bg-subtle);
+  color: var(--bs-body-color);
+  letter-spacing: 0.3px;
+  justify-content: space-between;
+}
+
+/* cleaner arrow icon */
+.accordion-button::after {
+  margin-left: 1rem;           /* space from text */
+  color: rgba(255,255,255,0.4); /* softer arrow */
+  transform: scale(0.9);
+}
+
+/* when open */
+.accordion-button:not(.collapsed)::after {
+  color: var(--bs-primary);
+}
+
+
+/* Remove harsh blue highlight on click/focus */
+.accordion-button:focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* When expanded, keep background neutral */
+.accordion-button:not(.collapsed) {
+  background-color: var(--bs-dark-bg-subtle);
+  color: var(--bs-body-color);
+}
+
+/* Add subtle outline highlight on hover or focus */
+.accordion-button:hover,
+.accordion-button:focus {
+  background-color: transparent;
+  box-shadow: 0 0 0 2px rgba(150, 200, 255, 0.25);
+  border-radius: 8px;
+  transition: box-shadow 0.2s ease-in-out;
+}

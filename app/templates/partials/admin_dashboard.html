@@ -1,89 +1,119 @@
+<div class="section-box bg-body-secondary p-4 rounded-3 shadow-sm">
+  <h4 class="mb-4 text-center">Admin Controls</h4>
 
+  <div class="accordion" id="adminAccordion">
 
-<div class="section-box"> 
-  <h3>Assign Student to Teacher</h3>
-  <form action="{{ url_for('admin.assign_student') }}" method="post">
-    {{ assign_form.hidden_tag() }}
-    <div class="mb-3">
-      {{ assign_form.student_id.label(class="form-label") }}
-      {{ assign_form.student_id(class="form-select") }}
-    </div>
-    <div class="mb-3">
-      {{ assign_form.teacher_id.label(class="form-label") }}
-      {{ assign_form.teacher_id(class="form-select") }}
-    </div>
-    <div class="mb-3">
-      {{ assign_form.submit(class="btn btn-primary") }}
-    </div>
-  </form>
-</div>
-
-<br>
-<div class="section-box">
-  <h3>Unassign Student</h3>
-  <form action="{{ url_for('admin.unassign_student') }}" method="post">
-    {{ unassign_form.hidden_tag() }}
-      <div class="mb-3">
-        {{ unassign_form.student_id.label(class="form-label") }}
-        {{ unassign_form.student_id(class="form-select") }}
+    <!-- Assign -->
+    <div class="accordion-item mb-2 border-0">
+      <h2 class="accordion-header" id="headingAssign">
+        <button class="accordion-button collapsed w-100 py-3 fw-semibold" type="button"
+                data-bs-toggle="collapse" data-bs-target="#collapseAssign"
+                aria-expanded="false" aria-controls="collapseAssign">
+          Assign Student to Teacher
+        </button>
+      </h2>
+      <div id="collapseAssign" class="accordion-collapse collapse" aria-labelledby="headingAssign"
+           data-bs-parent="#adminAccordion">
+        <div class="accordion-body">
+          <form action="{{ url_for('admin.assign_student') }}" method="post">
+            {{ assign_form.hidden_tag() }}
+            <div class="mb-3">
+              {{ assign_form.student_id.label(class="form-label") }}
+              {{ assign_form.student_id(class="form-select w-100") }}
+            </div>
+            <div class="mb-3">
+              {{ assign_form.teacher_id.label(class="form-label") }}
+              {{ assign_form.teacher_id(class="form-select w-100") }}
+            </div>
+            <div class="mb-3">
+              {{ assign_form.submit(class="btn btn-primary w-100") }}
+            </div>
+          </form>
+        </div>
       </div>
-      
-      <div class="mb-3">
-        {{ unassign_form.submit(class="btn btn-warning") }}
-       </div>
-  </form>
-</div>
-
-<br>
-<div class="section-box">
-  <h3>Change User Role</h3>
-  <form action="{{ url_for('admin.change_role') }}" method="post">
-   {{ change_role_form.hidden_tag() }}
-    <div class="mb-3">
-      {{ change_role_form.user_id.label(class="form-label") }}
-      {{ change_role_form.user_id(class="form-select") }}
     </div>
 
-    <div class="mb-3">
-          {{ change_role_form.role.label(class="form-label") }}
-          {{ change_role_form.role(class="form-select") }}
+    <!-- Unassign -->
+    <div class="accordion-item mb-2 border-0">
+      <h2 class="accordion-header" id="headingUnassign">
+        <button class="accordion-button collapsed w-100 py-3 fw-semibold" type="button"
+                data-bs-toggle="collapse" data-bs-target="#collapseUnassign"
+                aria-expanded="false" aria-controls="collapseUnassign">
+          Unassign Student
+        </button>
+      </h2>
+      <div id="collapseUnassign" class="accordion-collapse collapse" aria-labelledby="headingUnassign"
+           data-bs-parent="#adminAccordion">
+        <div class="accordion-body">
+          <form action="{{ url_for('admin.unassign_student') }}" method="post">
+            {{ unassign_form.hidden_tag() }}
+            <div class="mb-3">
+              {{ unassign_form.student_id.label(class="form-label") }}
+              {{ unassign_form.student_id(class="form-select w-100") }}
+            </div>
+            <div class="mb-3">
+              {{ unassign_form.submit(class="btn btn-warning w-100") }}
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
-    <div class="mb-3">
-      {{ change_role_form.submit(class="btn btn-secondary") }}
+    <!-- Change Role -->
+    <div class="accordion-item mb-2 border-0">
+      <h2 class="accordion-header" id="headingRole">
+        <button class="accordion-button collapsed w-100 py-3 fw-semibold" type="button"
+                data-bs-toggle="collapse" data-bs-target="#collapseRole"
+                aria-expanded="false" aria-controls="collapseRole">
+          Change User Role
+        </button>
+      </h2>
+      <div id="collapseRole" class="accordion-collapse collapse" aria-labelledby="headingRole"
+           data-bs-parent="#adminAccordion">
+        <div class="accordion-body">
+          <form action="{{ url_for('admin.change_role') }}" method="post">
+            {{ change_role_form.hidden_tag() }}
+            <div class="mb-3">
+              {{ change_role_form.user_id.label(class="form-label") }}
+              {{ change_role_form.user_id(class="form-select w-100") }}
+            </div>
+            <div class="mb-3">
+              {{ change_role_form.role.label(class="form-label") }}
+              {{ change_role_form.role(class="form-select w-100") }}
+            </div>
+            <div class="mb-3">
+              {{ change_role_form.submit(class="btn btn-secondary w-100") }}
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
-    </form>
-</div>
 
-
-<br>
-<div class="section-box">
-  <h3>Hard Delete User</h3>
-<form method="POST" action="{{ url_for('admin.delete_user') }}" onsubmit="return confirm('Are you sure you want to delete this user?');">
-    {{ delete_user_form.hidden_tag() }}
-
-    <div class="mb-3">
-        {{ delete_user_form.user_id.label }}
-        {{ delete_user_form.user_id(class="form-select") }}
+    <!-- Delete User -->
+    <div class="accordion-item mb-2 border-0">
+      <h2 class="accordion-header" id="headingDelete">
+        <button class="accordion-button collapsed w-100 py-3 fw-semibold text-danger" type="button"
+                data-bs-toggle="collapse" data-bs-target="#collapseDelete"
+                aria-expanded="false" aria-controls="collapseDelete">
+          Hard Delete User
+        </button>
+      </h2>
+      <div id="collapseDelete" class="accordion-collapse collapse" aria-labelledby="headingDelete"
+           data-bs-parent="#adminAccordion">
+        <div class="accordion-body">
+          <form method="POST" action="{{ url_for('admin.delete_user') }}" onsubmit="return confirm('Are you sure you want to delete this user?');">
+            {{ delete_user_form.hidden_tag() }}
+            <div class="mb-3">
+              {{ delete_user_form.user_id.label(class="form-label") }}
+              {{ delete_user_form.user_id(class="form-select w-100") }}
+            </div>
+            <div class="mb-3">
+              {{ delete_user_form.submit(class="btn btn-danger w-100") }}
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
-    <div class="mb-3">
-       {{ delete_user_form.submit(class="btn btn-danger") }}
-    </div>
-</form>
-</div>
 
-<br>
-<div class="section-box">
-  <h3>Toggle User Status</h3>
-<form method="POST" action="{{ url_for('admin.toggle_active_status') }}" onsubmit="return confirm('Toggle user status?');">
-    {{ toggle_active_status_form.hidden_tag() }}
-
-    <div class="mb-3">
-        {{ toggle_active_status_form.user_id.label }}
-        {{ toggle_active_status_form.user_id(class="form-select") }}
-    </div>
-    <div class="mb-3">
-       {{ toggle_active_status_form.submit(class="btn btn-danger") }}
-    </div>
-</form>
+  </div>
 </div>
