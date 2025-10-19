@@ -31,7 +31,8 @@ def calendar_settings():
         abort(403)
 
     settings = db_session.query(CalendarSettings).filter_by(teacher_id=current_user.id).first()
-    print(f"Calendar settings: {settings}")
+    
+    
 
     
     if not settings:
@@ -41,15 +42,15 @@ def calendar_settings():
             end_hour=21,
             lesson_duration=30,
         )
+        db_session.add(settings)  
+        db_session.commit()
+
         form = CalendarSettingsForm()
-        form.start_hour.data = 7
-        form.end_hour.data = 21
-        form.lesson_duration.data = 30
+
     else:
         form = CalendarSettingsForm(obj=settings)
 
     if form.validate_on_submit():
-        print("✅ Form submitted successfully")
         form.populate_obj(settings)
 
         db_session.add(settings)  
@@ -58,9 +59,7 @@ def calendar_settings():
         flash("Calendar settings saved!", "success")
         return redirect(url_for("calendar.calendar_settings"))
 
-    
-    print("Form errors:", form.errors)
-    print("Form data:", form.data)
+
 
     calendar_url = url_for("calendar.teacher_calendar", user_name=current_user.user_name, _external=True)
     return render_template("calendar/settings.html", form=form, phone_form=UpdatePhoneForm(), calendar_url=calendar_url)
