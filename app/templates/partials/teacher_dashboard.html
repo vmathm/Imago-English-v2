@@ -16,8 +16,8 @@
         {% set unrev = unreviewed_counts.get(student.id) %}
         <div>
         <li class="list-group-item d-flex justify-content-between align-items-center {% if unrev %}list-group-item-warning{% endif %}">
-          
-            <a href="{{ url_for('flashcard.manage_student', student_id=student.id) }}">
+
+            <a href="{{ url_for('flashcard.manage_student', student_id=student.id) }}" class="me-3">
               {{ student.name }}<br>
               <span class="text-muted small">
                 {{ student.email }} <br> {{ student.role }} ID: {{ student.id }} <br> Level: {{ student.level }}
