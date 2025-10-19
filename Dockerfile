@@ -21,5 +21,4 @@ COPY . .
 EXPOSE 5000
 
 # Run Flask
-CMD ["sh", "-c", "flask run --host=0.0.0.0 --port=${PORT:-8080}"]
-
+CMD sh -c "gunicorn -b 0.0.0.0:${PORT:-8080} main:app"
