@@ -96,17 +96,27 @@ def main():
 
     # Fixed flashcards for students
     dune_lore_map = {
-        "Crysknife": "Faca cristal",
-        "Sandworm": "Verme da areia",
-        "Spice Melange": "Especiaria Melange",
-        "Arrakis": "Arrakis",
-        "Water of Life": "Água da Vida",
-        "Guild Navigator": "Navegador da Guilda",
-        "Sietch": "Sietch (abrigo Fremen)",
-        "Kanly": "Kanly (vingança formal)",
-        "Mentat": "Mentate",
-        "Fremen": "Fremen"
+    "Desert": "Deserto",
+    "Sand": "Areia",
+    "Worm": "Verme",
+    "Spice": "Especiaria",
+    "Water": "Água",
+    "Life": "Vida",
+    "Planet": "Planeta",
+    "Wind": "Vento",
+    "Battle": "Batalha",
+    "Dream": "Sonho",
+    "Fear": "Medo",
+    "Voice": "Voz",
+    "Mind": "Mente",
+    "Power": "Poder",
+    "Prophecy": "Profecia",
+    "Faith": "Fé",
+    "Tribe": "Tribo",
+    "Leader": "Líder",
+    "Destiny": "Destino"
     }
+
 
     for student in students:
         for eng_term, pt_term in dune_lore_map.items():
