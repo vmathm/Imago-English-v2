@@ -11,6 +11,10 @@
         <h2 class="mb-4">Welcome, {{ current_user.name }}</h2>
         <p>Role: <strong>{{ current_user.role }}</strong></p>
 
+          {% if current_user.assigned_teacher_id %} 
+            <p> Professor (Teacher): <strong>{{ current_user.assigned_teacher.name }}</strong></p>
+          {% endif %}
+
         <p>
           Sequência de estudos (Study streak): <strong>{{ current_user.study_streak }}
           {{ "dia (day)" if current_user.study_streak == 1 else "dias (days)" }}</strong> 🔥<br>
@@ -22,17 +26,33 @@
           {% endif %}
         </p>
 
-        {% if current_user.role == 'student' %}
-        <div>
-          {% if current_user.assigned_teacher_id %} 
-            <p> Teacher: {{ current_user.assigned_teacher.name }}</p>
+        
+        {% if due_flashcards > 0 %}
+          <div class="alert alert-success mt-3  align-items-center">
+            <div>
+              Você tem <strong>{{ due_flashcards }}</strong> flashcard{{ "s" if due_flashcards > 1 else "" }} para estudar hoje! 📚 <br>
+              (You have <strong>{{ due_flashcards }}</strong> flashcard{{ "s" if due_flashcards > 1 else "" }} to study today!)
+            </div>
+            <a href="{{ url_for('flashcard.study') }}" class="btn btn-primary btn-sm">
+              Estudar (Study)
+            </a>
+          </div>
+        {% else %}
+            <div class="alert alert-info mt-3">
+              Nenhum flashcard pendente 🎉
+            </div>
           {% endif %}
-         
 
-        </div>
+
+       
+
+          
+
+        {% if current_user.role == 'student' %}
+ 
         
         
-          {% include "partials/add-card-form.html" %}
+         
 
         {% elif current_user.role == 'teacher' %} 
 
@@ -45,6 +65,22 @@
         {% endif %}
 
             <hr>
+
+    {% else %}
+
+    <div class="d-flex justify-content-center my-3">
+    <a href="{{ url_for('auth.login') }}"
+        class="btn btn-google d-flex align-items-center justify-content-center gap-2"
+        style="height: 2.5rem; padding: 0 1rem; border-radius: 0.5rem; font-size: 1rem; width: auto;">
+        <img src="{{ url_for('static', filename='img/google_logo.png') }}"
+            alt="Google Logo"
+            class="google-icon"
+            style="width: 45px; height: 45px;">
+        <span>Login with Google</span>
+    </a>
+    </div>
+
+            
     {% endif %}
 
    
