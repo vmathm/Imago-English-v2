@@ -3,6 +3,22 @@
 {% block title %}Dashboard - Imago English{% endblock %}
 
 {% block main %}
+
+
+
+    <div class="d-flex justify-content-center my-3">
+    <a href="{{ url_for('auth.login') }}"
+        class="btn btn-google d-flex align-items-center justify-content-center gap-2"
+        style="height: 2.5rem; padding: 0 1rem; border-radius: 0.5rem; font-size: 1rem; width: auto;">
+        <img src="{{ url_for('static', filename='img/google_logo.png') }}"
+            alt="Google Logo"
+            class="google-icon"
+            style="width: 45px; height: 45px;">
+        <span>Login with Google</span>
+    </a>
+    </div>
+
+
     <div class="card p-4" style="max-width:540px;margin:2rem auto;">
     
     <h1 class="mb-3">Demo Login</h1>
