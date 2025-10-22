@@ -5,8 +5,8 @@ from app.models import User
 from app.database import db_session
 from app.admin.forms import AssignStudentForm, UnassignStudentForm, ChangeRoleForm, DeleteUserForm, ToggleActiveStatusForm, ChangeStudentLevelForm
 from app.models.flashcard import Flashcard 
-from sqlalchemy import func
-
+from sqlalchemy import func, or_
+from datetime import datetime, timezone
 
 
 bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
@@ -87,6 +87,18 @@ def get_admin_data():
 def index():
     if not current_user.is_authenticated:
         return render_template('dashboard.html')
+    
+      # --- Flashcard counts for current user ---
+    total_flashcards = db_session.query(func.count(Flashcard.id)).filter_by(user_id=current_user.id).scalar()
+
+    due_flashcards = db_session.query(func.count(Flashcard.id)).filter(
+            Flashcard.user_id == current_user.id,
+            or_(
+                Flashcard.next_review == None,
+                Flashcard.next_review <= datetime.now(timezone.utc)
+            )
+        ).scalar()
+
     context = {
         "form": FlashcardForm(),
         "assigned_students": [],
@@ -98,7 +110,9 @@ def index():
         "unassign_form": None,
         "change_role_form": None,
         "toggle_active_status_form": None,
-        "change_student_level_form": None
+        "change_student_level_form": None,
+        "total_flashcards": total_flashcards,
+        "due_flashcards": due_flashcards
     }
 
     if current_user.is_teacher():

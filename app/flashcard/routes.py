@@ -4,7 +4,7 @@ from app.database import db_session
 from app.flashcard.form import FlashcardForm
 from app.models import Flashcard, User
 from datetime import datetime, timezone, timedelta
-from sqlalchemy import or_, asc
+from sqlalchemy import func, or_, asc
 import math
 from app.extensions import csrf
 from os import abort
@@ -15,9 +15,10 @@ bp = Blueprint('flashcard', __name__, url_prefix='/flashcard')
 @bp.route("/flashcards", methods=["GET"])
 @login_required
 def flashcards():
-    return render_template("flashcards/index_cards.html", form=FlashcardForm())
 
+    total_flashcards = db_session.query(func.count(Flashcard.id)).filter_by(user_id=current_user.id).scalar()
 
+    return render_template("flashcards/index_cards.html", form=FlashcardForm(), total_flashcards=total_flashcards)
 
 @bp.route("/addcards", methods=["POST"])
 @login_required

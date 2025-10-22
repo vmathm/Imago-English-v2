@@ -5,15 +5,17 @@
 {% block main %}
   <div class="container mt-5">
 
+    <h3>Flashcards</h3>
 
+    <p>You have {{ total_flashcards }} flashcards. (Você tem {{ total_flashcards }} flashcards.)</p>
 
     <form action="{{ url_for('flashcard.study') }}" method="get">
-        <button type="submit" class="btn btn-primary">Estudar (Study)</button>
+        <button type="submit" class="btn btn-primary">Study (Estudar)</button>
     </form>
     
 
     <form action="{{ url_for('flashcard.edit_cards') }}" method="get">
-        <button type="submit" class="btn btn-primary">Editar flashcards (Edit flashcards)</button>
+        <button type="submit" class="btn btn-primary">Edit flashcards (Editar flashcards)</button>
     </form>
 
     
