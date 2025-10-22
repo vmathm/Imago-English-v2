@@ -12,7 +12,7 @@
     Total de cartões estudados (Total cards studied): <strong>{{ student.flashcards_studied }}</strong> 🃏<br>
     Rate 3 percentage: 
     <strong>
-      {{ (student.rate_three_count / student.flashcards_studied * 100) | round(2) }}%
+      {{ (student.rate_three_count / student.flashcards_studied * 100 if student.flashcards_studied else 0) | round(2) }}%
     </strong> ⭐⭐⭐<br>
 
   </p>
