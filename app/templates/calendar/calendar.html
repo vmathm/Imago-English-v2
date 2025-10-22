@@ -20,7 +20,7 @@
             <button class="accordion-button collapsed w-100 py-3 fw-semibold" type="button"
                     data-bs-toggle="collapse" data-bs-target="#collapse-{{ loop.index }}"
                     aria-expanded="false" aria-controls="collapse-{{ loop.index }}">
-              {{ day.strftime("%A, %d %B %Y") }}
+              {{ day | replace('\n', '<br>') | safe }}
             </button>
           </h2>
           <div id="collapse-{{ loop.index }}" class="accordion-collapse collapse"

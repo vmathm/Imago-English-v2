@@ -33,7 +33,7 @@
               Você tem <strong>{{ due_flashcards }}</strong> flashcard{{ "s" if due_flashcards > 1 else "" }} para estudar hoje! 📚 <br>
               (You have <strong>{{ due_flashcards }}</strong> flashcard{{ "s" if due_flashcards > 1 else "" }} to study today!)
             </div>
-            <a href="{{ url_for('flashcard.study') }}" class="btn btn-primary btn-sm">
+            <a href="{{ url_for('flashcard.study') }}" class="btn btn-primary">
               Estudar (Study)
             </a>
           </div>
