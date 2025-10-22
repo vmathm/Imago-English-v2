@@ -152,8 +152,16 @@ body.dark-mode .form-check-label {
 
 /* Button appearance */
 .btn-primary {
-  background-color: var(--bs-primary);
+  background-color: #3c4043;
   margin: 5px !important;
+  border: none !important;
+}
+
+.btn-primary:hover {
+  background-color: #5f6368;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+ 
 }
 
 
@@ -166,12 +174,6 @@ body.dark-mode .form-check-label {
 }
 
 
-
-/* Button color*/
-.btn-primary {
-  background-color: var(--bs-primary);
-  margin: 5px !important;
-}
 
 
 
@@ -761,3 +763,5 @@ html[data-bs-theme="light"] .btn-google:active {
   border-radius: 8px;
   transition: box-shadow 0.2s ease-in-out;
 }
+
+
