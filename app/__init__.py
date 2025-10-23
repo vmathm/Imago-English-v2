@@ -10,6 +10,7 @@ from .extensions import login_manager
 from .extensions import csrf
 from .auth import user_loader
 from pathlib import Path
+from datetime import timedelta
 
 
 def create_app():
@@ -25,7 +26,7 @@ def create_app():
     csrf.init_app(app)
     login_manager.init_app(app)
 
-    
+    app.jinja_env.globals['timedelta'] = timedelta
    
     engine, db_session = init_engine(app)
     Base.metadata.create_all(engine)
