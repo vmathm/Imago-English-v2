@@ -289,6 +289,7 @@ def review_flashcard():
         flashcard.interval = MIN_INTERVAL
         flashcard.last_review = now
         flashcard.next_review = now + timedelta(seconds=3)
+        recipient.flashcards_studied = (recipient.flashcards_studied or 0) + 1
 
     elif rating == 2:
         award_points(recipient, 2)
@@ -298,6 +299,7 @@ def review_flashcard():
         flashcard.last_review = now
         next_review = now + timedelta(days=1)
         flashcard.next_review = next_review.replace(hour=0, minute=0, second=0, microsecond=0)
+        recipient.flashcards_studied = (recipient.flashcards_studied or 0) + 1
 
     else:
         recipient.rate_three_count = (recipient.rate_three_count or 0) + 1
