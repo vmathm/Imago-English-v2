@@ -1,4 +1,4 @@
-// app/static/js/study.js
+// app/static/js/study.js  — FINAL BUFFERED VERSION
 
 document.addEventListener("DOMContentLoaded", () => {
   if (!flashcards || flashcards.length === 0) {
@@ -7,7 +7,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // ---------- Setup ----------
   const container = document.getElementById("flashcard-container");
   const counterEl = document.getElementById("remaining-count");
   let index = 0;
@@ -23,16 +22,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   shuffle(queue);
 
-  // ---------- Counter helper ----------
+  // Counter
   function updateCounter() {
     const remaining = (queue.length - index) + reviewPool.length;
     if (!counterEl) return;
-    if (remaining > 0) {
-      counterEl.textContent = remaining;
-      counterEl.parentElement.style.display = "block";
-    } else {
-      counterEl.parentElement.style.display = "none";
-    }
+    counterEl.textContent = remaining > 0 ? remaining : 0;
+    counterEl.parentElement.style.display = remaining > 0 ? "block" : "none";
   }
 
   // ---------- Voice setup ----------
@@ -101,112 +96,115 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       };
     });
+    return;
   }
 
   // ---------- STUDENT MODE ----------
-  else {
-    function showNext() {
-      const hasQueue = index < queue.length;
-      const hasReview = reviewPool.length > 0;
+  function showNext() {
+    const hasQueue = index < queue.length;
+    const hasReview = reviewPool.length > 0;
 
-      // end condition
-      if (!hasQueue && !hasReview) {
-        container.innerHTML =
-          '<div class="section-box"><p>Você estudou todos os flashcards! 🔥</p></div>';
-        updateCounter();
-        return;
-      }
-
+    if (!hasQueue && !hasReview) {
+      container.innerHTML =
+        '<div class="section-box"><p>Você estudou todos os flashcards! 🔥</p></div>';
       updateCounter();
-
-      // only use reviewPool when queue is fully done
-      const useReview = !hasQueue && hasReview;
-      const card = useReview ? reviewPool[0] : queue[index];
-
-      // clear previous DOM (kills old listeners)
-      container.replaceChildren();
-      container.classList.remove("fade-in");
-      container.classList.add("fade-out");
-
-      setTimeout(() => {
-        // build current card UI
-        container.innerHTML = `
-          <div class="section-box">
-            <p>${card.question}
-              <button class="speak-btn" data-text="${card.question}">🔊</button>
-            </p>
-            <button id="toggle-answer" class="btn btn-secondary mb-3">Mostrar Resposta</button>
-            <p id="answer" style="display:none;">
-              ${card.answer}
-              <button class="speak-btn" data-text="${card.answer}">🔊</button>
-            </p>
-            <div>
-              <button class="btn btn-danger rate-btn" data-value="1">1</button>
-              <button class="btn btn-warning rate-btn" data-value="2">2</button>
-              <button class="btn btn-success rate-btn" data-value="3">3</button>
-            </div>
-          </div>
-        `;
-
-        // fade back in
-        container.classList.remove("fade-out");
-        void container.offsetWidth;
-        container.classList.add("fade-in");
-
-        // toggle answer
-        const answer = document.getElementById("answer");
-        document.getElementById("toggle-answer").onclick = () => {
-          const showing = answer.style.display === "block";
-          answer.style.display = showing ? "none" : "block";
-        };
-
-        // handle rating buttons
-        document.querySelectorAll(".rate-btn").forEach(btn => {
-          btn.onclick = async () => {
-            const rating = btn.dataset.value;
-
-            await fetch("/flashcard/review_flashcard", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ card_id: card.id, rating }),
-            });
-
-            if (rating === "1") {
-              // add to reviewPool if not already there
-              if (!reviewPool.some(c => c.id === card.id)) reviewPool.push(card);
-
-              if (useReview && reviewPool.length > 1) {
-                // if already in review pool, move it to end
-                reviewPool.push(reviewPool.shift());
-              } else if (!useReview) {
-                // continue main queue
-                index++;
-              }
-            } else {
-              // ratings 2 or 3
-              if (useReview) {
-                // remove once from review pool
-                reviewPool.shift();
-              } else {
-                index++;
-                // ensure it's not in reviewPool anymore
-                reviewPool = reviewPool.filter(c => c.id !== card.id);
-              }
-            }
-
-            // safety clamp
-            if (index > queue.length) index = queue.length;
-
-            showNext();
-          };
-        });
-      }, 150);
+      return;
     }
 
-    showNext();
+    updateCounter();
+
+    // ✅ BUFFER RULE:
+    // use reviewPool when it has 5 or more cards,
+    // or when queue is empty but reviewPool still has some
+    const useReview = (reviewPool.length >= 5) || (!hasQueue && hasReview);
+    const card = useReview ? reviewPool[0] : queue[index];
+
+    container.replaceChildren();
+    container.classList.remove("fade-in");
+    container.classList.add("fade-out");
+
+    setTimeout(() => {
+      container.innerHTML = `
+        <div class="section-box">
+          <p>${card.question}
+            <button class="speak-btn" data-text="${card.question}">🔊</button>
+          </p>
+          <button id="toggle-answer" class="btn btn-secondary mb-3">Mostrar Resposta</button>
+          <p id="answer" style="display:none;">
+            ${card.answer}
+            <button class="speak-btn" data-text="${card.answer}">🔊</button>
+          </p>
+          <div>
+            <button class="btn btn-danger rate-btn" data-value="1">1</button>
+            <button class="btn btn-warning rate-btn" data-value="2">2</button>
+            <button class="btn btn-success rate-btn" data-value="3">3</button>
+          </div>
+        </div>
+      `;
+
+      container.classList.remove("fade-out");
+      void container.offsetWidth;
+      container.classList.add("fade-in");
+
+      const answer = document.getElementById("answer");
+      document.getElementById("toggle-answer").onclick = () => {
+        answer.style.display = answer.style.display === "block" ? "none" : "block";
+      };
+
+      document.querySelectorAll(".rate-btn").forEach(btn => {
+        btn.onclick = async () => {
+          const rating = btn.dataset.value;
+
+          await fetch("/flashcard/review_flashcard", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ card_id: card.id, rating }),
+          });
+
+          if (rating === "1") {
+            // Add to review pool if not already there
+            if (!reviewPool.some(c => c.id === card.id)) reviewPool.push(card);
+
+            // Move to end if already looping in review pool
+            if (useReview && reviewPool.length > 1) reviewPool.push(reviewPool.shift());
+            else if (!useReview) index++;
+
+          } else {
+            // Rating 2 or 3
+            if (useReview) {
+              // Graduates out of review pool
+              reviewPool.shift();
+            } else {
+              index++;
+              // Remove from review pool if present
+              reviewPool = reviewPool.filter(c => c.id !== card.id);
+            }
+          }
+
+          // Safety clamp
+          if (index > queue.length) index = queue.length;
+
+          // After success, check if we can resume new cards
+          // (if <5 failures left and still queue to show)
+          const backToQueue = (reviewPool.length < 5) && (index < queue.length);
+          if (backToQueue) {
+            // resume pulling new cards
+            showNext();
+          } else if (reviewPool.length > 0) {
+            // continue looping failed cards
+            showNext();
+          } else {
+            // all done
+            showNext();
+          }
+        };
+      });
+    }, 150);
   }
 
-  // ---------- Text-to-Speech Listener ----------
+  showNext();
+
+  // ---------- Text-to-Speech ----------
   document.addEventListener("click", e => {
     if (e.target.classList.contains("speak-btn")) {
       const text = e.target.dataset.text;
