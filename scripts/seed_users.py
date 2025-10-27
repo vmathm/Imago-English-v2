@@ -131,7 +131,7 @@ def main():
 
     db_session.commit()
 
-    print("✅ Seeded admin, 5 teachers, 15 students, and 10 fixed flashcards each (PT → EN Dune Lore).")
+    print("✅ Seeded admin, 5 teachers, 15 students, and 10 fixed flashcards each.")
 
 
 if __name__ == "__main__":

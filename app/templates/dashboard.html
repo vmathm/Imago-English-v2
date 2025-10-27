@@ -8,8 +8,22 @@
     <div class="container mt-5">
     {% if current_user.is_authenticated %}
 
+
         <h2 class="mb-4">Welcome, {{ current_user.name }}</h2>
         <p>Role: <strong>{{ current_user.role }}</strong></p>
+
+
+
+        {% if current_user.role == 'teacher' %} 
+
+          {% include "partials/teacher_dashboard.html" %}
+
+         {% elif current_user.role == '@dmin!' %}
+
+          {% include "partials/admin_dashboard.html" %}
+
+        {% endif %}
+
 
           {% if current_user.assigned_teacher_id %} 
             <p> Professor (Teacher): <strong>{{ current_user.assigned_teacher.name }}</strong></p>
@@ -51,21 +65,7 @@
 
           
 
-        {% if current_user.role == 'student' %}
- 
-        
-        
-         
-
-        {% elif current_user.role == 'teacher' %} 
-
-          {% include "partials/teacher_dashboard.html" %}
-
-        {% elif current_user.role == '@dmin!' %}
-
-          {% include "partials/admin_dashboard.html" %}
-
-        {% endif %}
+        c
 
             <hr>
 

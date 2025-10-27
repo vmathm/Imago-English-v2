@@ -198,3 +198,7 @@ cython_debug/
 
 
 secrets/
+
+
+backup.sql
+old_imago.db
