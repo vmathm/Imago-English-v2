@@ -7,7 +7,64 @@ A modular Flask-based language learning app designed to help students build voca
 **TL;DR:** Flask + SQLAlchemy + Google APIs + modular blueprints.  
 Core features: flashcards, spaced repetition, admin/teacher/student dashboards, Google Calendar sync, built in E-reader with Google Translate and flashcard creation.
 
+
+
+
+## 🎨 App Preview
+
+A visual overview of the app
+
 ---
+
+### Dashboards
+
+| Student Dashboard | Teacher Dashboard | Admin Dashboard |
+|------------------|------------------|-----------------|
+| ![Student Dashboard](docs/screenshots/student_dashboard.png) | ![Teacher Dashboard](docs/screenshots/teacher-dashboard.png) | ![Admin Dashboard](docs/screenshots/admin_dashboard.png) |
+
+---
+
+### Flashcards & Study
+
+| Flashcards Section | Study Session |
+|--------------------|---------------|
+| ![Flashcards Section](docs/screenshots/flashcards_section.png) | ![Study Session](docs/screenshots/study_session.png) |
+
+---
+
+### Audiobook Integration
+
+| Audiobook Reader | Create Flashcard Modal |
+|------------------|------------------------|
+| ![Audiobook Reader](docs/screenshots/audiobooks.png) | ![Create Flashcard Modal](docs/screenshots/audiobook_create_flashcard.png) |
+
+---
+
+### Calendar & Availability
+
+| Calendar View | Settings Panel |
+|---------------|----------------|
+| ![Calendar](docs/screenshots/calendar.png) | ![Calendar Settings](docs/screenshots/calendar_settings.png) |
+
+---
+
+### Leaderboards & Demo
+
+| Leaderboards | Demo Login |
+|---------------|------------|
+| ![Leaderboards](docs/screenshots/leaderboards.png) | ![Demo Login](docs/screenshots/demo_login.png) |
+
+---
+
+### Light & Dark Mode
+
+| Light Mode | Dark Mode |
+|-------------|------------|
+| ![Light Mode](docs/screenshots/light_mode.png) | ![Dark Mode](docs/screenshots/student_dashboard.png) |
+
+---
+
+
 
 ## ✅ Features (Planned and Implemented)
 
