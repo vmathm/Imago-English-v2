@@ -1,5 +1,3 @@
-// app/static/js/study.js  — FINAL BUFFERED VERSION
-
 document.addEventListener("DOMContentLoaded", () => {
   if (!flashcards || flashcards.length === 0) {
     const container = document.getElementById("flashcard-container");
@@ -12,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let index = 0;
   let reviewPool = [];
   const queue = [...flashcards];
+  let isProcessing = false; // prevents double clicks during async call
 
   // Fisher–Yates shuffle
   function shuffle(arr) {
@@ -54,6 +53,14 @@ document.addEventListener("DOMContentLoaded", () => {
     synth.speak(utterance);
   }
 
+  // ---------- Disable buttons softly ----------
+  function setButtonsEnabled(enabled) {
+    document.querySelectorAll(".rate-btn, #toggle-answer").forEach(b => {
+      b.style.pointerEvents = enabled ? "auto" : "none";
+      b.style.opacity = enabled ? "1" : "0.6";
+    });
+  }
+
   // ---------- TEACHER MODE ----------
   if (typeof studentId !== "undefined" && studentId !== null) {
     container.innerHTML = "";
@@ -80,19 +87,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.querySelectorAll(".rate-btn").forEach(btn => {
       btn.onclick = async () => {
+        if (isProcessing) return;
+        isProcessing = true;
+        setButtonsEnabled(false);
+
         const rating = btn.dataset.value;
         const cardDiv = btn.closest(".section-box");
         const cardId = cardDiv.dataset.cardId;
 
-        await fetch("/flashcard/review_flashcard", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ card_id: cardId, rating, student_id: studentId }),
-        });
-
-        if (rating === "2" || rating === "3") {
-          cardDiv.remove();
-          updateCounter();
+        try {
+          await fetch("/flashcard/review_flashcard", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ card_id: cardId, rating, student_id: studentId }),
+          });
+          if (rating === "2" || rating === "3") {
+            cardDiv.remove();
+            updateCounter();
+          }
+        } finally {
+          isProcessing = false;
+          setButtonsEnabled(true);
         }
       };
     });
@@ -113,9 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateCounter();
 
-    // ✅ BUFFER RULE:
-    // use reviewPool when it has 5 or more cards,
-    // or when queue is empty but reviewPool still has some
+    // BUFFER RULE: use reviewPool when 5+ or when queue empty
     const useReview = (reviewPool.length >= 5) || (!hasQueue && hasReview);
     const card = useReview ? reviewPool[0] : queue[index];
 
@@ -153,49 +166,46 @@ document.addEventListener("DOMContentLoaded", () => {
 
       document.querySelectorAll(".rate-btn").forEach(btn => {
         btn.onclick = async () => {
+          if (isProcessing) return;
+          isProcessing = true;
+          setButtonsEnabled(false);
+
           const rating = btn.dataset.value;
 
-          await fetch("/flashcard/review_flashcard", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ card_id: card.id, rating }),
-          });
+          try {
+            const res = await fetch("/flashcard/review_flashcard", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ card_id: card.id, rating }),
+            });
 
-          if (rating === "1") {
-            // Add to review pool if not already there
-            if (!reviewPool.some(c => c.id === card.id)) reviewPool.push(card);
+            if (!res.ok) return;
 
-            // Move to end if already looping in review pool
-            if (useReview && reviewPool.length > 1) reviewPool.push(reviewPool.shift());
-            else if (!useReview) index++;
-
-          } else {
-            // Rating 2 or 3
-            if (useReview) {
-              // Graduates out of review pool
-              reviewPool.shift();
+            if (rating === "1") {
+              if (!reviewPool.some(c => c.id === card.id)) reviewPool.push(card);
+              if (useReview && reviewPool.length > 1) reviewPool.push(reviewPool.shift());
+              else if (!useReview) index++;
             } else {
-              index++;
-              // Remove from review pool if present
-              reviewPool = reviewPool.filter(c => c.id !== card.id);
+              if (useReview) {
+                reviewPool.shift();
+              } else {
+                index++;
+                reviewPool = reviewPool.filter(c => c.id !== card.id);
+              }
             }
-          }
 
-          // Safety clamp
-          if (index > queue.length) index = queue.length;
+            if (index > queue.length) index = queue.length;
 
-          // After success, check if we can resume new cards
-          // (if <5 failures left and still queue to show)
-          const backToQueue = (reviewPool.length < 5) && (index < queue.length);
-          if (backToQueue) {
-            // resume pulling new cards
-            showNext();
-          } else if (reviewPool.length > 0) {
-            // continue looping failed cards
-            showNext();
-          } else {
-            // all done
-            showNext();
+            // decide next move
+            const backToQueue = (reviewPool.length < 5) && (index < queue.length);
+            if (backToQueue || reviewPool.length > 0 || (!hasQueue && hasReview)) {
+              showNext();
+            } else {
+              showNext();
+            }
+          } finally {
+            isProcessing = false;
+            setButtonsEnabled(true);
           }
         };
       });
