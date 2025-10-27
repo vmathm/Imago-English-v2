@@ -142,7 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <p>${card.question}
             <button class="speak-btn" data-text="${card.question}">🔊</button>
           </p>
-          <button id="toggle-answer" class="btn btn-secondary mb-3">Mostrar Resposta</button>
+          <button id="toggle-answer" class="btn btn-secondary mb-3">Show answer (Mostrar Resposta)</button>
           <p id="answer" style="display:none;">
             ${card.answer}
             <button class="speak-btn" data-text="${card.answer}">🔊</button>
