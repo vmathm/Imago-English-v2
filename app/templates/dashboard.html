@@ -8,7 +8,19 @@
     <div class="container mt-5">
     {% if current_user.is_authenticated %}
 
+      <button id="install-button"
+              class="btn btn-success position-fixed bottom-0 end-0 m-3 shadow-lg"
+              style="display:none; z-index: 1050;">
+        📲 Instalar App
+      </button>
 
+
+      {% block scripts %}
+      {{ super() }}
+      <script src="{{ url_for('static', filename='js/install-prompt.js') }}"></script>
+      {% endblock %}
+
+          
         <h2 class="mb-4">Welcome, {{ current_user.name }}</h2>
         <p>Role: <strong>{{ current_user.role }}</strong></p>
 
