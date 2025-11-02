@@ -1,6 +1,13 @@
 
 # Imago English v2  
 
+![Python](https://img.shields.io/badge/python-3.10-blue)
+![Flask](https://img.shields.io/badge/flask-2.3-lightgrey)
+![Docker](https://img.shields.io/badge/docker-ready-2496ED)
+![Google%20APIs](https://img.shields.io/badge/Google%20APIs-integrated-orange)
+![License: MIT](https://img.shields.io/badge/License-MIT-green)
+
+
 A modular Flask-based language learning app designed to help students build vocabulary using flashcards, study streak tracking, text-to-speech, and an interactive audiobook feature. This is a rewrite of the original Imago English app, structured for clarity and maintainability.
 
 
@@ -304,3 +311,9 @@ OAUTHLIB_INSECURE_TRANSPORT=1  # Only for development
 - flask-dance[google]
 
 - flask-login
+
+
+
+## ⚠️ Branding Notice
+The Imago English logo and brand name are property of Vitor Moraes and are **not covered by the MIT License**.  
+They may not be reused or redistributed without permission.
