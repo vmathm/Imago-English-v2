@@ -39,7 +39,7 @@
         "name": "Imago English",
         "url": "https://www.imagoenglish.com.br"
       },
-      "image": ["https://www.imagoenglish.com.br/static/Imagologo.png"],
+      "image": ["https://www.imagoenglish.com.br/static/Imago-light.png"],
       "offers": [
         {
           "@type": "Offer",
@@ -109,7 +109,12 @@
         <div class="container-fluid">
             <!-- Logo -->
             <a class="nav-link" href="/">
-                <img src="{{ url_for('static', filename='img/icons/Imagologo.png') }}" alt="Logo" style="max-width: 200px; max-height: 150px;">
+              <img
+                src="{{ url_for('static', filename='img/icons/logo-light.png') }}"
+                alt="Imago English"
+                style="max-width: 200px; max-height: 150px;"
+                id="brand-logo"
+              >
             </a>
 
             <!-- Toggler -->

@@ -765,3 +765,7 @@ html[data-bs-theme="light"] .btn-google:active {
 }
 
 
+html[data-bs-theme="dark"] #brand-logo {
+  content: url("/static/img/icons/logo-dark.png");
+}
+
