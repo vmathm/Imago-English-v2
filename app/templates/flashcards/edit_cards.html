@@ -5,6 +5,13 @@
 {% block main %}
  <div id="flash-message-container"></div>
 {% include "partials/search_bar.html" %}
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/flashcard-search.js') }}"></script>
+{% endblock %}
+
+
 {% for card in flashcards %}
 <div id="card-{{ card.id }}" class="section-box flashcard">
     <form class="flashcard-form" data-card-id="{{ card.id }}" method="POST" action="{{ url_for('flashcard.edit_card', card_id=card.id) }}">

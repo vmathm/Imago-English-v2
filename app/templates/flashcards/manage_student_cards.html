@@ -2,6 +2,7 @@
 {% block title %}{{ student.name }}{% endblock %}
 
 {% block main %}
+ 
   <div id="flash-message-container"></div>
   <h2>Student: {{ student.name }}</h2>
   <p>
@@ -24,6 +25,11 @@
   </form>
     
   {% include "partials/search_bar.html" %}
+  
+  {% block scripts %}
+  {{ super() }}
+  <script src="{{ url_for('static', filename='js/flashcard-search.js') }}"></script>
+  {% endblock %}
    
 <div>
 {% for card in flashcards %}
@@ -72,3 +78,5 @@
 
 {% endblock %}
 </div>
+
+
