@@ -1,33 +1,45 @@
-let deferredPrompt;
-const installButton = document.getElementById("install-button");
+// Prevent redeclaration if this script is ever executed twice
+if (!window.hasOwnProperty("deferredPrompt")) {
+  window.deferredPrompt = null;
 
-window.addEventListener("beforeinstallprompt", (e) => {
-  // Prevent the default browser mini-infobar
-  e.preventDefault();
-  deferredPrompt = e;
+  // Cache the install button once
+  const installButton = document.getElementById("install-button");
 
-  // Show your custom install button
-  installButton.style.display = "inline-block";
-});
+  if (installButton) {
+    // Hide it initially
+    installButton.style.display = "none";
 
-installButton.addEventListener("click", async () => {
-  if (!deferredPrompt) return;
+    window.addEventListener("beforeinstallprompt", (e) => {
+      // Stop the automatic mini-infobar
+      e.preventDefault();
+      window.deferredPrompt = e;
 
-  // Show the browser’s native install prompt
-  deferredPrompt.prompt();
+      // Show your custom install button
+      installButton.style.display = "inline-block";
+    });
 
-  // Wait for user response
-  const { outcome } = await deferredPrompt.userChoice;
-  console.log(`User response: ${outcome}`);
+    installButton.addEventListener("click", async () => {
+      if (!window.deferredPrompt) return;
 
-  // Hide the button again
-  installButton.style.display = "none";
+      // Show the browser’s native install prompt
+      window.deferredPrompt.prompt();
 
-  // Reset prompt so it doesn't fire twice
-  deferredPrompt = null;
-});
+      // Wait for user response
+      const { outcome } = await window.deferredPrompt.userChoice;
+      console.log(`User response: ${outcome}`);
 
-window.addEventListener("appinstalled", () => {
-  console.log("App installed!");
-  installButton.style.display = "none";
-});
+      // Hide the button again
+      installButton.style.display = "none";
+
+      // Reset prompt so it doesn't fire twice
+      window.deferredPrompt = null;
+    });
+
+    window.addEventListener("appinstalled", () => {
+      console.log("App installed!");
+      installButton.style.display = "none";
+    });
+  } else {
+    console.warn("Install button not found in DOM.");
+  }
+}
