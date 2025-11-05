@@ -36,20 +36,74 @@ def to_date(d):
     except Exception:
         return None
 
-def to_dt(dt):
-    if not dt:
+from datetime import datetime, date, timezone
+
+def to_dt(value):
+    """
+    Convert various timestamp representations to an aware UTC datetime.
+    Accepts:
+      - datetime (naive or aware)
+      - date (set to 00:00:00)
+      - ISO strings (with 'T'/'Z'/'±HH:MM' offsets)
+      - SQLite-ish strings: 'YYYY-MM-DD HH:MM:SS[.ffffff]'
+      - 'YYYY-MM-DD' (date-only)
+      - UNIX epoch (int/float seconds)
+    Returns None on failure.
+    """
+    if not value:
         return None
-    if isinstance(dt, datetime):
-        return dt
-    s = str(dt)
-    # try common formats
-    for fmt in ("%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
+
+    # Already datetime
+    if isinstance(value, datetime):
+        return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+
+    # Date only
+    if isinstance(value, date):
+        return datetime(value.year, value.month, value.day, tzinfo=timezone.utc)
+
+    # Epoch seconds?
+    if isinstance(value, (int, float)):
         try:
-            parsed = datetime.strptime(s[:len(fmt)], fmt)
-            return parsed.replace(tzinfo=timezone.utc) if fmt != "%Y-%m-%d" else parsed.replace(tzinfo=timezone.utc)
+            return datetime.fromtimestamp(float(value), tz=timezone.utc)
         except Exception:
             pass
+
+    s = str(value).strip()
+    if not s:
+        return None
+
+    # Normalize common variants
+    s_norm = s.replace("T", " ")  # ISO to space
+    s_norm = s_norm.replace("Z", "+00:00")  # Zulu to explicit offset
+
+    # 1) Try ISO first
+    try:
+        dt = datetime.fromisoformat(s_norm)
+        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+    except Exception:
+        pass
+
+    # 2) Try explicit format list (no slicing!)
+    fmts = [
+        "%Y-%m-%d %H:%M:%S.%f%z",
+        "%Y-%m-%d %H:%M:%S%z",
+        "%Y-%m-%d %H:%M:%S.%f",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d",  # date-only
+    ]
+    for fmt in fmts:
+        try:
+            dt = datetime.strptime(s_norm, fmt)
+            if dt.tzinfo:
+                return dt.astimezone(timezone.utc)
+            # if date-only, time is 00:00
+            return dt.replace(tzinfo=timezone.utc)
+        except Exception:
+            continue
+
+    # Couldn’t parse
     return None
+
 
 def migrate_users():
     print("🚀 Migrating users (v1.users → v2.users) with role mapping...")
@@ -179,10 +233,20 @@ def migrate_flashcards():
     cur = old.cursor()
     cur.execute("SELECT * FROM flashcards")
 
+    # Build a fast lookup of teacher/admin IDs from the *v2* DB
+    teacher_like_roles = {"teacher", "@dmin!"}
+    teacher_ids = {
+        u.id for u in db_session.query(User.id, User.role).all()
+        if (u.role or "").strip() in teacher_like_roles
+    }
+
     count = 0
     for row in cur.fetchall():
         if db_session.get(Flashcard, row["id"]):
             continue
+
+        owner_id = row["user_id"]
+        owner_is_teacher = owner_id in teacher_ids
 
         card = Flashcard(
             id=row["id"],
@@ -196,17 +260,21 @@ def migrate_flashcards():
             last_review=to_dt(row["last_review"]),
             next_review=to_dt(row["next_review"]),
             show_answer=(bool(row["show_answer"]) if row["show_answer"] is not None else False),
-            reviewed_by_tc=bool(row["reviewed_by_tc"]),
+
+            # ✅ If the card belongs to a teacher/admin, force True on migration
+            reviewed_by_tc=True if owner_is_teacher else bool(row["reviewed_by_tc"]),
+
             add_by_tc=bool(row["add_by_tc"]),
             add_by_user=bool(row["add_by_user"]),
             created_at=(to_dt(row["last_review"]) or to_dt(row["next_review"]) or datetime.now(timezone.utc)),
-            user_id=row["user_id"],
+            user_id=owner_id,
         )
         db_session.add(card)
         count += 1
 
     db_session.commit()
     print(f"✅ {count} flashcards migrated.\n")
+
 
 if __name__ == "__main__":
     with app.app_context():
