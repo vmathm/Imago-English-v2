@@ -829,3 +829,34 @@ html[data-bs-theme="light"] #studentsAccordion .accordion-button.bg-warning-subt
   box-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
   color: #fff;
 }
+
+
+/* --- Landscape Only Mode for Leaderboard --- */
+@media screen and (orientation: portrait) {
+  /* Hide leaderboard when in portrait */
+  #leaderboard-content {
+    display: none;
+  }
+
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: #000;
+    color: #fff;
+    text-align: center;
+    font-size: 1.2rem;
+    padding: 1rem;
+  }
+
+  body::before {
+    content: "Vire seu dispositivo para a horizontal. (Rotate your device to landscape mode) 📱↩️";
+  }
+}
+
+@media screen and (orientation: landscape) {
+  #leaderboard-content {
+    display: block;
+  }
+}
