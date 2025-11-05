@@ -62,9 +62,11 @@
               Você tem <strong>{{ due_flashcards }}</strong> flashcard{{ "s" if due_flashcards > 1 else "" }} para estudar hoje! 📚 <br>
               (You have <strong>{{ due_flashcards }}</strong> flashcard{{ "s" if due_flashcards > 1 else "" }} to study today!)
             </div>
-            <a href="{{ url_for('flashcard.study') }}" class="btn btn-primary">
-              Estudar (Study)
-            </a>
+       
+            <form action="{{ url_for('flashcard.study') }}" method="get">
+            <button type="submit" class="btn btn-primary">Study (Estudar)</button>
+            </form>
+            
           </div>
         {% else %}
             <div class="alert alert-info mt-3">

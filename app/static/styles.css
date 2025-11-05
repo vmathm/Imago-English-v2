@@ -769,3 +769,63 @@ html[data-bs-theme="dark"] #brand-logo {
   content: url("/static/img/icons/logo-dark.png");
 }
 
+
+/* --- Light Mode Overrides for Teacher Dashboard Accordion --- */
+html[data-bs-theme="light"] #studentsAccordion .accordion-item {
+  background: transparent;
+  border: none;
+}
+
+html[data-bs-theme="light"] #studentsAccordion .accordion-button {
+  background-color: rgba(0, 0, 0, 0.35);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  box-shadow: none;
+  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Hover and expanded states */
+html[data-bs-theme="light"] #studentsAccordion .accordion-button:hover,
+html[data-bs-theme="light"] #studentsAccordion .accordion-button:not(.collapsed) {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+/* Chevron arrow – make it white */
+html[data-bs-theme="light"] #studentsAccordion .accordion-button::after {
+  filter: invert(1);
+}
+
+/* Accordion body with transparent background */
+html[data-bs-theme="light"] #studentsAccordion .accordion-body {
+  background-color: rgba(0, 0, 0, 0.3);
+  color: #fff; /* ✅ ensures all text inside is white */
+  border-radius: 0 0 0.5rem 0.5rem;
+}
+
+/* Make links and muted text also white */
+html[data-bs-theme="light"] #studentsAccordion .accordion-body a,
+html[data-bs-theme="light"] #studentsAccordion .accordion-body .text-muted {
+  color: #fff !important;
+}
+
+/* Ensure form elements are readable */
+html[data-bs-theme="light"] #studentsAccordion .accordion-body select,
+html[data-bs-theme="light"] #studentsAccordion .accordion-body button {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+html[data-bs-theme="light"] #studentsAccordion .accordion-body button:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Highlight for students with unreviewed flashcards */
+html[data-bs-theme="light"] #studentsAccordion .accordion-button.bg-warning-subtle {
+  background-color: rgba(255, 215, 0, 0.25) !important;
+  border-color: rgba(255, 215, 0, 0.5);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+  color: #fff;
+}
