@@ -99,36 +99,42 @@
 
 
 
-<body>
+<body class="d-flex flex-column min-vh-100" data-bs-theme="{{ theme }}">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-md navbar-light border w-100">
+      <div class="container-fluid px-0">
+        <!-- Logo -->
+        <a class="navbar-brand d-flex align-items-center" href="/">
+          <img
+            src="{{ url_for('static', filename='img/icons/logo-light.png') }}"
+            alt="Imago English"
+            height="40"
+            id="brand-logo"
+          >
+        </a>
+
+        <!-- Toggler -->
+        <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbar"
+                aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Nav Links (from partial) -->
+        <div class="collapse navbar-collapse" id="navbar">
+          {% include 'partials/navlinks.html' %}
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Page Content -->
+    <main class="flex-grow-1 ">
+    <div class="container text-center py-5">
 
     <!-- Flash container for JS (optional placeholder) -->
     <div id="flash-message-container"></div>
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-md navbar-light border">
-        <div class="container-fluid">
-            <!-- Logo -->
-            <a class="nav-link" href="/">
-              <img
-                src="{{ url_for('static', filename='img/icons/logo-light.png') }}"
-                alt="Imago English"
-                style="max-width: 200px; max-height: 150px;"
-                id="brand-logo"
-              >
-            </a>
-
-            <!-- Toggler -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar"
-                aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <!-- Nav Links (from partial) -->
-            <div class="collapse navbar-collapse" id="navbar">
-                {% include 'partials/navlinks.html' %}
-            </div>
-        </div>
-    </nav>
+ 
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
@@ -142,11 +148,11 @@
     {% endif %}
 {% endwith %}
 
-    <!-- Main Page Content -->
-    <main class="container-fluid py-5 text-center">
+
         {% block main %}{% endblock %}
     </main>
-
+    </div>
+    
     <!-- Footer -->
     <footer class="mb-5 small text-center footer">
         Copyright © 2025 by Imago English |
