@@ -12,30 +12,56 @@
   <div class="section-box">
     <h3 class="mt-4">Assigned Students</h3>
     <ul class="list-group mb-4">
-      {% for student in assigned_students %}
-        {% set unrev = unreviewed_counts.get(student.id) %}
-        <div>
-        <li class="list-group-item d-flex justify-content-between align-items-center {% if unrev %}list-group-item-warning{% endif %}">
 
-            <a href="{{ url_for('flashcard.manage_student', student_id=student.id) }}" class="me-3">
-              {{ student.name }}<br>
-              <span class="text-muted small">
-                {{ student.email }} <br> {{ student.role }} ID: {{ student.id }} <br> Level: {{ student.level }}
-              </span>
-                {% if unrev %}
-              <span class="badge bg-danger ms-2 d-block">{{ unrev }} unreviewed</span>
+    <div class="accordion" id="studentsAccordion">
+  {% for student in assigned_students %}
+    {% set unrev = unreviewed_counts.get(student.id) %}
+    <div class="accordion-item mb-2 border-0">
+      <h2 class="accordion-header" id="heading-{{ loop.index }}">
+        <button class="accordion-button collapsed w-100 py-3 fw-semibold {% if unrev %}bg-warning-subtle{% endif %}"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapse-{{ loop.index }}"
+                aria-expanded="false"
+                aria-controls="collapse-{{ loop.index }}">
+          <span>
+            {{ student.name }}
+            {% if unrev %}
+              <span class="badge bg-danger ms-2">{{ unrev }} unreviewed</span>
             {% endif %}
+          </span>
+        </button>
+      </h2>
+
+      <div id="collapse-{{ loop.index }}"
+           class="accordion-collapse collapse"
+           aria-labelledby="heading-{{ loop.index }}"
+           data-bs-parent="#studentsAccordion">
+        <div class="accordion-body">
+          <p class="text-muted small mb-2">
+            {{ student.email }}<br>
+            Role: {{ student.role }} | ID: {{ student.id }}<br>
+            Level: {{ student.level }}
+          </p>
+
+          <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <a href="{{ url_for('flashcard.manage_student', student_id=student.id) }}" class="btn btn-outline-primary btn-sm mb-2 me-2">
+              Manage flashcards
             </a>
-            <form action="{{ url_for('admin.update_student_level') }}" method="post" class="mb-3">
+
+            <form action="{{ url_for('admin.update_student_level') }}" method="post" class="d-inline mb-2">
               {{ change_student_level_form.csrf_token }}
               {{ change_student_level_form.student_id(value=student.id) }}
               {{ change_student_level_form.level(class="form-select-sm me-2") }}
               {{ change_student_level_form.submit(class="btn btn-secondary btn-sm") }}
             </form>
-
-        </li>
+          </div>
         </div>
-      {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
     </ul>
   </div>
 {% else %}
