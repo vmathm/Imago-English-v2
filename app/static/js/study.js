@@ -23,10 +23,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Counter
   function updateCounter() {
-    const remaining = (queue.length - index) + reviewPool.length;
     if (!counterEl) return;
-    counterEl.textContent = remaining > 0 ? remaining : 0;
-    counterEl.parentElement.style.display = remaining > 0 ? "block" : "none";
+
+    let remaining;
+
+    // TEACHER MODE: count what's still rendered
+    if (typeof studentId !== "undefined" && studentId !== null) {
+      remaining = container.querySelectorAll(".section-box").length;
+    } else {
+      // STUDENT MODE: queue + reviewPool
+      remaining = (queue.length - index) + reviewPool.length;
+    }
+
+    remaining = Math.max(0, remaining);
+    counterEl.textContent = remaining;
+    if (counterEl.parentElement) {
+      counterEl.parentElement.style.display = remaining > 0 ? "block" : "none";
+    }
   }
 
   // ---------- Voice setup ----------
