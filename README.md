@@ -27,7 +27,7 @@ A visual overview of the app
 
 | Student Dashboard | Teacher Dashboard | Admin Dashboard |
 |------------------|------------------|-----------------|
-| ![Student Dashboard](docs/screenshots/student_dashboard.png) | ![Teacher Dashboard](docs/screenshots/teacher-dashboard.png) | ![Admin Dashboard](docs/screenshots/admin_dashboard.png) |
+| ![Student Dashboard](docs/screenshots/student_dashboard.png) | ![Teacher Dashboard](docs/screenshots/teacher_dashboard.png) | ![Admin Dashboard](docs/screenshots/admin_dashboard.png) |
 
 ---
 
@@ -55,11 +55,11 @@ A visual overview of the app
 
 ---
 
-### Leaderboards & Demo
+### Leaderboards
 
-| Leaderboards | Demo Login |
+| Leaderboards | 
 |---------------|------------|
-| ![Leaderboards](docs/screenshots/leaderboards.png) | ![Demo Login](docs/screenshots/demo_login.png) |
+| ![Leaderboards](docs/screenshots/leaderboards.png) |
 
 ---
 
@@ -67,7 +67,7 @@ A visual overview of the app
 
 | Light Mode | Dark Mode |
 |-------------|------------|
-| ![Light Mode](docs/screenshots/light_mode.png) | ![Dark Mode](docs/screenshots/student_dashboard.png) |
+| ![Light Mode](docs/screenshots/light_mode.png) | ![Dark Mode](docs/screenshots/demo_login.png) |
 
 ---
 
