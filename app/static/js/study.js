@@ -21,26 +21,26 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   shuffle(queue);
 
-  // Counter
-  function updateCounter() {
-    if (!counterEl) return;
+ // Counter
+function updateCounter() {
+  if (!counterEl) return;
 
-    let remaining;
+  let remaining;
 
-    // TEACHER MODE: count what's still rendered
-    if (typeof studentId !== "undefined" && studentId !== null) {
-      remaining = container.querySelectorAll(".section-box").length;
-    } else {
-      // STUDENT MODE: queue + reviewPool
-      remaining = (queue.length - index) + reviewPool.length;
-    }
-
-    remaining = Math.max(0, remaining);
-    counterEl.textContent = remaining;
-    if (counterEl.parentElement) {
-      counterEl.parentElement.style.display = remaining > 0 ? "block" : "none";
-    }
+  // TEACHER MODE: count what's still rendered
+  if (typeof studentId !== "undefined" && studentId !== null) {
+    remaining = container.querySelectorAll(".section-box").length;
+  } else {
+    // STUDENT MODE: queue + reviewPool
+    remaining = (queue.length - index) + reviewPool.length;
   }
+
+  remaining = Math.max(0, remaining);
+  counterEl.textContent = remaining;
+  if (counterEl.parentElement) {
+    counterEl.parentElement.style.display = remaining > 0 ? "block" : "none";
+  }
+}
 
   // ---------- Voice setup ----------
   let selectedVoice;
@@ -109,9 +109,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const cardId = cardDiv.dataset.cardId;
 
         try {
+          const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
           await fetch("/flashcard/review_flashcard", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
             body: JSON.stringify({ card_id: cardId, rating, student_id: studentId }),
           });
           if (rating === "2" || rating === "3") {
@@ -186,9 +187,10 @@ document.addEventListener("DOMContentLoaded", () => {
           const rating = btn.dataset.value;
 
           try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
             const res = await fetch("/flashcard/review_flashcard", {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
               body: JSON.stringify({ card_id: card.id, rating }),
             });
 

@@ -264,7 +264,6 @@ def study():
 
 
 @bp.route("/review_flashcard", methods=["POST"])
-@csrf.exempt
 @login_required
 def review_flashcard():
     """
