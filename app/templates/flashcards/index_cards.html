@@ -9,10 +9,25 @@
 
     <p>You have {{ total_flashcards }} flashcard{{ 's' if total_flashcards != 1 else '' }}. (Você tem {{ total_flashcards }} flashcard{{ 's' if total_flashcards != 1 else '' }}.)</p>
 
-    <form action="{{ url_for('flashcard.study') }}" method="get">
-        <button type="submit" class="btn btn-primary">Study (Estudar)</button>
-    </form>
-    
+  
+  {% set has_cards = has_cards %}
+
+
+  <form action="{{ url_for('flashcard.study') }}" method="get">
+    <button
+      type="submit"
+      class="btn {{ 'btn-primary' if has_cards else 'btn-secondary' }}"
+      {{ '' if has_cards else 'disabled' }}
+      aria-disabled="{{ 'false' if has_cards else 'true' }}">
+      Study (Estudar)
+    </button>
+  </form>
+  {% if not has_cards %}
+    <small class="text-muted d-block mt-1">
+      No cards due now. (Sem cartões para estudar no momento.)
+    </small>
+      <br>
+  {% endif %}
 
     <form action="{{ url_for('flashcard.edit_cards') }}" method="get">
         <button type="submit" class="btn btn-primary">Edit flashcards (Editar flashcards)</button>

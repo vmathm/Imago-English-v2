@@ -17,8 +17,20 @@ bp = Blueprint('flashcard', __name__, url_prefix='/flashcard')
 def flashcards():
 
     total_flashcards = db_session.query(func.count(Flashcard.id)).filter_by(user_id=current_user.id).scalar()
+    due_count = (
+            db_session.query(func.count(Flashcard.id))
+            .filter(
+                Flashcard.user_id == current_user.id,
+                or_(
+                    Flashcard.next_review.is_(None),
+                    Flashcard.next_review <= datetime.now(timezone.utc),
+                ),
+            )
+            .scalar()
+        )
 
-    return render_template("flashcards/index_cards.html", form=FlashcardForm(), total_flashcards=total_flashcards)
+    has_cards = (due_count or 0) > 0
+    return render_template("flashcards/index_cards.html", form=FlashcardForm(), has_cards=has_cards, due_count=due_count, total_flashcards=total_flashcards)
 
 @bp.route("/addcards", methods=["POST"])
 @login_required
