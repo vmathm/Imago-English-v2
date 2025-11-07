@@ -1,23 +1,28 @@
-<div>
-<div class="section-box my-flashcards"> 
-    <form id="add-card-form" action="/flashcard/addcards" method="post">
-        {{ form.hidden_tag() }}
+<div class="section-box my-flashcards">
+  <form id="add-card-form" action="/flashcard/addcards" method="post">
+    {{ form.hidden_tag() }}
 
-   
+    <div class="mb-3">
+      {{ form.question(
+          class="form-control mx-auto w-auto auto-expand",
+          style="overflow:hidden;resize:none;height:1.5em",
+          placeholder="question (pergunta)",
+          autofocus=True,
+          autocomplete="off"
+      ) }}
+    </div>
 
-        <div class="mb-3">
-            {{ form.question(class="form-control mx-auto w-auto auto-expand", placeholder="question (pergunta)", autofocus=True, autocomplete="off") }}
-        </div>
+    <div class="mb-3">
+      {{ form.answer(
+          class="form-control mx-auto w-auto auto-expand",
+          style="overflow:hidden;resize:none;height:1.5em",
+          placeholder="answer (resposta)",
+          autocomplete="off"
+      ) }}
+    </div>
 
-        <div class="mb-3">
-            {{ form.answer(class="form-control mx-auto w-auto auto-expand", placeholder="answer (resposta)", autofocus=True, autocomplete="off") }}
-        </div>
-
-        
-
-        <div class="mb-3">
-            {{ form.submit(class="btn btn-primary") }}
-        </div>
-    </form>
-</div>
+    <div class="mb-3">
+      {{ form.submit(class="btn btn-primary") }}
+    </div>
+  </form>
 </div>
