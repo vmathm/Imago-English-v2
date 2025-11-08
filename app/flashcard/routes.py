@@ -262,7 +262,6 @@ def study():
 
 
 
-
 @bp.route("/review_flashcard", methods=["POST"])
 @login_required
 def review_flashcard():

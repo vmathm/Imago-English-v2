@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, abort
+from flask import Blueprint, flash, render_template, redirect, request, url_for, abort
 from flask_login import current_user
 from app.flashcard.form import FlashcardForm
 from app.models import User            
@@ -88,6 +88,7 @@ def index():
     if not current_user.is_authenticated:
         return render_template('dashboard.html')
     
+    
       # --- Flashcard counts for current user ---
     total_flashcards = db_session.query(func.count(Flashcard.id)).filter_by(user_id=current_user.id).scalar()
 
@@ -120,7 +121,6 @@ def index():
 
     if current_user.is_admin():
         context.update(get_admin_data())
-        
 
     return render_template('dashboard.html', **context)
 

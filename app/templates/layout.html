@@ -132,8 +132,9 @@
     <div class="container text-center py-5">
 
     <!-- Flash container for JS (optional placeholder) -->
-    <div id="flash-message-container"></div>
-
+    <div class="container">
+      <div id="flash-message-container" class="mt-3"></div>
+    </div>
  
 
   {% with messages = get_flashed_messages(with_categories=true) %}
@@ -172,7 +173,49 @@
     <script src="{{ url_for('static', filename='js/auto-expand-input.js') }}"></script>
     
 
-{% block scripts %}{% endblock %}
+{% block scripts %}
+ <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const msg  = sessionStorage.getItem("flash_msg");
+  if (!msg) return;
+
+  const kindRaw = sessionStorage.getItem("flash_kind") || "success";
+  sessionStorage.removeItem("flash_msg");
+  sessionStorage.removeItem("flash_kind");
+
+  const map = {
+    success: "success",
+    ok: "success",
+    info: "info",
+    warning: "warning",
+    warn: "warning",
+    error: "danger",
+    danger: "danger"
+  };
+  const bsType = map[kindRaw.toLowerCase().trim()] || "success";
+  showFlash(msg, bsType);
+
+  function showFlash(message, bsType = "success") {
+  const container = document.getElementById("flash-message-container");
+  if (!container) return;
+
+  // map Bootstrap types to your custom ones
+  const map = { success: "success", info: "info", warning: "warning", danger: "error", error: "error", ok: "success" };
+  const kind = map[String(bsType).toLowerCase()] || "success";
+
+  const el = document.createElement("div");
+  el.className = `flashcard-${kind}-message`;
+  el.textContent = message;
+
+
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+});
+</script>
+
+{% endblock %}
 
 </body>
 

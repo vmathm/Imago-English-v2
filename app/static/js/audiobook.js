@@ -51,36 +51,35 @@ document.addEventListener("DOMContentLoaded", () => {
   textContent.addEventListener("touchend", handleSelection, { passive: true });
 
   async function handleSelection() {
-    const selection = window.getSelection().toString().trim();
-    if (!selection) return;
+  const selection = window.getSelection().toString().trim();
+  if (!selection) return;
 
-    // disable selection temporarily to avoid flicker
-    toggleSelection(true);
+  // disable selection temporarily to avoid flicker
+  toggleSelection(true);
 
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
-    const response = await fetch("/audiobook/translate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": csrfToken
-      },
-      body: JSON.stringify({ text: selection })
-    });
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+  const response = await fetch("/audiobook/translate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrfToken
+    },
+    body: JSON.stringify({ text: selection })
+  });
 
-    const { translation } = await response.json();
-
-    // ✅ Decode escaped characters
-    const cleanTranslation = decodeHtmlEntities(translation);
-
-    // Use the decoded version when showing modal
-    showModal(selection, cleanTranslation);
+  if (!response.ok) {
+    toggleSelection(false);
+    showFlash("Translation failed. Try again.", "error");
+    return;
   }
 
-  function decodeHtmlEntities(text) {
-    const txt = document.createElement("textarea");
-    txt.innerHTML = text;
-    return txt.value;
-  }
+  // ⬇️ Use the JSON as-is (no decoding helper)
+  const { translation } = await response.json();
+  showModal(selection, translation);
+
+  // re-enable for next selection
+  toggleSelection(false);
+}
 
 
   function showModal(original, translation) {

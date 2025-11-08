@@ -11,6 +11,8 @@
 <script type="text/javascript">
   const flashcards = {{ cards|tojson |safe }};
   const studentId = {{ student_id|tojson }};
+  const DASHBOARD_URL = "{{ url_for('dashboard.index') }}";  
 </script>
+
 <script src="{{ url_for('static', filename='js/study.js') }}"></script>
 {% endblock %}
