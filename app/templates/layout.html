@@ -132,22 +132,9 @@
     <div class="container text-center py-5">
 
     <!-- Flash container for JS (optional placeholder) -->
-    <div class="container">
       <div id="flash-message-container" class="mt-3"></div>
-    </div>
- 
+    
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <header>
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }} mb-0 text-center" role="alert">
-            {{ message }}
-          </div>
-        {% endfor %}
-      </header>
-    {% endif %}
-{% endwith %}
 
 
         {% block main %}{% endblock %}
@@ -172,50 +159,48 @@
     <script src="{{ url_for('static', filename='js/add-card.js') }}"></script>
     <script src="{{ url_for('static', filename='js/auto-expand-input.js') }}"></script>
     
-
+{% set flashes = get_flashed_messages(with_categories=true) %}
+<script>window.__serverFlashes = {{ flashes|tojson }};</script>
 {% block scripts %}
- <script>
+<script>
 document.addEventListener("DOMContentLoaded", () => {
+  // --- unified renderer (keeps your custom style) ---
+  function showFlash(message, kind = "success") {
+    const container = document.getElementById("flash-message-container");
+    if (!container) return;
+
+    // Normalize kinds -> your class suffix
+    const map = { success:"success", ok:"success", info:"info",
+                  warning:"warning", warn:"warning",
+                  error:"error", danger:"error" };
+    const k = map[String(kind).toLowerCase().trim()] || "success";
+
+    const el = document.createElement("div");
+    el.className = `flashcard-${k}-message`;
+    el.textContent = message;
+    container.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
+  }
+
+  // Prefer sessionStorage message (study completion, etc.)
   const msg  = sessionStorage.getItem("flash_msg");
-  if (!msg) return;
+  const kind = sessionStorage.getItem("flash_kind") || "success";
+  if (msg) {
+    sessionStorage.removeItem("flash_msg");
+    sessionStorage.removeItem("flash_kind");
+    showFlash(msg, kind);
+    return; // prevent also rendering server flashes
+  }
 
-  const kindRaw = sessionStorage.getItem("flash_kind") || "success";
-  sessionStorage.removeItem("flash_msg");
-  sessionStorage.removeItem("flash_kind");
+  // Otherwise, render server flashes from Flask's flash(...)
+  (window.__serverFlashes || []).forEach(([k, m]) => showFlash(m, k || "info"));
 
-  const map = {
-    success: "success",
-    ok: "success",
-    info: "info",
-    warning: "warning",
-    warn: "warning",
-    error: "danger",
-    danger: "danger"
-  };
-  const bsType = map[kindRaw.toLowerCase().trim()] || "success";
-  showFlash(msg, bsType);
-
-  function showFlash(message, bsType = "success") {
-  const container = document.getElementById("flash-message-container");
-  if (!container) return;
-
-  // map Bootstrap types to your custom ones
-  const map = { success: "success", info: "info", warning: "warning", danger: "error", error: "error", ok: "success" };
-  const kind = map[String(bsType).toLowerCase()] || "success";
-
-  const el = document.createElement("div");
-  el.className = `flashcard-${kind}-message`;
-  el.textContent = message;
-
-
-  container.appendChild(el);
-  setTimeout(() => el.remove(), 3000);
-}
-
+  // Optional: expose globally if you want to call from other scripts
+  window.showFlash = showFlash;
 });
 </script>
-
 {% endblock %}
+
 
 </body>
 
