@@ -122,10 +122,10 @@ pip install -r requirements.txt
 ```env
 
 SECRET_KEY=your-secret-key
-ALLOW_SEEDED_USERS=True  #False for production
+APP_ENV=development
 ```
 Optional: 
-add DATABASE_URL=sqlite:///app.db= your_database.db to .env
+add DATABASE_URL=sqlite:///instance/your_database.db to .env
 
 
 #### 3. Create a `.flaskenv` file in the project root:
@@ -154,7 +154,7 @@ SECRET_KEY=your-secret-key
 ALLOW_SEEDED_USERS=True
 ```
 Optional: 
-add DATABASE_URL=sqlite:///app.db= your_database.db to .env
+add DATABASE_URL=sqlite:///instance/app.db= your_database.db to .env
 
 
 

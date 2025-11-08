@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from werkzeug.middleware.proxy_fix import ProxyFix
 import os
 
-from config import Config
+from config import ProdConfig, DevConfig
 from .models.base import Base
 from .database import init_engine
 from .extensions import login_manager
@@ -11,6 +11,7 @@ from .extensions import csrf
 from .auth import user_loader
 from pathlib import Path
 from datetime import timedelta
+
 
 
 def create_app():
@@ -21,7 +22,8 @@ def create_app():
     static_dir = package_root / "static"                 # -> /app/app/static
 
     app = Flask(__name__, static_folder=str(static_dir), static_url_path="/static")
-    app.config.from_object("config.Config")
+    env = os.getenv("APP_ENV", "development").lower()
+    app.config.from_object(ProdConfig if env == "production" else DevConfig)
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
     csrf.init_app(app)
     login_manager.init_app(app)
@@ -40,7 +42,9 @@ def create_app():
             print("⚠️ Seeding skipped or failed:", e)
     
 
-    
+
+
+
     from .auth.routes import bp as auth_bp, google_bp
     from .dashboard.routes import bp as dashboard_bp
     from .flashcard.routes import bp as flashcard_bp

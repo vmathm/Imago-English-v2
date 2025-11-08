@@ -69,6 +69,13 @@ Each major feature has its own blueprint:
 
 The app uses a centralized `config.py` module to manage settings based on .env variables
 
+| Profile      |  Key Behaviors |
+|--------------|----------------|
+| `DevConfig`  |  Relaxed cookies (no HTTPS required), `ALLOW_SEEDED_USERS=True` to enable demo/seeded logins   
+| `ProdConfig` |  Strict cookies (`Secure`, `HttpOnly`), `ALLOW_SEEDED_USERS=False` (hard-disabled), assumes HTTPS termination. |
+
+
+Secrets and third-party credentials (SECRET_KEY, GOOGLE_OAUTH_CLIENT_ID/SECRET, DATABASE_URL) always come from the environment—never hard-coded in config classes.
 
 ### Configuration Fields in .env
 
@@ -77,7 +84,8 @@ The app uses a centralized `config.py` module to manage settings based on .env v
 | `SECRET_KEY`              | Flask session encryption and CSRF protection |
 | `SQLALCHEMY_DATABASE_URI` | Database connection string (SQLite) |
 | `SQLALCHEMY_TRACK_MODIFICATIONS` | Performance optimization (set to `False`) |
-| `ALLOW_SEEDED_USERS`         | Custom flag that enables `/auth/demo-login/<user_id>` |
+| `APP_ENV`     |Sets Development or Production config at config.py |
+
 
 
 ### Switching Environments
