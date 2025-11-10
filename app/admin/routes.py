@@ -78,7 +78,7 @@ def change_role():
 
     if form.validate_on_submit():
         user = db_session.query(User).filter_by(id=form.user_id.data).first()
-        if not user:
+        if not user or user.id == current_user.id:
             flash('User not found', 'danger')
             return redirect(url_for('dashboard.index'))
 
@@ -100,7 +100,7 @@ def delete_user():
     if form.validate_on_submit():
         user = db_session.query(User).filter_by(id=form.user_id.data).first()
 
-        if user:
+        if user and user.role != '@dmin!' and user.id != current_user.id and user.role != 'teacher':
             flashcards = db_session.query(Flashcard).filter_by(user_id=user.id).all()
             for fc in flashcards:
                 db_session.delete(fc)
