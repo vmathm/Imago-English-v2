@@ -21,10 +21,10 @@
       {% endblock %}
 
           
-        <h2 class="mb-4">Welcome, {{ current_user.name }}</h2>
-        <p>Role: <strong>{{ current_user.role }}</strong></p>
+        <h2>Welcome, {{ current_user.name }}</h2>
+        <small>Role: <strong>{{ current_user.role }}</strong></small>
 
-
+          <br><br>
 
         {% if current_user.role == 'teacher' %} 
 
@@ -91,8 +91,7 @@
             </div>
           {% endif %}
 
-            <hr>
-
+            
     {% else %}
 
     <div class="d-flex justify-content-center my-3">
@@ -103,7 +102,7 @@
             alt="Google Logo"
             class="google-icon"
             style="width: 45px; height: 45px;">
-        <span>Login with Google</span>
+        <span>Sign in with Google</span>
     </a>
     </div>
 
