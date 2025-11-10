@@ -6,23 +6,22 @@
   <div id="flash-message-container"></div>
   <h2>Student: {{ student.name }}</h2>
   <p>
-    Sequência de estudos (Study streak): <br> <strong>{{ current_user.study_streak }}
-    {{ "dia (day)" if current_user.study_streak == 1 else "dias (days)" }}</strong> 🔥<br><br>
-    Máxima sequência de estudos (Max Study Streak): <br> <strong>{{ current_user.max_study_streak }}
-    {{ "dia (day)" if current_user.max_study_streak == 1 else "dias (days)" }}</strong> 🏅<br><br>
-    Total de cartões estudados (Total cards studied): <br> <strong>{{ current_user.flashcards_studied }}</strong> 🃏<br>
-    {% if current_user.role == 'teacher' %} 
+    Sequência de estudos (Study streak): <br> <strong>{{ student.study_streak }}
+    {{ "dia (day)" if student.study_streak == 1 else "dias (days)" }}</strong> 🔥<br><br>
+    Máxima sequência de estudos (Max Study Streak): <br> <strong>{{ student.max_study_streak }}
+    {{ "dia (day)" if student.max_study_streak == 1 else "dias (days)" }}</strong> 🏅<br><br>
+    Total de cartões estudados (Total cards studied): <br> <strong>{{ student.flashcards_studied }}</strong> 🃏<br>
     <br>
     Rate 3 percentage: <br>
-    {% set studied = current_user.flashcards_studied or 0 %}
-    {% set r3 = current_user.rate_three_count or 0 %}
+    {% set studied = student.flashcards_studied or 0 %}
+    {% set r3 = student.rate_three_count or 0 %}
     {% set pct = (
         (r3 / studied * 100) if (r3 > 0 and studied > 0)
-        else (85 if (current_user.id|string)|length == 4 else 0)
+        else (85 if (student.id|string)|length == 4 else 0)
     ) %}
     <strong>{{ pct | round(2) }}%</strong> ⭐⭐⭐
 
-    {% endif %}
+  
   </p>
   {% include "partials/add-card-form.html" with context %}
 
