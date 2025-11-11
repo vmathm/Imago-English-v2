@@ -831,3 +831,18 @@ html[data-bs-theme="light"] #studentsAccordion .accordion-button.bg-warning-subt
 }
 
 
+/* Default: show leaderboard, hide hint */
+#leaderboard { display: block; }
+#rotate-to-landscape { display: none; }
+
+/* Hide leaderboard on small+portrait, show the rotate hint */
+@media (max-width: 991.98px) and (orientation: portrait) {
+  #leaderboard { display: none !important; }
+  #rotate-to-landscape { display: block !important; }
+}
+
+/* Show leaderboard in landscape (even on small screens) */
+@media (orientation: landscape) {
+  #leaderboard { display: block !important; }
+  #rotate-to-landscape { display: none !important; }
+}
