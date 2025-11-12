@@ -5,9 +5,9 @@
 {% block main %}
   <div class="container mt-5">
 
-    <h3>Flashcards</h3>
+    
 
-    <p>You have {{ total_flashcards }} flashcard{{ 's' if total_flashcards != 1 else '' }}. (Você tem {{ total_flashcards }} flashcard{{ 's' if total_flashcards != 1 else '' }}.)</p>
+    <p>You have {{ total_flashcards }} flashcard{{ 's' if total_flashcards != 1 else '' }}. <br><small>(Você tem {{ total_flashcards }} flashcard{{ 's' if total_flashcards != 1 else '' }}.)</small></p>
 
   
   {% set has_cards = has_cards %}

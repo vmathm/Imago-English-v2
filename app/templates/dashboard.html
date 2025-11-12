@@ -22,58 +22,13 @@
 
           
         <h2>Welcome, {{ current_user.name }}</h2>
-        <small>Role: <strong>{{ current_user.role }}</strong></small>
+        <small><strong>({{ current_user.role }})</strong></small>
 
-          <br><br>
-
-        {% if current_user.role == 'teacher' %} 
-
-          {% include "partials/teacher_dashboard.html" %}
-
-         {% elif current_user.role == '@dmin!' %}
-
-          {% include "partials/admin_dashboard.html" %}
-
+        {% if current_user.assigned_teacher_id %} 
+          <p> Professor <small>(Teacher)</small>: <strong>{{ current_user.assigned_teacher.name }}</strong></p>
         {% endif %}
-
-
-          {% if current_user.assigned_teacher_id %} 
-            <p> Professor (Teacher): <strong>{{ current_user.assigned_teacher.name }}</strong></p>
-          {% endif %}
-
-       <p>
-        Study streak (Sequência de estudos): <br>
-        <strong>
-          {{ current_user.study_streak }}
-          {{ "day (dia)" if current_user.study_streak == 1 else "days (dias)" }}
-        </strong> 🔥
-        <br><br>
-
-        Max study streak (Máxima sequência de estudos): <br>
-        <strong>
-          {{ current_user.max_study_streak }}
-          {{ "day (dia)" if current_user.max_study_streak == 1 else "days (dias)" }}
-        </strong> 🏅
-        <br><br>
-
-        Total cards studied (Total de cartões estudados): <br>
-        <strong>{{ current_user.flashcards_studied }}</strong> 🃏
-        {% if current_user.role == 'teacher' %}
-          <br><br>
-          Rate 3 percentage (Percentual de notas 3): <br>
-          {% set studied = current_user.flashcards_studied or 0 %}
-          {% set r3 = current_user.rate_three_count or 0 %}
-          {% set pct = (
-              (r3 / studied * 100) if (r3 > 0 and studied > 0)
-              else (85 if (current_user.id|string)|length == 4 else 0)
-          ) %}
-          <strong>{{ pct | round(2) }}%</strong> ⭐⭐⭐
-        {% endif %}
-       </p>
-
-
-        
-        {% if due_flashcards > 0 %}
+       
+                {% if due_flashcards > 0 %}
           <div class="alert alert-success mt-3  align-items-center">
             <div>
               Você tem <strong>{{ due_flashcards }}</strong> flashcard{{ "s" if due_flashcards > 1 else "" }} para estudar hoje! 📚 <br>
@@ -87,9 +42,62 @@
           </div>
         {% else %}
             <div class="alert alert-info mt-3">
-              Nenhum flashcard pendente 🎉
+              No due flashcards  <br>
+              <small>(Nenhum flashcard pendente)</small> 🎉
             </div>
           {% endif %}
+
+        {% if current_user.role == 'teacher' %} 
+
+          {% include "partials/teacher_dashboard.html" %}
+
+         {% elif current_user.role == '@dmin!' %}
+
+          {% include "partials/admin_dashboard.html" %}
+
+        {% endif %}
+
+          
+        <div class="section-box">
+        Total cards studied <br><small>(Total de cartões estudados)</small> <br>
+        <strong>{{ current_user.flashcards_studied }}</strong> 🃏
+        {% if current_user.role == 'teacher' %}
+        
+
+          Rate 3 percentage <br><small>(Percentual de notas 3)</small> <br>
+          {% set studied = current_user.flashcards_studied or 0 %}
+          {% set r3 = current_user.rate_three_count or 0 %}
+          {% set pct = (
+              (r3 / studied * 100) if (r3 > 0 and studied > 0)
+              else (85 if (current_user.id|string)|length == 4 else 0)
+          ) %}
+          <strong>{{ pct | round(2) }}%</strong> ⭐⭐⭐
+        {% endif %}
+       </p>
+        </div>
+
+       <div class="section-box">
+       <p>
+        Study streak <br><small>(Sequência de estudos)</small> <br>
+        <strong>
+          {{ current_user.study_streak }}
+          {{ "day (dia)" if current_user.study_streak == 1 else "days (dias)" }}
+        </strong> 🔥
+        </div>
+    
+
+        
+        <div class="section-box">
+        Max study streak <br><small>(Máxima sequência de estudos)</small> <br>
+        <strong>
+          {{ current_user.max_study_streak }}
+          {{ "day (dia)" if current_user.max_study_streak == 1 else "days (dias)" }}
+        </strong> 🏅
+        </div>
+ 
+
+        
+  
 
             
     {% else %}
