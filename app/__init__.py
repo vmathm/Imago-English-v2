@@ -1,5 +1,4 @@
 from flask import Flask
-from dotenv import load_dotenv
 from werkzeug.middleware.proxy_fix import ProxyFix
 import os
 
@@ -14,9 +13,18 @@ from datetime import timedelta
 
 
 
+
 def create_app():
-    
-    load_dotenv()
+    # Load .env only outside production, only if the file exists, and only if python-dotenv is installed.
+    try:
+        env_mode = os.getenv("APP_ENV", "development").lower()
+        if env_mode != "production":
+            env_path = Path(__file__).resolve().parents[1] / ".env"
+            if env_path.exists():
+                from dotenv import load_dotenv  # optional dependency
+                load_dotenv(env_path)
+    except Exception:
+        pass
 
     package_root = Path(__file__).resolve().parent       # -> /app/app
     static_dir = package_root / "static"                 # -> /app/app/static
