@@ -2,7 +2,6 @@
 
 
 
-/*LOAD.HTML DARK MODE */
 .text-content {
   background-color: var(--bs-body-bg) !important; /* Adjust the last value (alpha) to control darkness */
   color: var(--bs-body-color) !important; /* Set text color to contrast with the dark background */
@@ -31,41 +30,10 @@
   text-align: right;
 }
 
-/* Dark Mode Switch Styling */
-.form-switch .form-check-input {
-  width: 2.5rem;
-  height: 1.2rem;
-  background-color: var(--bs-secondary-bg);
-  border-radius: 1.2rem;
-  transition: background-color 0.3s;
-}
 
-.form-switch .form-check-input:checked {
-  background-color: var(--bs-primary);
-}
 
-.form-switch .form-check-label {
-  margin-left: 0.5rem;
-  color: var(--bs-body-color);
-  display: inline-flex;
-  align-items: center;
-  position: relative;
-  z-index: 1;
-  white-space: nowrap;
-}
 
-/* Dark mode switch color */
-body.dark-mode .form-check-input {
-  background-color: var(--bs-secondary-bg);
-}
 
-body.dark-mode .form-check-input:checked {
-  background-color: var(--bs-secondary-bg);
-}
-
-body.dark-mode .form-check-label {
-  color: var(--bs-body-color); 
-}
 
 /* Navbar switch alignment */
 .nav-item .form-check {
@@ -133,15 +101,6 @@ body.dark-mode .form-check-label {
   }
 }
 
-/* Dark mode switch button hover */
-.form-check-input:hover {
-  cursor: pointer;
-}
-
-/* Adjust the gap between the switch and the last item */
-.navbar-nav.ms-auto {
-  margin-right: 0.5rem;
-}
 
 /* Improved alignment of switch and label */
 .form-check-label {
@@ -476,7 +435,7 @@ a {
 
 
 
-/* ===== Light Mode: Your Custom Look ===== */
+/* ===== Light Mode: DISABLED ===== 
 html[data-bs-theme="light"] {
   color: white;
 }
@@ -511,8 +470,10 @@ html[data-bs-theme="light"] footer a {
 }
 
 html[data-bs-theme="light"] footer a:hover {
-  color: #ccc; /* optional: lighter shade on hover */
-}
+  color: #ccc; 
+} 
+*/
+
 /* ===== Dark Mode: Bootstrap-native ===== */
 html[data-bs-theme="dark"] {
   background-color: #000;

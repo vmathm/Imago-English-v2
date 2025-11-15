@@ -21,7 +21,7 @@
       {% endblock %}
 
           
-        <h2>Welcome, {{ current_user.name }}</h2>
+        <h4>Welcome, {{ current_user.name }}</h4>
         <small><strong>({{ current_user.role }})</strong></small>
 
         {% if current_user.assigned_teacher_id %} 
@@ -31,8 +31,10 @@
                 {% if due_flashcards > 0 %}
           <div class="alert alert-success mt-3  align-items-center">
             <div>
-              Você tem <strong>{{ due_flashcards }}</strong> flashcard{{ "s" if due_flashcards > 1 else "" }} para estudar hoje! 📚 <br>
-              (You have <strong>{{ due_flashcards }}</strong> flashcard{{ "s" if due_flashcards > 1 else "" }} to study today!)
+              
+              <p>You have <strong>{{ due_flashcards }}</strong> flashcard{{ "s" if due_flashcards > 1 else "" }} to study today!<br> 
+                <small>(Você tem <strong>{{ due_flashcards }}</strong> flashcard{{ "s" if due_flashcards > 1 else "" }} para estudar hoje!) 📚</small>
+              </p>
             </div>
        
             <form action="{{ url_for('flashcard.study') }}" method="get">

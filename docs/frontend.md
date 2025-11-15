@@ -23,7 +23,7 @@ This update to `styles.css` modernizes the project’s design system by:
   }
   ```
 
-#### 🌚 Dark Mode
+#### 🌚 Dark Mode (DISABLED)
 * `html[data-bs-theme="dark"]` switches to a solid black background and disables the gradient
 * All key components inherit Bootstrap’s `--bs-body-bg` and `--bs-body-color`
 * No manual overrides are needed for text readability
@@ -165,7 +165,7 @@ Note: The review logic follows the customized spaced repetition algorithm (see `
 * Each question and answer also includes a **🔊 button** that uses the Web Speech API for text-to-speech. The script initializes an English voice, provides playback with adjustable rate and pitch, and highlights the button with a smooth animation while speaking.
 
 
-### Theme Toggle Script
+### Theme Toggle Script (DISABLED)
 
 Handles dark mode switching using Bootstrap 5.3’s `data-bs-theme` attribute.
 
