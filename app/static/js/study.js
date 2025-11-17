@@ -128,7 +128,7 @@ async function redirectToDashboardCompleted() {
   if (__redirectingCompleted) return;
   __redirectingCompleted = true;
 
-  const DEFAULT_MSG  = "Você estudou todos os flashcards! 🔥";
+  const DEFAULT_MSG  = "You studied all your flashcards! 🔥";
   const DEFAULT_KIND = "success";
 
   // small timeout so a flaky endpoint doesn't block the redirect
