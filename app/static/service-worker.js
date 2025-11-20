@@ -2,7 +2,6 @@ const CACHE_NAME = "imago-v2-cache";
 const STATIC_ASSETS = [
   "/",
   "/static/css/styles.css",
-  "/static/js/theme-toggle.js",
   "/static/img/icons/icon-192.png",
   "/static/img/icons/icon-512.png"
 ];

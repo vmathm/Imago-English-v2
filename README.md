@@ -63,14 +63,6 @@ A visual overview of the app
 
 ---
 
-### Light & Dark Mode
-
-| Light Mode | Dark Mode |
-|-------------|------------|
-| ![Light Mode](docs/screenshots/light_mode.png) | ![Dark Mode](docs/screenshots/demo_login.png) |
-
----
-
 
 
 ## ✅ Features (Planned and Implemented)

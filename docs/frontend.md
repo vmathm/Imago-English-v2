@@ -158,7 +158,7 @@ Note: The review logic follows the customized spaced repetition algorithm (see `
 
 * A rating of **1** moves the card to the end of the queue; otherwise it is removed.
 
-* When no cards remain, the message **“Você estudou todos os flashcards!”** is shown.
+* When no cards remain, the message **“  todos os flashcards!”** is shown.
 
 * If Study Mode is being used by a teacher from `manage_student_cards.html`, then all cards are rendered to the page with level information, and rating **1** does not remove them.
 
@@ -249,3 +249,4 @@ All Flask-WTF forms include:
 JS (AJAX) requests:  
 <meta name="csrf-token" content="{{ csrf_token() }}">  
 This exposes the CSRF token to JavaScript so it can be included in the `X-CSRFToken` header when making `fetch` (AJAX) calls.
+g
