@@ -7,12 +7,12 @@
     <h5 class="mb-3">Criar flashcard (Create flashcard)</h5>
 
     <div class="mb-2">
-      <label for="modal-question" class="form-label">Pergunta (Question)</label>
+      <label for="modal-question" class="form-label">Question <small>(Pergunta)</small></label>
       <textarea id="modal-question" class="form-control" rows="3"></textarea>
     </div>
 
     <div class="mb-3">
-      <label for="modal-answer" class="form-label">Resposta (Answer)</label>
+      <label for="modal-answer" class="form-label">Answer <small>(Resposta)</small></label>
       <textarea id="modal-answer" class="form-control" rows="3"></textarea>
     </div>
 
@@ -29,13 +29,13 @@
     <div class="col-md-12">
       <div class="pt-4">
       <p>Upload your audio and text files (.txt format). When you select a word or phrase, you can see the translation and create flashcards.</p>
-      <p>(Carregue seu arquivo de áudio e texto (formato .txt). Ao selecionar uma palavra ou frase, veja a tradução e crie flashcards.)</p>
+      <p><small>(Carregue seu arquivo de áudio e texto (formato .txt). Ao selecionar uma palavra ou frase, veja a tradução e crie flashcards.)</small></p>
       </div>
       <input type="file" id="audio-input" accept="audio/*" hidden>
       <input type="file" id="text-input" accept=".txt" hidden>
 
-          <button id="load-audio" class="btn btn-primary">Load Audio (Carregar áudio)</button>
-      <button id="load-text"  class="btn btn-primary">Load Text (Carregar texto)</button>
+          <button id="load-audio" class="btn btn-primary">Load Audio <small>(Carregar áudio)</small></button>
+      <button id="load-text"  class="btn btn-primary">Load Text <small>(Carregar texto)</small></button>
 
       <audio id="audio-player" controls style="display:none;" class="mt-3"></audio>
       

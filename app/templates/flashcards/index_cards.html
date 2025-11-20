@@ -19,7 +19,7 @@
       class="btn {{ 'btn-primary' if has_cards else 'btn-secondary' }}"
       {{ '' if has_cards else 'disabled' }}
       aria-disabled="{{ 'false' if has_cards else 'true' }}">
-      Study (Estudar)
+      Study <small>(Estudar)</small>
     </button>
   </form>
   {% if not has_cards %}
@@ -30,7 +30,7 @@
   {% endif %}
 
     <form action="{{ url_for('flashcard.edit_cards') }}" method="get">
-        <button type="submit" class="btn btn-primary">Edit flashcards (Editar flashcards)</button>
+        <button type="submit" class="btn btn-primary">Edit flashcards <small>(Editar flashcards)</small></button>
     </form>
 
     

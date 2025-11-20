@@ -19,4 +19,4 @@ class FlashcardForm(FlaskForm):
         render_kw={"maxlength": 500}
     )
     student_id = HiddenField()
-    submit = SubmitField("Adicionar")
+    submit = SubmitField("Add (Adicionar)")
