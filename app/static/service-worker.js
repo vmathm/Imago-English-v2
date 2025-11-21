@@ -6,26 +6,20 @@ const STATIC_ASSETS = [
   "/static/img/icons/icon-512.png"
 ];
 
-// Install event: pre-cache key files
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
-  );
-  self.skipWaiting();
-});
-
-// Activate event: clean up old caches
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
-  );
-  self.clients.claim();
-});
-
-// Fetch event: try cache first, fallback to network
 self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+
+  // 1) Don’t touch cross-origin requests (e.g. accounts.google.com)
+  if (url.origin !== self.location.origin) {
+    return; // Let the browser handle it normally
+  }
+
+  // 2) Optionally: don’t cache auth or API routes
+  if (url.pathname.startsWith("/auth/") || url.pathname.startsWith("/api/")) {
+    return;
+  }
+
+  // 3) Cache-first for *static* same-origin assets only
   event.respondWith(
     caches.match(event.request).then((response) => response || fetch(event.request))
   );

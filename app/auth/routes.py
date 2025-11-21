@@ -46,16 +46,21 @@ def demo_login(user_id):
 
 @bp.route("/login/google")
 def login():
+    current_app.logger.info("Hitting /auth/login/google; session=%s", dict(session))
     return redirect(url_for("google.login"))
 
 
 
 @bp.route("/login/google/complete")
 def google_complete():
-    
+    current_app.logger.info(
+        "Google complete hit; google.authorized=%s; session=%s",
+        google.authorized,
+        dict(session),
+    )
     if not google.authorized:
-        print("Google authorized:", google.authorized)
-        return f"Not authorized. Session: {session}", 403
+        return "Not authorized", 403
+    ...
 
    
     info = get_google_user_info()
