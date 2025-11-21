@@ -266,3 +266,44 @@ The dashboard route (`dashboard/index`) uses two helper functions to assemble ro
 - `get_admin_data()` → returns all admin forms and user lists, with WTForms choices pre-populated.
 
   
+
+## PWA scope vs. Google OAuth (Android behavior)
+The PWA manifest is intentionally scoped to the dashboard routes only:
+
+```json
+{
+  "start_url": "/dashboard/",
+  "scope": "/dashboard/",
+  "display": "standalone",
+  ...
+}
+```
+#### Why this matters:
+
+- All interactive app UI lives under /dashboard/….
+
+- All authentication and OAuth endpoints live outside that scope:
+
+    - /auth/...
+
+    - /login/google/authorized (Flask-Dance callback)
+
+- On Android, installed PWAs are packaged as WebAPKs. If the PWA scope includes / (the whole origin), Chrome may try to “hand off” OAuth callback URLs back into the PWA window, which breaks the Flask-Dance session/state on some devices and causes a Google login loop (account chooser repeating).
+
+#### Resulting behavior
+
+Google OAuth now runs entirely in normal Chrome:
+
+1. User taps “Sign in with Google” (in browser or inside PWA).
+
+2. Flow goes through /auth/login/google → Google → /login/google/authorized → /auth/login/google/complete.
+
+3. All of this stays outside the PWA scope, in a single browser context with a consistent session.
+
+- Once authenticated, the user is redirected to /dashboard/, which is inside the PWA scope and opens in standalone mode when installed.
+
+
+** Restricting the PWA scope to /dashboard/ is a deliberate choice to avoid Android WebAPK / Chrome handoff issues during OAuth. ** 
+
+
+

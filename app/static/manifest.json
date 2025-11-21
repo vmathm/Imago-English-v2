@@ -1,6 +1,6 @@
 {
   "name": "Imago English",
-  "short_name": "Imago",
+  "short_name": "Imago English",
   "description": "Study English with flashcards, audiobooks, and progress tracking.",
   "start_url": "/dashboard/",
   "scope": "/dashboard/",

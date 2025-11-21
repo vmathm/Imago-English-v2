@@ -249,4 +249,26 @@ All Flask-WTF forms include:
 JS (AJAX) requests:  
 <meta name="csrf-token" content="{{ csrf_token() }}">  
 This exposes the CSRF token to JavaScript so it can be included in the `X-CSRFToken` header when making `fetch` (AJAX) calls.
-g
+
+
+## Progressive Web App: Web App Manifest
+
+The app is installable as a PWA and exposes a standard Web App Manifest.
+
+**File:** `static/manifest.webmanifest` (served from `/manifest.webmanifest`)
+
+Key fields:
+
+- `name` / `short_name`  
+  Used for the install prompt and the app label on devices.
+
+- `start_url` and `scope`
+
+  ```json
+  "start_url": "/dashboard/",
+  "scope": "/dashboard/"
+
+* The PWA is intentionally scoped only to `/dashboard/…`.
+  Auth and OAuth routes (e.g. `/auth/...`, `/login/google/authorized`) live outside this scope so that Google login always runs in the regular browser context. (More about this in [architecture.md](architecture.md))
+
+
