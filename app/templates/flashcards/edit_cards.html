@@ -6,10 +6,7 @@
  <div id="flash-message-container"></div>
 {% include "partials/search_bar.html" %}
 
-{% block scripts %}
-{{ super() }}
-<script src="{{ url_for('static', filename='js/flashcard-search.js') }}"></script>
-{% endblock %}
+
 
 
 {% for card in flashcards %}
@@ -19,14 +16,19 @@
     
         <div class="mb-3">
             {{ forms[card.id].question.label }}
-            {{ forms[card.id].question(class="form-control auto-expand") }}
+            {{ forms[card.id].question(class="form-control auto-expand flashcard-question") }}
         </div>
 
         <div class="mb-3">  
             {{ forms[card.id].answer.label }}
-            {{ forms[card.id].answer(class="form-control auto-expand") }}
+            {{ forms[card.id].answer(class="form-control auto-expand flashcard-answer") }}
         </div>
-
+         <div class="mb-3">
+              <button type="button"
+                      class="btn btn-outline-secondary btn-sm flip-card-btn">
+                  Flip question & answer
+              </button>
+          </div>
         <div class="mb-3"> 
         <span class="tc-status">
               {% if card.reviewed_by_tc %}✅Reviewed by teacher{% endif %}
@@ -41,6 +43,29 @@
   
 {% endfor %}
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.flip-card-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const form = btn.closest('.flashcard-form');
+      if (!form) return;
 
+      const questionField = form.querySelector('.flashcard-question');
+      const answerField   = form.querySelector('.flashcard-answer');
 
+      if (!questionField || !answerField) return;
+
+      const temp = questionField.value;
+      questionField.value = answerField.value;
+      answerField.value = temp;
+    });
+  });
+});
+</script>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/flashcard-search.js') }}"></script>
 {% endblock %}
