@@ -170,6 +170,7 @@ Receives JSON `{"text": "<selected string>"}`
 - Looks up a teacher by `user_name` and renders a public page with the teacher’s available slots.
 - Returns **404** if the teacher is not found.  
  
+* Seed teacher users have a valid email address to enable demo view. 
 
 ### `GET /calendar/settings` *(teachers only)*
 - Shows the `CalendarSettingsForm` for the logged‑in teacher to adjust working hours, lesson duration and weekend availability.
