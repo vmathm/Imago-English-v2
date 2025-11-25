@@ -184,6 +184,7 @@ flowchart TD
 Now in any route:
     🔹 current_user is available
     🔹 protect views with `@login_required`
+    
 
 
 ## Form Handling
@@ -297,7 +298,7 @@ OAUTHLIB_INSECURE_TRANSPORT=1  # Only for development
 
 - `GET /auth/login/google/complete` – final login logic after Google redirects back
 
-- Refer to docs/api.md for full details.
+- Refer to [## Auth at api.md](docs/api.md##auth) for full details.
 
 ### 4. Dependencies
 - flask-dance[google]

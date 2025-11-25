@@ -89,7 +89,39 @@
       </div>
     </div>
 
-    <!-- Delete User -->
+  
+
+    <!-- Activate / Deactivate -->
+    <div class="accordion-item mb-2 border-0">
+      <h2 class="accordion-header" id="headingActive">
+        <button class="accordion-button collapsed w-100 py-3 fw-semibold" type="button"
+                data-bs-toggle="collapse" data-bs-target="#collapseActive"
+                aria-expanded="false" aria-controls="collapseActive">
+          Activate / Deactivate User
+        </button>
+      </h2>
+      <div id="collapseActive" class="accordion-collapse collapse" aria-labelledby="headingActive"
+          data-bs-parent="#adminAccordion">
+        <div class="accordion-body">
+          <form action="{{ url_for('admin.toggle_active_status') }}" method="post">
+            {{ toggle_active_status_form.hidden_tag() }}
+
+            <div class="mb-3">
+              {{ toggle_active_status_form.user_id.label(class="form-label") }}
+              {{ toggle_active_status_form.user_id(class="form-select w-100") }}
+            </div>
+
+
+            <div class="mb-3">
+              {{ toggle_active_status_form.submit(class="btn btn-primary w-100") }}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+
+ <!-- Delete User -->
     <div class="accordion-item mb-2 border-0">
       <h2 class="accordion-header" id="headingDelete">
         <button class="accordion-button collapsed w-100 py-3 fw-semibold text-danger" type="button"
@@ -115,6 +147,7 @@
       </div>
     </div>
 
+    
   </div>
 </div>
 <br><br>

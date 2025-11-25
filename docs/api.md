@@ -55,7 +55,13 @@ More routes will be added as blueprints are developed.
 - Hard deletes a user and their flashcards from the database.
 
 ### `POST /admin/toggle_active_status`
-- Toggles `user.active` (also affects is_active since it returns self.active)
+- Toggles `user.active` 
+
+- Disables flashcard creation, editing, study and managing student cards for teachers. 
+
+- Redirects the user to `inactive_user.html` on any flashcard-related route
+
+- keeps Google OAuth login functional (user can still log in)
 
 ### `POST /admin/update_student_level`
 - Updates `user.level` (A1 to C2)
@@ -66,9 +72,6 @@ More routes will be added as blueprints are developed.
 
 
 ## Dashboard
-
-### `GET /index`
-- Loads `dashboard.html` according to user type, rendering necessary forms and partials. 
 
 ### `GET /index`
 - Loads `dashboard.html` according to user type.
@@ -95,7 +98,29 @@ More routes will be added as blueprints are developed.
 - Templates decide what to show based on which keys exist.
 
 
+### `POST /dashboard/set_username`
+- Updates the logged-in user’s `user_name`.
+- Requires authentication.
+
+#### Request
+Standard HTML form POST:
+
+- `user_name` – new username to be displayed in the dashboard and used in the URLs for the calendar link.
+
+Basic validation is applied (non-empty string, trimmed).  
+If valid, `current_user.user_name` is updated and the user is redirected back to `/dashboard` with a flashed message.
+
+#### Notes
+- On first login, `user_name` is automatically set to the part of the email before `@`.  
+  Example: `john@gmail.com` → `john`.
+- This endpoint lets the user override that default with a more friendly or public-facing username.
+
+
 ## Flashcards
+⚠ All flashcard routes require an [active user](architecture.md####user-account-status-(active))
+If current_user.active == False, the request redirects to `/inactive_user.html`
+
+
 ### `POST /addcards`
 adds a flashcard to the user's db and redirects to dashboard.index. 
 Handles flashcards being added to current_user or to student by using a hidden input for student.id:

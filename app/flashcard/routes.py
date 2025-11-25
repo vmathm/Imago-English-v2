@@ -1,6 +1,7 @@
 from flask import Blueprint, request, redirect, url_for, flash, render_template, jsonify
 from flask_login import current_user, login_required
 from app.database import db_session
+from app.decorators import active_required
 from app.flashcard.form import FlashcardForm
 from app.models import Flashcard, User
 from datetime import datetime, timezone, timedelta
@@ -33,7 +34,7 @@ def flashcards():
     return render_template("flashcards/index_cards.html", form=FlashcardForm(), has_cards=has_cards, due_count=due_count, total_flashcards=total_flashcards)
 
 @bp.route("/addcards", methods=["POST"])
-@login_required
+@active_required
 def addcards():
     form = FlashcardForm()
     if form.validate_on_submit():
@@ -107,7 +108,7 @@ def addcards():
 
 
 @bp.route("/edit_cards", methods=["GET"])
-@login_required
+@active_required
 def edit_cards():
     
     if current_user.is_student():
@@ -151,7 +152,7 @@ def edit_cards():
 
 
 @bp.route("/edit_card/<int:card_id>", methods=["POST"])
-@login_required
+@active_required
 def edit_card(card_id):
     flashcard = db_session.query(Flashcard).get(card_id)
 
@@ -217,7 +218,7 @@ def edit_card(card_id):
 
 
 @bp.route("/study")
-@login_required
+@active_required
 def study():
     """Show flashcards due for review."""
     student_id = request.args.get("student_id")
@@ -263,7 +264,7 @@ def study():
 
 
 @bp.route("/review_flashcard", methods=["POST"])
-@login_required
+@active_required
 def review_flashcard():
     """
     Update flashcard scheduling when a rating (1, 2, or 3) is submitted from study.js.
@@ -368,7 +369,7 @@ def update_study_streak(user):
     user.max_points = (user.points or 0) * (user.max_study_streak or 0)
 
 @bp.route("/manage/<student_id>", methods=["GET"])
-@login_required
+@active_required
 def manage_student(student_id):
     if not current_user.is_teacher() and not current_user.is_admin():
         abort(403)

@@ -40,6 +40,7 @@ def assign_student():
             return redirect(url_for('dashboard.index'))
 
         student.assigned_teacher_id = teacher.id
+        student.active = True 
         db_session.commit()
         flash(f'{student.name} assigned to {teacher.name}', 'success')
     else:
@@ -61,6 +62,7 @@ def unassign_student():
             return redirect(url_for('dashboard.index'))
 
         student.assigned_teacher_id = None
+        student.active = False
         db_session.commit()
         flash(f'{student.name} unassigned', 'success')
     else:
@@ -79,10 +81,12 @@ def change_role():
     if form.validate_on_submit():
         user = db_session.query(User).filter_by(id=form.user_id.data).first()
         if not user or user.id == current_user.id:
-            flash('User not found', 'danger')
+            flash('User not found / demote user status before deleting.', 'danger')
             return redirect(url_for('dashboard.index'))
 
         user.role = form.role.data
+        if user.role == 'student':  
+            user.active = False
         db_session.commit()
         flash(f"{user.name}'s role updated to {form.role.data}", 'success')
     else:
@@ -155,8 +159,7 @@ def update_student_level():
             db_session.commit()
             flash(f"{student.name}'s level updated to {form.level.data}", "success")
     else:
-        print("DEBUG form.errors:", form.errors)
-        print("DEBUG form data:", form.data)
         flash("Invalid form submission.", "danger")
 
     return redirect(url_for("dashboard.index"))
+

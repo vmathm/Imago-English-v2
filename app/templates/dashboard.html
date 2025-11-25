@@ -7,7 +7,7 @@
 
     <div class="container mt-5">
     {% if current_user.is_authenticated %}
-
+      
       <button id="install-button"
               class="btn btn-success position-fixed bottom-0 end-0 m-3 shadow-lg"
               style="display:none; z-index: 1050;">
@@ -21,8 +21,51 @@
       {% endblock %}
 
           
-        <h4>Welcome, {{ current_user.name }}</h4>
-        <small><strong>({{ current_user.role }})</strong></small>
+
+
+     <h4>Welcome, {{ current_user.user_name }}</h4> 
+     <small><strong>({{ current_user.role }})</strong></small>
+
+        <div class="mt-1">
+          <small class="text-muted">
+            <button
+              class="btn btn-link btn-sm p-0 align-baseline"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#usernameCollapse"
+              aria-expanded="false"
+              aria-controls="usernameCollapse"
+            >
+              Change username (alterar nome de usuário)
+            </button>
+          </small>
+
+          <div class="collapse mt-2" id="usernameCollapse">
+            <form method="post"
+                  action="{{ url_for('dashboard.set_username') }}"
+                  class="d-inline-flex align-items-center gap-2">
+              {{ user_name_form.hidden_tag() }}
+
+              {{ user_name_form.user_name(
+                class_="form-control form-control-sm",
+                value=suggested_username,
+                style="max-width: 220px;"
+              ) }}
+
+              {{ user_name_form.submit(
+                class_="btn btn-sm btn-outline-primary"
+              ) }}
+            </form>
+
+            {% for error in user_name_form.user_name.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+
+
+       
 
         {% if current_user.assigned_teacher_id %} 
           <p> Professor <small>(Teacher)</small>: <strong>{{ current_user.assigned_teacher.name }}</strong></p>
@@ -63,20 +106,11 @@
         <div class="section-box">
         Total cards studied <br><small>(Total de cartões estudados)</small> <br>
         <strong>{{ current_user.flashcards_studied }}</strong> 🃏
+        </div>
+
         {% if current_user.role == 'teacher' %}
         
-
-          Rate 3 percentage <br><small>(Percentual de notas 3)</small> <br>
-          {% set studied = current_user.flashcards_studied or 0 %}
-          {% set r3 = current_user.rate_three_count or 0 %}
-          {% set pct = (
-              (r3 / studied * 100) if (r3 > 0 and studied > 0)
-              else (85 if (current_user.id|string)|length == 4 else 0)
-          ) %}
-          <strong>{{ pct | round(2) }}%</strong> ⭐⭐⭐
-        {% endif %}
-       </p>
-        </div>
+      
 
        <div class="section-box">
        <p>
@@ -98,7 +132,18 @@
         </div>
  
 
-        
+          <div class="section-box">
+          Rate 3 percentage <br><small>(Percentual de notas 3)</small> <br>
+          {% set studied = current_user.flashcards_studied or 0 %}
+          {% set r3 = current_user.rate_three_count or 0 %}
+          {% set pct = (
+              (r3 / studied * 100) if (r3 > 0 and studied > 0)
+              else (85 if (current_user.id|string)|length == 4 else 0)
+          ) %}
+          <strong>{{ pct | round(2) }}%</strong> ⭐⭐⭐
+        {% endif %}
+       </p>
+        </div>
   
 
             

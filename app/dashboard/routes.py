@@ -1,5 +1,5 @@
-from flask import Blueprint, flash, render_template, redirect, request, url_for, abort
-from flask_login import current_user
+from flask import Blueprint, flash, render_template, redirect, request, session, url_for, abort
+from flask_login import current_user, login_required
 from app.flashcard.form import FlashcardForm
 from app.models import User            
 from app.database import db_session
@@ -7,6 +7,7 @@ from app.admin.forms import AssignStudentForm, UnassignStudentForm, ChangeRoleFo
 from app.models.flashcard import Flashcard 
 from sqlalchemy import func, or_
 from datetime import datetime, timezone
+from app.dashboard.forms import UsernameForm
 
 
 bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
@@ -85,8 +86,19 @@ def get_admin_data():
 
 @bp.route('/')
 def index():
+
     if not current_user.is_authenticated:
+        print("User not authenticated, rendering dashboard without user data.")
         return render_template('dashboard.html')
+    
+    user_name_form = UsernameForm()
+
+    if current_user.user_name:
+        suggested_username = current_user.user_name
+    else:   
+        suggested_username = current_user.email.split("@")[0]
+
+    user_name_form = UsernameForm(data={"user_name": suggested_username})
     
     
       # --- Flashcard counts for current user ---
@@ -113,7 +125,9 @@ def index():
         "toggle_active_status_form": None,
         "change_student_level_form": None,
         "total_flashcards": total_flashcards,
-        "due_flashcards": due_flashcards
+        "due_flashcards": due_flashcards,
+        "user_name_form": user_name_form,
+        "suggested_username": suggested_username
     }
 
     if current_user.is_teacher():
@@ -123,5 +137,40 @@ def index():
         context.update(get_admin_data())
 
     return render_template('dashboard.html', **context)
+
+
+@bp.route("/set_username", methods=["POST"])
+@login_required
+def set_username():
+    user_name_form = UsernameForm()
+
+    if user_name_form.validate_on_submit():
+        desired_name = user_name_form.user_name.data.strip()
+
+       
+        existing = (
+            db_session.query(User)
+            .filter(
+                User.user_name == desired_name,
+                User.id != current_user.id  
+            )
+            .first()
+        )
+
+        if existing:
+            flash("Este nome de usuário já está em uso. Por favor, escolha outro.", "danger")
+            return redirect(url_for("dashboard.index"))
+
+       
+        current_user.user_name = desired_name
+        db_session.commit()
+        flash("Nome de usuário salvo com sucesso!", "success")
+    else:
+        
+        for field, errors in user_name_form.errors.items():
+            for error in errors:
+                flash(error, "danger")
+
+    return redirect(url_for("dashboard.index"))
 
 

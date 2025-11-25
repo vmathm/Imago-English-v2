@@ -115,14 +115,14 @@ The `User` model represents all types of users in the system: students, teachers
 |----------------------|--------------|-------------|
 | id                   | String (PK)  | Unique user ID (from Google OAuth) |
 | name                 | String       | User's display name |
-| user_name            | String       | Optional custom username |
+| user_name            | String       | Defined by default using the user's email as in the example: john@gmail.com → user_name: john |
 | email                | String       | User email address |
 | google_access_token  | String       | Stored access token for Google APIs |
 | profilepic           | String       | Profile image URL |
 | phone                | String       | Optional phone number |
 | level                | String       | English level (e.g., A1, B2) |
 | role                 | String       | `'student'`, `'teacher'`, or `'@dmin!'` |
-| active *               | Boolean      | Whether the account is active (used by Flask-Login)  |
+| active               | Boolean      | Grants access to flashcard features  |
 | delete_date          | Date         | Soft-delete timestamp |
 | user_stripe_id       | String       | Stripe ID for payment tracking |
 | join_date            | Date         | First registration date |
@@ -136,7 +136,7 @@ The `User` model represents all types of users in the system: students, teachers
 | rate_three_count     | Integer      | Number of "3" ratings received for flashcards |
 | assigned_teacher_id  | FK → users.id | Reference to the user’s assigned teacher |
 
-* `active` overrides he default behavior of Flask-Login's `is_active` property so it's based on DB value. (default is always True)
+
 
 ---
 
@@ -162,6 +162,39 @@ user.is_teacher()   # True if teacher or admin
 user.is_admin()     # True if admin
 ```
 
+#### User Account Status (active)
+
+The active column controls whether the user has access to all learning features. 
+
+Admins may toggle this status via `/admin/toggle_active_status`. Assigning a student to a teacher sets `active` to True and Unassigning sets it to False. 
+
+When active = True → full access to:
+
+- creating flashcards
+
+- editing flashcards
+
+- studying flashcards (spaced repetition)
+
+- teacher flashcard management
+
+Views are protected with a decorator `@active_required` that check the status of 'active'.
+
+#### Inactive User Flow
+
+When active = False →
+user is blocked from all flashcard features and automatically redirected to `inactive_user.html` where they are prompted to book a free lesson.
+
+Current behavior:
+
+- `inactive_user.html` uses the admin hardcoded email user_name to call `calendar/user_name`. More about calendar at [README.md](../README.md#google-calendar-integration).
+
+NEXT: - evolve into a general “teacher marketplace” where students can pick a teacher with open slots, allowing  inactive status to serve as:
+- a payment gate
+
+- an onboarding funnel
+
+- a teacher acquisition mechanism
 
 
 ### Flashcard Model

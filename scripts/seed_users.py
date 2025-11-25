@@ -73,6 +73,7 @@ def main():
         student = User(
             id=f"800{i}",
             name=name,
+            user_name=f"u_name_{name.lower()}",
             email=f"{name.lower()}@example.com",
             role="student",
             join_date=today,

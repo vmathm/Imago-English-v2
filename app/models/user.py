@@ -4,7 +4,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from flask_login import UserMixin
 from .base import Base
 
-class User(Base, UserMixin):
+class User(UserMixin, Base):
     __tablename__ = 'users'
 
     id = Column(String(50), primary_key=True)
@@ -21,7 +21,7 @@ class User(Base, UserMixin):
     join_date = Column(Date, nullable=True)
     last_payment_date = Column(Date, nullable=True)
 
-    active = Column(Boolean, nullable=False, default=True)  # replaces is_active
+    active = Column(Boolean, nullable=False, default=False)  # replaces is_active
     study_streak = Column(Integer, nullable=True, default=0)
     max_study_streak = Column(Integer, nullable=True, default=0)
     streak_last_date = Column(Date, nullable=True)
@@ -39,9 +39,7 @@ class User(Base, UserMixin):
     calendar_settings = relationship("CalendarSettings", uselist=False, back_populates="teacher")
     
 
-    @property
-    def is_active(self):
-        return self.active
+
 
     def is_student(self):
         return self.role in ('teacher', '@dmin!', 'student')

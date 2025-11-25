@@ -27,7 +27,7 @@ def teacher_calendar(user_name):
 @bp.route("/settings", methods=["GET", "POST"])
 @login_required
 def calendar_settings():
-    if current_user.role != "teacher":
+    if current_user.role not in ("teacher", "@dmin!"):
         abort(403)
 
     settings = db_session.query(CalendarSettings).filter_by(teacher_id=current_user.id).first()

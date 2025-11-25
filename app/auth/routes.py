@@ -27,7 +27,7 @@ google_bp = make_google_blueprint(
 @bp.route('/demo_login/<user_id>')
 def demo_login(user_id):
     logout_user()
-    print("Attempting demo login for user:", user_id)
+    
 
     if not current_app.config.get("ALLOW_SEEDED_USERS", False):
         abort(403)
@@ -39,7 +39,10 @@ def demo_login(user_id):
     if not user:
         return render_template("demo_login.html")
 
-    login_user(user)
+    if login_user(user):
+        print("Demo login successful for user:", user_id)
+    else:
+        print("Demo login failed for user:", user_id)
     return redirect("/dashboard")
 
 
@@ -65,11 +68,11 @@ def google_complete():
     id = info["id"]
     user = db_session.query(User).filter_by(email=email).first()
     if not user:
-        user = User(id=id, email=email, name=name, role='student', profilepic=info.get("picture", "none"))
+        user = User(id=id, email=email, name=name, user_name=(email).split("@")[0], role='student', profilepic=info.get("picture", "none"))
         db_session.add(user)
         db_session.commit()
 
-    login_user(user)
+    login_user(user, force=True)
     return redirect("/dashboard")
 
 

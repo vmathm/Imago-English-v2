@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import SelectField, SubmitField, HiddenField, StringField
+from wtforms import BooleanField, SelectField, SubmitField, HiddenField, StringField
 from wtforms.validators import DataRequired, Optional, Regexp
 
 class AssignStudentForm(FlaskForm):
@@ -22,6 +22,7 @@ class DeleteUserForm(FlaskForm):
 
 class ToggleActiveStatusForm(FlaskForm):
     user_id = SelectField("User", validators=[DataRequired()], coerce=str, choices=[])
+    active = BooleanField("Active") 
     submit = SubmitField("Toggle Status")
 
 class ChangeStudentLevelForm(FlaskForm):
@@ -39,3 +40,4 @@ class UpdatePhoneForm(FlaskForm):
         Regexp(r'^\d{10,13}$', message="Digite o DDD seguido do número, sem espaços ou caracteres especiais (ex: 11987654321)")
     ])
     submit = SubmitField("Update Phone")
+
