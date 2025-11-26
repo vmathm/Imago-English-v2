@@ -1,4 +1,20 @@
+from pathlib import Path
 import os
+
+BASE_DIR = Path(__file__).resolve().parent
+ENV_PATH = BASE_DIR / ".env"
+
+# 1. Load .env if it exists
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    load_dotenv = None
+else:
+    if ENV_PATH.exists():
+        load_dotenv(ENV_PATH)
+
+# 2. Now APP_ENV can come from .env OR real env
+env_mode = os.getenv("APP_ENV", "development").lower()
 
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY")
