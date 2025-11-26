@@ -57,8 +57,7 @@ A visual overview of the app
 
 ### Leaderboards
 
-| Leaderboards | 
-|---------------|------------|
+
 | ![Leaderboards](docs/screenshots/leaderboards.png) |
 
 ---
