@@ -68,9 +68,23 @@ def google_complete():
     id = info["id"]
     user = db_session.query(User).filter_by(email=email).first()
     if not user:
-        user = User(id=id, email=email, name=name, user_name=(email).split("@")[0], role='student', profilepic=info.get("picture", "none"))
-        db_session.add(user)
-        db_session.commit()
+        user = User(
+            id=id,
+            email=email,
+            name=name,
+            user_name=email.split("@")[0],
+            role="student",
+            profilepic=info.get("picture", "none"),
+        )
+        db_session.add(user)  # only here
+
+    else:
+        if user.user_name is None:
+            user.user_name = email.split("@")[0]
+        user.name = name
+        user.profilepic = info.get("picture", "none")
+
+    db_session.commit()
 
     login_user(user, force=True)
     return redirect("/dashboard")

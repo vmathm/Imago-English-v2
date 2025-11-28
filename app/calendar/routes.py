@@ -16,7 +16,10 @@ def dateformat(value, fmt='%H:%M'):
 
 @bp.route('/<string:user_name>')
 def teacher_calendar(user_name):
-    teacher = db_session.query(User).filter_by(user_name=user_name, role='teacher').first()
+    if user_name  == 'admin':
+        teacher = db_session.query(User).filter(User.email == 'vitornorace@gmail.com').first()
+    else:
+        teacher = db_session.query(User).filter(User.user_name == user_name, User.role.in_(("teacher", "@dmin!"))).first()
     if not teacher:
         abort(404)
     grouped_slots = get_teacher_availability(teacher.id)

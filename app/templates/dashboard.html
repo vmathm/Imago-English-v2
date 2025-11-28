@@ -108,11 +108,7 @@
         <strong>{{ current_user.flashcards_studied }}</strong> 🃏
         </div>
 
-        {% if current_user.role == 'teacher' %}
-        
-      
-
-       <div class="section-box">
+        <div class="section-box">
        <p>
         Study streak <br><small>(Sequência de estudos)</small> <br>
         <strong>
@@ -120,7 +116,13 @@
           {{ "day (dia)" if current_user.study_streak == 1 else "days (dias)" }}
         </strong> 🔥
         </div>
-    
+  
+
+
+        {% if current_user.role == 'teacher' %}
+        
+      
+
 
         
         <div class="section-box">
