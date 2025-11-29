@@ -6,7 +6,7 @@ from app.database import db_session
 from app.admin.forms import AssignStudentForm, UnassignStudentForm, ChangeRoleForm, DeleteUserForm, ToggleActiveStatusForm, ChangeStudentLevelForm
 from app.models.flashcard import Flashcard 
 from sqlalchemy import func, or_
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from app.dashboard.forms import UsernameForm
 
 
@@ -108,7 +108,7 @@ def index():
             Flashcard.user_id == current_user.id,
             or_(
                 Flashcard.next_review == None,
-                Flashcard.next_review <= datetime.now(timezone.utc)
+                Flashcard.next_review <= datetime.now(timezone.utc) - timedelta(hours=3)
             )
         ).scalar()
 

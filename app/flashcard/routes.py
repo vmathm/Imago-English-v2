@@ -279,7 +279,7 @@ def review_flashcard():
     if not flashcard:
         return jsonify({"status": "error", "message": "Flashcard not found."}), 404
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc) - timedelta(hours=3)
 
     def award_points(user, pts):
         user.points = user.points + pts
