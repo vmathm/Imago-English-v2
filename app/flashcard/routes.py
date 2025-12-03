@@ -190,7 +190,9 @@ def edit_card(card_id):
         if action == "edit":
             flashcard.question = form.question.data
             flashcard.answer  = form.answer.data
-
+            flashcard.next_review = datetime.now(timezone.utc) - timedelta(hours=3)
+            flashcard.ease = 1.3
+            flashcard.interval = 1
            
             if is_teacher_of_student or current_user.is_admin():
                 flashcard.reviewed_by_tc = True
