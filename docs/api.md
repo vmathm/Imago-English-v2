@@ -133,6 +133,7 @@ Handles flashcards being added to current_user or to student by using a hidden i
 
 ### `POST /edit_card/<int:card_id>` 
 - Uses the card id and information on the form to update flashcard. Handles student, teacher and admin requests. 
+- Sets flashcard.interval=1, flashcard.ease=1.3 and flashcard.next_review=current_date
 
 ### `GET /flashcards`
 - Renders flashcards.html, with forms to add flashcards using Google Translate from Portuguese to English, to add both 'question' and 'answer' and icon to render flashcards in edit mode. 
@@ -153,6 +154,26 @@ Handles flashcards being added to current_user or to student by using a hidden i
   edit, delete, or add flashcards for a specific student.
 - Teachers may only manage students assigned to them. Admins can manage any student.
 - Returns `{"status": "success"}` or `403` if the user lacks permission or the student does not belong to that teacher.
+
+
+### `POST /flashcard/flag_card`
+- Mark a flashcard as problematic during study mode by using the “😵 Preciso de ajuda com esse flashcard.” button and selecting one of the help options.
+
+- Request:  
+```json
+{
+  "card_id": 123,
+  "reason": "dont_understand" | "talk_next_class" | "has_mistake"
+}
+
+```
+
+- Append a note to the flashcard question indicating the problem. 
+- Push next_review 7 days ahead, making time for teacher to review. 
+- Remove it from the current study session (handled on the frontend).
+- Mark reviewed_by_tc = False, so it re-enters the teacher’s review queue.
+- Does not affect streak or points.
+
 
 ## Audiobook
 

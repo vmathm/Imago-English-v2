@@ -396,4 +396,66 @@ def manage_student(student_id):
     )
 
 
+@bp.route("/flag_card", methods=["POST"])
+@csrf.exempt
+@login_required
+def flag_card():
+    """
+    Let the user mark a flashcard as problematic during study mode.
+
+    Effects:
+    - Append a short note to flashcard.question (if not already present)
+    - Set next_review = today + 7 days (rounded to midnight)
+    - Mark reviewed_by_tc = False so it appears in teacher review queue
+    - Remove from current study session on the frontend
+    """
+    data = request.get_json() or {}
+    card_id = data.get("card_id")
+    reason_key = data.get("reason")
+
+    if not card_id or not reason_key:
+        return jsonify({"status": "error", "message": "Missing card_id or reason."}), 400
+
+    flashcard = db_session.query(Flashcard).get(card_id)
+    if not flashcard:
+        return jsonify({"status": "error", "message": "Flashcard not found."}), 404
+
+
+    is_owner = flashcard.user_id == current_user.id
+    if not is_owner:
+        return jsonify({"status": "error", "message": "Not authorized."}), 403
+
+    REASON_LABELS = {
+        "dont_understand": "I don't understand this flashcard",
+        "talk_next_class": "I want to talk about this flashcard in my next class",
+        "has_mistake": "I think this flashcard has a mistake",
+    }
+
+    reason_text = REASON_LABELS.get(reason_key, "Flagged for review")
+
+    # Append a note to the question if it's not already there
+    note = f"[NOTE] {reason_text}"
+    if note not in (flashcard.question or ""):
+        flashcard.question = (flashcard.question or "").strip()
+        if flashcard.question:
+            flashcard.question = f"{flashcard.question} ({note})"
+        else:
+            flashcard.question = note
+
+    now = datetime.now(timezone.utc)
+    next_review = now + timedelta(days=7)
+    flashcard.next_review = next_review.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    flashcard.reviewed_by_tc = False
+
+    db_session.commit()
+
+    return jsonify({
+        "status": "success",
+        "message": "Seu professor foi notificado.",
+        "card_id": flashcard.id,
+        "reason": reason_key,
+    })
+
+
 

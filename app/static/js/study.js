@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ====== DOM ======
   const container = document.getElementById("flashcard-container");
   const counterEl = document.getElementById("remaining-count");
+
   if (!container) return;
 
   // ====== Early exit (no cards) ======
@@ -54,10 +55,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function setButtonsEnabled(enabled) {
-    document.querySelectorAll(".rate-btn, #toggle-answer").forEach(b => {
-      b.style.pointerEvents = enabled ? "auto" : "none";
-      b.style.opacity = enabled ? "1" : "0.6";
-    });
+    document
+      .querySelectorAll(".rate-btn, #toggle-answer, #problem-card-btn, .card-help-option")
+      .forEach((b) => {
+        b.style.pointerEvents = enabled ? "auto" : "none";
+        b.style.opacity = enabled ? "1" : "0.6";
+      });
   }
 
   function updateCounter() {
@@ -81,7 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let selectedVoice;
   function initializeVoices() {
     const voices = window.speechSynthesis.getVoices();
-    selectedVoice = voices.find(v => v.lang && v.lang.startsWith("en")) || null;
+    selectedVoice = voices.find((v) => v.lang && v.lang.startsWith("en")) || null;
   }
   window.speechSynthesis.onvoiceschanged = initializeVoices;
   if (window.speechSynthesis.getVoices().length > 0) initializeVoices();
@@ -107,7 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (id) b.id = id;
     if (className) b.className = className;
     b.textContent = text;
-    Object.entries(dataset).forEach(([k, v]) => b.dataset[k] = v);
+    Object.entries(dataset).forEach(([k, v]) => (b.dataset[k] = v));
     if (onClick) b.onclick = onClick;
     return b;
   }
@@ -121,61 +124,64 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ====== Completion redirect (shared) ======
-// Prevent multiple redirects if the user double-clicks
-let __redirectingCompleted = false;
+  // Prevent multiple redirects if the user double-clicks
+  let __redirectingCompleted = false;
 
-async function redirectToDashboardCompleted() {
-  if (__redirectingCompleted) return;
-  __redirectingCompleted = true;
+  async function redirectToDashboardCompleted() {
+    if (__redirectingCompleted) return;
+    __redirectingCompleted = true;
 
-  const DEFAULT_MSG  = "You studied all your flashcards! 🔥";
-  const DEFAULT_KIND = "success";
+    const DEFAULT_MSG = "You studied all your flashcards! 🔥";
+    const DEFAULT_KIND = "success";
 
-  // small timeout so a flaky endpoint doesn't block the redirect
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 2000);
+    // small timeout so a flaky endpoint doesn't block the redirect
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 2000);
 
-  try {
-    const token = document.querySelector('meta[name="csrf-token"]')?.content || "";
-    const res = await fetch("/flashcard/completed_study", {
-      method: "POST",
-      headers: {
-        // Flask-WTF accepts either header name
-        "X-CSRF-Token": token,
-        "X-CSRFToken": token
-      },
-      credentials: "same-origin",
-      cache: "no-store",
-      signal: ctrl.signal
-    });
+    try {
+      const token = document.querySelector('meta[name="csrf-token"]')?.content || "";
+      const res = await fetch("/flashcard/completed_study", {
+        method: "POST",
+        headers: {
+          // Flask-WTF accepts either header name
+          "X-CSRF-Token": token,
+          "X-CSRFToken": token,
+        },
+        credentials: "same-origin",
+        cache: "no-store",
+        signal: ctrl.signal,
+      });
 
-    clearTimeout(t);
+      clearTimeout(t);
 
-    // Handle 204 or non-JSON gracefully
-    let data = null;
-    try { data = await res.json(); } catch { /* no body or non-json */ }
+      // Handle 204 or non-JSON gracefully
+      let data = null;
+      try {
+        data = await res.json();
+      } catch {
+        /* no body or non-json */
+      }
 
-    const msg  = (data && data.message) || DEFAULT_MSG;
-    const kind = (data && data.status === "success") ? "success" : DEFAULT_KIND;
+      const msg = (data && data.message) || DEFAULT_MSG;
+      const kind = data && data.status === "success" ? "success" : DEFAULT_KIND;
 
-    sessionStorage.setItem("flash_msg", msg);
-    sessionStorage.setItem("flash_kind", kind);
-  } catch {
-    // Network/timeout: fall back to default client message
-    sessionStorage.setItem("flash_msg", DEFAULT_MSG);
-    sessionStorage.setItem("flash_kind", DEFAULT_KIND);
-  } finally {
-    // Always redirect
-    window.location.href = DASHBOARD_URL; // defined in your template
+      sessionStorage.setItem("flash_msg", msg);
+      sessionStorage.setItem("flash_kind", kind);
+    } catch {
+      // Network/timeout: fall back to default client message
+      sessionStorage.setItem("flash_msg", DEFAULT_MSG);
+      sessionStorage.setItem("flash_kind", DEFAULT_KIND);
+    } finally {
+      // Always redirect
+      window.location.href = DASHBOARD_URL; // defined in your template
+    }
   }
-}
-
 
   // ===================== TEACHER MODE =====================
   if (hasStudent) {
     container.replaceChildren();
 
-    queue.forEach(card => {
+    queue.forEach((card) => {
       const cardElement = document.createElement("div");
       cardElement.className = "section-box";
       cardElement.dataset.cardId = card.id;
@@ -205,10 +211,13 @@ async function redirectToDashboardCompleted() {
 
       // Rate buttons
       const btnWrap = document.createElement("div");
-      ["1", "2", "3"].forEach(v => {
-        const cls = v === "1" ? "btn btn-danger rate-btn"
-                  : v === "2" ? "btn btn-warning rate-btn"
-                  : "btn btn-success rate-btn";
+      ["1", "2", "3"].forEach((v) => {
+        const cls =
+          v === "1"
+            ? "btn btn-danger rate-btn"
+            : v === "2"
+            ? "btn btn-warning rate-btn"
+            : "btn btn-success rate-btn";
         const b = makeBtn({ text: v, className: cls, dataset: { value: v } });
         btnWrap.appendChild(b);
       });
@@ -220,7 +229,7 @@ async function redirectToDashboardCompleted() {
     updateCounter();
 
     // Rate handlers with throttle
-    container.querySelectorAll(".rate-btn").forEach(btn => {
+    container.querySelectorAll(".rate-btn").forEach((btn) => {
       btn.onclick = async () => {
         const now = Date.now();
         if (now - lastRatingAt < MIN_RATING_INTERVAL_MS) return; // too fast
@@ -239,10 +248,10 @@ async function redirectToDashboardCompleted() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "X-CSRF-Token": csrf()
+              "X-CSRF-Token": csrf(),
             },
             credentials: "same-origin",
-            body: JSON.stringify({ card_id: cardId, rating, student_id: studentId })
+            body: JSON.stringify({ card_id: cardId, rating, student_id: studentId }),
           });
 
           if (!res.ok) return;
@@ -263,9 +272,8 @@ async function redirectToDashboardCompleted() {
       };
     });
 
-  // ===================== STUDENT MODE =====================
+    // ===================== STUDENT MODE =====================
   } else {
-
     function renderCard(card, useReview) {
       container.replaceChildren();
 
@@ -282,7 +290,7 @@ async function redirectToDashboardCompleted() {
       const toggleBtn = makeBtn({
         id: "toggle-answer",
         text: "Show answer (Mostrar Resposta)",
-        className: "btn btn-secondary mb-3"
+        className: "btn btn-secondary mb-3",
       });
 
       // Answer + speak (hidden)
@@ -295,15 +303,62 @@ async function redirectToDashboardCompleted() {
 
       // Rate buttons
       const btnWrap = document.createElement("div");
-      ["1", "2", "3"].forEach(v => {
-        const cls = v === "1" ? "btn btn-danger rate-btn"
-                  : v === "2" ? "btn btn-warning rate-btn"
-                  : "btn btn-success rate-btn";
+      ["1", "2", "3"].forEach((v) => {
+        const cls =
+          v === "1"
+            ? "btn btn-danger rate-btn"
+            : v === "2"
+            ? "btn btn-warning rate-btn"
+            : "btn btn-success rate-btn";
         const b = makeBtn({ text: v, className: cls, dataset: { value: v } });
         btnWrap.appendChild(b);
       });
 
-      box.append(qP, toggleBtn, aP, btnWrap);
+      // Problem / help button + options
+      const problemWrap = document.createElement("div");
+      problemWrap.className = "mt-3";
+
+      const problemBtn = makeBtn({
+        id: "problem-card-btn",
+        text: "😵 Preciso de ajuda com esse flashcard.",
+        className: "btn btn-outline-warning btn-sm",
+      });
+
+      const helpOptions = document.createElement("div");
+      helpOptions.id = "card-help-options";
+      helpOptions.className = "mt-2";
+      helpOptions.style.display = "none";
+
+      const helpPrompt = document.createElement("p");
+      helpPrompt.className = "small mb-1 text-muted";
+      helpPrompt.textContent = "Qual o problema com este flashcard?";
+
+      const helpButtonsWrap = document.createElement("div");
+      helpButtonsWrap.className = "d-flex flex-wrap gap-2";
+
+      function addHelpOption(reason, label) {
+        const btn = makeBtn({
+          text: label,
+          className: "btn btn-outline-secondary btn-sm card-help-option",
+        });
+        btn.dataset.reason = reason;
+        btn.addEventListener("click", () => {
+          flagProblemCard(card, useReview, reason);
+        });
+        helpButtonsWrap.appendChild(btn);
+      }
+
+      addHelpOption("dont_understand", "Este flashcard é difícil demais");
+      addHelpOption("talk_next_class", "Quero falar sobre isso na minha próxima aula");
+      addHelpOption("has_mistake", "Acho que este flashcard tem um erro");
+
+      helpOptions.appendChild(helpPrompt);
+      helpOptions.appendChild(helpButtonsWrap);
+
+      problemWrap.appendChild(problemBtn);
+      problemWrap.appendChild(helpOptions);
+
+      box.append(qP, toggleBtn, aP, btnWrap, problemWrap);
       container.appendChild(box);
 
       // Simple fade
@@ -315,10 +370,16 @@ async function redirectToDashboardCompleted() {
 
       const answer = document.getElementById("answer");
       toggleBtn.onclick = () => {
-        answer.style.display = (answer.style.display === "block") ? "none" : "block";
+        answer.style.display = answer.style.display === "block" ? "none" : "block";
       };
 
-      container.querySelectorAll(".rate-btn").forEach(btn => {
+      problemBtn.onclick = () => {
+        const isHidden =
+          helpOptions.style.display === "none" || helpOptions.style.display === "";
+        helpOptions.style.display = isHidden ? "block" : "none";
+      };
+
+      container.querySelectorAll(".rate-btn").forEach((btn) => {
         btn.onclick = async () => {
           const now = Date.now();
           if (now - lastRatingAt < MIN_RATING_INTERVAL_MS) return; // too fast
@@ -335,16 +396,16 @@ async function redirectToDashboardCompleted() {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                "X-CSRF-Token": csrf()
+                "X-CSRF-Token": csrf(),
               },
               credentials: "same-origin",
-              body: JSON.stringify({ card_id: card.id, rating })
+              body: JSON.stringify({ card_id: card.id, rating }),
             });
 
             if (!res.ok) return;
 
             if (rating === "1") {
-              if (!reviewPool.some(c => c.id === card.id)) reviewPool.push(card);
+              if (!reviewPool.some((c) => c.id === card.id)) reviewPool.push(card);
               if (useReview && reviewPool.length > 1) {
                 // rotate review pool: move current to the end
                 reviewPool.push(reviewPool.shift());
@@ -356,7 +417,7 @@ async function redirectToDashboardCompleted() {
                 reviewPool.shift();
               } else {
                 index++;
-                reviewPool = reviewPool.filter(c => c.id !== card.id);
+                reviewPool = reviewPool.filter((c) => c.id !== card.id);
               }
             }
 
@@ -369,6 +430,56 @@ async function redirectToDashboardCompleted() {
           }
         };
       });
+    }
+
+    async function flagProblemCard(card, useReview, reason) {
+      const now = Date.now();
+      if (now - lastRatingAt < MIN_RATING_INTERVAL_MS) return;
+      lastRatingAt = now;
+
+      if (isProcessing) return;
+      isProcessing = true;
+      setButtonsEnabled(false);
+
+      try {
+        const res = await fetch("/flashcard/flag_card", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-Token": csrf(),
+          },
+          credentials: "same-origin",
+          body: JSON.stringify({ card_id: card.id, reason }),
+        });
+
+        if (!res.ok) {
+          // You could show an alert here if you want feedback
+          return;
+        }
+
+        // Remove this card from the current session
+        if (useReview) {
+          if (reviewPool.length && reviewPool[0].id === card.id) {
+            reviewPool.shift();
+          } else {
+            reviewPool = reviewPool.filter((c) => c.id !== card.id);
+          }
+        } else {
+          const idx = queue.findIndex((c) => c.id === card.id);
+          if (idx !== -1) {
+            queue.splice(idx, 1);
+          }
+          // ensure index not out of range
+          if (index > queue.length) {
+            index = queue.length;
+          }
+        }
+
+        showNext();
+      } finally {
+        isProcessing = false;
+        setButtonsEnabled(true);
+      }
     }
 
     function showNext() {
@@ -384,7 +495,7 @@ async function redirectToDashboardCompleted() {
       updateCounter();
 
       // BUFFER RULE: use reviewPool when 5+ or when queue empty
-      const useReview = (reviewPool.length >= 5) || (!hasQueue && hasReview);
+      const useReview = reviewPool.length >= 5 || (!hasQueue && hasReview);
       const card = useReview ? reviewPool[0] : queue[index];
 
       renderCard(card, useReview);
@@ -394,7 +505,7 @@ async function redirectToDashboardCompleted() {
   }
 
   // ----- Text-to-Speech (event delegation for both modes) -----
-  document.addEventListener("click", e => {
+  document.addEventListener("click", (e) => {
     if (e.target.classList.contains("speak-btn")) {
       const text = e.target.dataset.text || "";
       speakText(text, e.target);
