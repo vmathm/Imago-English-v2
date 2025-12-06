@@ -15,12 +15,21 @@ def upload_file_to_gcs(file_obj, *, prefix: str, content_type: str) -> str:
     unique_suffix = uuid.uuid4().hex
     blob_name = f"{prefix}-{unique_suffix}"
 
+    # --- IMPORTANT: normalize text content types to UTF-8 ---
+    if content_type and content_type.startswith("text/") and "charset" not in content_type.lower():
+        content_type = content_type + "; charset=utf-8"
+
+    # Make sure we start reading from the beginning of the file
+    try:
+        file_obj.seek(0)
+    except Exception:
+        pass
+
     blob = bucket.blob(blob_name)
     blob.upload_from_file(file_obj, content_type=content_type)
 
     # Bucket itself is public; no make_public() here
     return f"https://storage.googleapis.com/{bucket_name}/{blob_name}"
-
 
 def _blob_name_from_url(url: str, bucket_name: str) -> str:
     """

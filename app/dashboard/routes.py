@@ -3,11 +3,12 @@ from flask_login import current_user, login_required
 from app.flashcard.form import FlashcardForm
 from app.models import User            
 from app.database import db_session
-from app.admin.forms import AssignStudentForm, UnassignStudentForm, ChangeRoleForm, DeleteUserForm, ToggleActiveStatusForm, ChangeStudentLevelForm
+from app.admin.forms import AssignStudentForm, UnassignStudentForm, ChangeRoleForm, DeleteUserForm, ToggleActiveStatusForm, ChangeStudentLevelForm, UpdateLearningLanguageForm
 from app.models.flashcard import Flashcard 
 from sqlalchemy import func, or_
 from datetime import datetime, timedelta, timezone
 from app.audiobook.forms import UserAudiobookForm, UsernameForm
+
 
 
 
@@ -18,7 +19,7 @@ bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 def get_teacher_data():
     change_student_level_form = ChangeStudentLevelForm()
     audiobook_form = UserAudiobookForm()
-
+    update_learning_language_form = UpdateLearningLanguageForm()
     assigned = list(current_user.assigned_students)
     student_ids = [s.id for s in assigned]
 
@@ -46,7 +47,8 @@ def get_teacher_data():
         "assigned_students": ordered_students,
         "change_student_level_form": change_student_level_form,
         "unreviewed_counts": unreviewed_counts,
-        "audiobook_form": audiobook_form
+        "audiobook_form": audiobook_form,
+        "update_learning_language_form": update_learning_language_form
     }
 
 def get_admin_data():

@@ -41,3 +41,14 @@ class UpdatePhoneForm(FlaskForm):
     ])
     submit = SubmitField("Update Phone")
 
+
+class UpdateLearningLanguageForm(FlaskForm):
+    learning_language = SelectField(
+        "Language you’re learning",
+        choices=[
+            ("en", "English"),
+            ("pt-BR", "Brazilian Portuguese"),
+        ],
+        validators=[DataRequired()],
+    )
+    submit = SubmitField("Update Language")

@@ -28,11 +28,12 @@ def main():
             email="admin@example.com",
             role="@dmin!",
             join_date=today,
-            active=True
+            active=True,
+            learning_language="en",  # default: learning English
         )
     ]
 
-        # Teachers
+    # Teachers
     for i in range(5):
         p = random.randint(50, 500)        # current points
         s = random.randint(0, 30)          # current streak
@@ -52,24 +53,24 @@ def main():
                 study_streak=s,
                 max_study_streak=max_s,
                 max_points=p * max_s,   # <-- formula
-                flashcards_studied=fc_studied
+                flashcards_studied=fc_studied,
+                learning_language="en",  # default: learning English
             )
         )
-        
 
     # Students
+    dune_names = [
+        "Paul", "Jessica", "Gurney", "Chani", "Baron", "Feyd", "Irulan",
+        "Leto", "Piter", "Thufir", "Jamis", "Rabban", "Mapes", "Wellington", "Korba"
+    ]
 
-    dune_names = [ "Paul", "Jessica", "Gurney", "Chani", "Baron", "Feyd", "Irulan",
-     "Leto", "Piter", "Thufir", "Jamis", "Rabban", "Mapes", "Wellington", "Korba" ]
-    
-    
     students = []
     for i, name in enumerate(dune_names):
         p = random.randint(50, 1000)
         s = random.randint(0, 50)
         max_s = max(s, s + random.randint(0, 15))
         fc_studied = random.randint(50, 1000) + p // 2 + s * 3
-        
+
         student = User(
             id=f"800{i}",
             name=name,
@@ -81,12 +82,12 @@ def main():
             points=p,
             study_streak=s,
             max_study_streak=max_s,
-            max_points=p * max_s,   
-            flashcards_studied=fc_studied
+            max_points=p * max_s,
+            flashcards_studied=fc_studied,
+            learning_language="en",  # default: learning English
         )
         users.append(student)
         students.append(student)
-
 
     # Commit users
     for user in users:
@@ -97,27 +98,26 @@ def main():
 
     # Fixed flashcards for students
     dune_lore_map = {
-    "Desert": "Deserto",
-    "Sand": "Areia",
-    "Worm": "Verme",
-    "Spice": "Especiaria",
-    "Water": "Água",
-    "Life": "Vida",
-    "Planet": "Planeta",
-    "Wind": "Vento",
-    "Battle": "Batalha",
-    "Dream": "Sonho",
-    "Fear": "Medo",
-    "Voice": "Voz",
-    "Mind": "Mente",
-    "Power": "Poder",
-    "Prophecy": "Profecia",
-    "Faith": "Fé",
-    "Tribe": "Tribo",
-    "Leader": "Líder",
-    "Destiny": "Destino"
+        "Desert": "Deserto",
+        "Sand": "Areia",
+        "Worm": "Verme",
+        "Spice": "Especiaria",
+        "Water": "Água",
+        "Life": "Vida",
+        "Planet": "Planeta",
+        "Wind": "Vento",
+        "Battle": "Batalha",
+        "Dream": "Sonho",
+        "Fear": "Medo",
+        "Voice": "Voz",
+        "Mind": "Mente",
+        "Power": "Poder",
+        "Prophecy": "Profecia",
+        "Faith": "Fé",
+        "Tribe": "Tribo",
+        "Leader": "Líder",
+        "Destiny": "Destino",
     }
-
 
     for student in students:
         for eng_term, pt_term in dune_lore_map.items():
@@ -126,7 +126,7 @@ def main():
                 question=pt_term,   # Portuguese term
                 answer=eng_term,    # English term
                 next_review=today,
-                created_at=today
+                created_at=today,
             )
             db_session.add(flashcard)
 

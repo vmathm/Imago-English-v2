@@ -15,5 +15,9 @@
   const DASHBOARD_URL = "{{ url_for('dashboard.index') }}";  
 </script>
 
+
+<script>
+  window.IMAGO_TTS_LANGUAGE = "{{ current_user.learning_language or 'en' }}";
+</script>
 <script src="{{ url_for('static', filename='js/study.js') }}"></script>
 {% endblock %}

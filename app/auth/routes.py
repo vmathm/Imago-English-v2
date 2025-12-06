@@ -75,6 +75,7 @@ def google_complete():
             user_name=email.split("@")[0],
             role="student",
             profilepic=info.get("picture", "none"),
+            learning_language="en"
         )
         db_session.add(user)  # only here
 

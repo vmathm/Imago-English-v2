@@ -211,7 +211,7 @@ Receives JSON `{"text": "<selected string>"}`
       - Deletes any existing GCS object for that field and clears the URL.
   - If both `text_url` and `audio_url` end up empty:
     - Deletes the `UserAudiobook` row.
-    - Flashes a message indicating the audiobook has effectively been cleared.
+    - Flashes a message indicating the buttons for manually uploading text and audio is now available for the student.
   - Redirects back to `/dashboard`.
 
 
@@ -240,7 +240,7 @@ Receives JSON `{"text": "<selected string>"}`
 - Generates half‑hour slots within the configured working window, skipping busy periods, and returns a dictionary keyed by date.  
 
 ### `translate.translate_text(text, target_language="pt")`
- Receives a text string when it's called from audiobook/translate, sends it to the Google Translate API and returns its Portuguese translation.
+ Receives a text string when it's called from audiobook/translate, sends it to the Google Translate API and returns its translation according to `user.learning_language` (if it's `en`, target language is `pt-BR` and the opposite otherwise).
 
 Notes:
 - Uses the Google Cloud Translate v2 API.

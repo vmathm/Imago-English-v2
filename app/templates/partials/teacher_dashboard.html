@@ -62,6 +62,27 @@
               Audiobook
             </button>
 
+            <div class="mt-3">
+              <form method="post"
+                    action="{{ url_for('admin.set_language', student_id=student.id) }}"
+                    class="d-flex gap-2 align-items-center">
+                {{ update_learning_language_form.hidden_tag() }}
+
+                <select name="learning_language" class="form-select form-select-sm w-auto">
+                  <option value="en"
+                          {% if student.learning_language == 'en' %}selected{% endif %}>
+                    English
+                  </option>
+                  <option value="pt-BR"
+                          {% if student.learning_language == 'pt-BR' %}selected{% endif %}>
+                    Brazilian Portuguese
+                  </option>
+                </select>
+
+                {{ update_learning_language_form.submit(class_="btn btn-secondary btn-sm") }}
+              </form>
+            </div>
+
             <!-- 3) Update level -->
             <form action="{{ url_for('admin.update_student_level') }}"
                   method="post"

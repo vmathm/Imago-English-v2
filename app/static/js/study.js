@@ -1,5 +1,3 @@
-// flashcards_study.js — safe DOM (no innerHTML), redirect on completion, anti-spam rating throttle
-
 document.addEventListener("DOMContentLoaded", () => {
   // ====== Inputs from template ======
   // Cards can be injected as `flashcards` or `window.flashcards`
@@ -13,6 +11,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Dashboard URL injected by template (fallback to "/")
   const DASHBOARD_URL = (typeof window.DASHBOARD_URL === "string" && window.DASHBOARD_URL) || "/";
+
+  // TTS language injected by template, e.g. "en" or "pt-BR"
+  const TTS_LANGUAGE =
+    (typeof window.IMAGO_TTS_LANGUAGE === "string" && window.IMAGO_TTS_LANGUAGE) || "en";
 
   // ====== DOM ======
   const container = document.getElementById("flashcard-container");
@@ -80,27 +82,63 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Speech synthesis
-  let selectedVoice;
-  function initializeVoices() {
+  // ====== Speech synthesis (language-aware) ======
+  let selectedVoice = null;
+
+  function pickVoice() {
+    if (!("speechSynthesis" in window)) return null;
+
     const voices = window.speechSynthesis.getVoices();
-    selectedVoice = voices.find((v) => v.lang && v.lang.startsWith("en")) || null;
+    if (!voices || voices.length === 0) return null;
+
+    // 1) Exact match, e.g. "pt-BR"
+    let v = voices.find((voice) => voice.lang === TTS_LANGUAGE);
+
+    // 2) Same base language, e.g. "pt" for "pt-BR", "en" for "en-US"
+    if (!v) {
+      const base = TTS_LANGUAGE.split("-")[0];
+      v = voices.find((voice) => voice.lang && voice.lang.startsWith(base));
+    }
+
+    // 3) Fallback: first available voice
+    return v || voices[0] || null;
   }
-  window.speechSynthesis.onvoiceschanged = initializeVoices;
-  if (window.speechSynthesis.getVoices().length > 0) initializeVoices();
+
+  function initializeVoices() {
+    selectedVoice = pickVoice();
+  }
+
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.onvoiceschanged = initializeVoices;
+    if (window.speechSynthesis.getVoices().length > 0) {
+      initializeVoices();
+    }
+  }
 
   function speakText(text, element) {
+    if (!("speechSynthesis" in window)) return;
+
     const synth = window.speechSynthesis;
     if (synth.speaking || synth.pending) synth.cancel();
+
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-GB";
+
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+      utterance.lang = selectedVoice.lang;
+    } else {
+      utterance.lang = TTS_LANGUAGE;
+    }
+
+    // Keep your existing tuning – this works fine for EN and PT-BR
     utterance.rate = 0.8;
     utterance.pitch = 1.1;
-    if (selectedVoice) utterance.voice = selectedVoice;
+
     if (element) {
       element.classList.add("speaking");
       utterance.onend = () => element.classList.remove("speaking");
     }
+
     synth.speak(utterance);
   }
 

@@ -16,6 +16,12 @@ class User(UserMixin, Base):
     level = Column(String(2), nullable=True)
     role = Column(String(10), nullable=False)  # 'student', 'teacher', 'admin'
 
+
+    
+    # "en"   → learning English
+    # "pt-BR" → learning Brazilian Portuguese
+    learning_language = Column(String(10), nullable=False, default="en")
+
     delete_date = Column(Date, nullable=True)
     user_stripe_id = Column(String(50), nullable=True)
     join_date = Column(Date, nullable=True)
@@ -50,3 +56,9 @@ class User(UserMixin, Base):
     def is_admin(self):
         return self.role == '@dmin!'
     
+
+    def learning_en(self) -> bool:
+        return (self.learning_language or "").startswith("en")
+
+    def learning_pt(self) -> bool:
+        return (self.learning_language or "").startswith("pt")

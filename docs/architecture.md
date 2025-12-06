@@ -186,6 +186,7 @@ The `User` model represents all types of users in the system: students, teachers
 | phone                | String       | Optional phone number |
 | level                | String       | English level (e.g., A1, B2) |
 | role                 | String       | `'student'`, `'teacher'`, or `'@dmin!'` |
+| learning_language    | String       | `'pt-BR'`or `'en'` - default: `'en'`
 | active               | Boolean      | Grants access to flashcard features  |
 | delete_date          | Date         | Soft-delete timestamp |
 | user_stripe_id       | String       | Stripe ID for payment tracking |
@@ -200,15 +201,21 @@ The `User` model represents all types of users in the system: students, teachers
 | rate_three_count     | Integer      | Number of "3" ratings received for flashcards |
 | assigned_teacher_id  | FK → users.id | Reference to the user’s assigned teacher |
 
+#### `learning_language`:
+
+  Language the user is currently **learning**. This setting controls:
+
+  - The default **target language** for translation (Google Cloud Translate).
+  - The **text-to-speech voice** language in study mode and audiobook text selection.
 
 
----
 
 #### Relationships
 
 - `assigned_teacher_id` is a self-referencing FK used for assigning a teacher to a student.
 - `assigned_students` is a reverse relationship available to teacher users.
-- `flashcards`: links user to their flashcards (one-to-many)
+- `flashcards` links user to their flashcards (one-to-many)
+- `user_audiobook`links user to current audiobook uploaded by the teacher. 
 
 ---
 

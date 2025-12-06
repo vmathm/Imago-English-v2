@@ -9,7 +9,8 @@ from app.admin.forms import (
     ChangeRoleForm, 
     DeleteUserForm, 
     ToggleActiveStatusForm, 
-    ChangeStudentLevelForm
+    ChangeStudentLevelForm,
+    UpdateLearningLanguageForm
 )
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -163,3 +164,40 @@ def update_student_level():
 
     return redirect(url_for("dashboard.index"))
 
+
+@bp.route("/set_language/<student_id>", methods=["POST"])
+@login_required
+def set_language(student_id):
+    form = UpdateLearningLanguageForm()
+
+    # Only teachers and admins can change student language
+    if not (current_user.is_teacher() or current_user.is_admin()):
+        abort(403)
+
+    if form.validate_on_submit():
+        # Look up the student
+        student = (
+            db_session.query(User)
+            .filter_by(id=student_id, role="student")
+            .first()
+        )
+        if not student:
+            flash("Student not found.", "danger")
+            return redirect(url_for("dashboard.index"))
+
+        # Optional: ensure teacher owns this student
+        if current_user.is_teacher() and getattr(student, "assigned_teacher_id", None) != current_user.id:
+            abort(403)
+
+        # ✅ Update the student's language, not current_user
+        student.learning_language = form.learning_language.data
+        db_session.commit()
+
+        flash(f"{student.name}'s learning language updated!", "success")
+    else:
+        print("set_language errors:", form.errors)
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(error, "danger")
+
+    return redirect(url_for("dashboard.index"))

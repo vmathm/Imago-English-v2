@@ -39,20 +39,33 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (textBtn && textInput) {
-    textBtn.addEventListener("click", () => textInput.click());
+if (textBtn && textInput) {
+  textBtn.addEventListener("click", () => textInput.click());
 
-    textInput.addEventListener("change", e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        textContent.textContent = reader.result;
+  textInput.addEventListener("change", e => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      try {
+        // Explicit UTF-8 decode from bytes
+        const decoder = new TextDecoder("utf-8");
+        const text = decoder.decode(reader.result);
+        textContent.textContent = text;
         textContent.style.display = "block";
-      };
-      reader.readAsText(file);
-    });
-  }
+      } catch (err) {
+        console.error("Error decoding text file:", err);
+        textContent.textContent = "Erro ao ler o arquivo de texto (codificação).";
+        textContent.style.display = "block";
+      }
+    };
+
+    // Read raw bytes, we’ll decode ourselves
+    reader.readAsArrayBuffer(file);
+  });
+}
 
   // Selection event for desktop and mobile
   textContent.addEventListener("mouseup", handleSelection);
