@@ -78,11 +78,25 @@ def assign_audiobook(user_id):
 
     ua = db_session.query(UserAudiobook).filter_by(user_id=student.id).first()
 
-    # If there's no existing record and no new files → nothing to do
-    if not ua and not (has_new_text or has_new_audio):
-        flash("Você precisa enviar pelo menos um arquivo (texto ou áudio).", "warning")
+    # ✅ If no new files were selected, treat this as a "clear audiobook" action
+    if not has_new_text and not has_new_audio:
+        if ua:
+            # Delete existing files from GCS (if any)
+            if ua.text_url:
+                delete_file_from_gcs_by_url(ua.text_url)
+            if ua.audio_url:
+                delete_file_from_gcs_by_url(ua.audio_url)
+
+            # Delete the DB row
+            db_session.delete(ua)
+            db_session.commit()
+            flash("Load audiobook button enabled for user.", "success")
+        else:
+            flash("Nenhum arquivo selecionado para upload.", "warning")
+
         return redirect(url_for("dashboard.index"))
 
+    # From here on, we know at least one new file was uploaded
     if not ua:
         ua = UserAudiobook(user_id=student.id)
 
@@ -97,9 +111,8 @@ def assign_audiobook(user_id):
         base_name = os.path.splitext(os.path.basename(raw_name))[0]
         ua.title = base_name.strip() or ua.title
 
-        # Handle text file upload
+    # Handle text file upload (only touch if new text provided)
     if has_new_text:
-        # Replace old text with new file
         if ua.text_url:
             delete_file_from_gcs_by_url(ua.text_url)
 
@@ -108,16 +121,9 @@ def assign_audiobook(user_id):
             prefix=f"user_{student.id}/audiobook_text.txt",
             content_type="text/plain",
         )
-    else:
-        # No new text sent in this submission → remove any previous text
-        if ua.text_url:
-            delete_file_from_gcs_by_url(ua.text_url)
-            ua.text_url = None
 
-
-
+    # Handle audio file upload (only touch if new audio provided)
     if has_new_audio:
-        # Replace old audio with new file
         if ua.audio_url:
             delete_file_from_gcs_by_url(ua.audio_url)
 
@@ -126,20 +132,13 @@ def assign_audiobook(user_id):
             prefix=f"user_{student.id}/audiobook_audio.mp3",
             content_type="audio/mpeg",
         )
-    else:
-        # No new audio sent → remove any previous audio
-        if ua.audio_url:
-            delete_file_from_gcs_by_url(ua.audio_url)
-            ua.audio_url = None
 
-    # If we got here and ua has at least something, save
+    # Safety: if somehow we end up with no text or audio, remove the row
     if not (ua.text_url or ua.audio_url):
         db_session.delete(ua)
         db_session.commit()
-        # Edge case: user had an existing record but we deleted both and uploaded nothing
         flash("Load audiobook button enabled for user.", "success")
         return redirect(url_for("dashboard.index"))
-        
 
     db_session.add(ua)
     db_session.commit()
