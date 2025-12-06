@@ -25,6 +25,7 @@ class Config:
     ALLOW_SEEDED_USERS = os.environ.get("ALLOW_SEEDED_USERS", "false").lower() in ("true", "1", "t")
     GOOGLE_OAUTH_CLIENT_ID = os.getenv("GOOGLE_OAUTH_CLIENT_ID")
     GOOGLE_OAUTH_CLIENT_SECRET = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
+    GCS_AUDIOBOOK_BUCKET = os.getenv("GCS_AUDIOBOOK_BUCKET")
 
 class DevConfig(Config):
     # Looser cookies for local dev (http://127.0.0.1)

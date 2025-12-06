@@ -87,6 +87,8 @@ A visual overview of the app
   - ✅ Creates search button within `manage_student_flashcards` (added to edit_cards also)  
   - ✅ Student level (A1 to C1), for later implementation of audiobooks and activities
 - ✅ Audiobook reader (with dictionary and flashcard addition)
+  - ✅ Teachers can upload audiobook **text (.txt)** and/or **audio (.mp3)** (Files are stored in **Google Cloud Storage**) for each student from the dashboard
+  - ✅ Students can manually load **text (.txt)** and/or **audio (.mp3)** temporarily to use the e-reader feature.
 - ✅ Progress tracking  
   - ✅ Leaderboard table with ranking and top three ever
 - ✅ Google Calendar integration (for teacher availability)

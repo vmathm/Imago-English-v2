@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, render_template, redirect, request, session, url_for, abort
+from flask import Blueprint, flash, render_template, redirect, url_for
 from flask_login import current_user, login_required
 from app.flashcard.form import FlashcardForm
 from app.models import User            
@@ -7,7 +7,8 @@ from app.admin.forms import AssignStudentForm, UnassignStudentForm, ChangeRoleFo
 from app.models.flashcard import Flashcard 
 from sqlalchemy import func, or_
 from datetime import datetime, timedelta, timezone
-from app.dashboard.forms import UsernameForm
+from app.audiobook.forms import UserAudiobookForm, UsernameForm
+
 
 
 bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
@@ -16,6 +17,7 @@ bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 
 def get_teacher_data():
     change_student_level_form = ChangeStudentLevelForm()
+    audiobook_form = UserAudiobookForm()
 
     assigned = list(current_user.assigned_students)
     student_ids = [s.id for s in assigned]
@@ -44,6 +46,7 @@ def get_teacher_data():
         "assigned_students": ordered_students,
         "change_student_level_form": change_student_level_form,
         "unreviewed_counts": unreviewed_counts,
+        "audiobook_form": audiobook_form
     }
 
 def get_admin_data():
@@ -172,5 +175,3 @@ def set_username():
                 flash(error, "danger")
 
     return redirect(url_for("dashboard.index"))
-
-

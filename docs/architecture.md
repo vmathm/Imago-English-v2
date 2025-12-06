@@ -18,6 +18,8 @@ This project uses the Flask **app factory pattern** and **blueprints** to keep t
 │ ├── database.py #sets up the SQLAlchemy database.
 │ ├── admin/#routes and logic
 │ ├── audiobook/#routes and logic
+│   │   ├── routes.py       # /audiobook/view, /audiobook/assign/<user_id>
+│   │   └── forms.py        # UserAudiobookForm
 │ ├── auth/ #User-related routes and logic
 │ │ ├── user_loader.py #Defines @login_manager.user_loader decorator to load User objects from session on request
 │ ├── admin/#routes and logic
@@ -64,6 +66,68 @@ Each major feature has its own blueprint:
 - `progress` for students and teachers points and study sequence, which define the leaderboards. 
 - `services` contains reusable integrations and background logic used across blueprints.
   
+## Audiobook Feature
+
+The audiobook feature is implemented as its own blueprint and model, and it reuses the existing flashcard/translation flow.
+
+### Components
+
+- `app/audiobook/routes.py`
+  - `GET /audiobook/view`  
+    Student-facing view. Loads the `UserAudiobook` row for the logged-in user, fetches the `.txt` from Google Cloud Storage using `requests`, and renders it into `audiobooks.html`.
+  - `POST /audiobook/assign_audiobook/<user_id>`  
+    Teacher/admin-only endpoint. Called from a modal in the teacher dashboard. Handles upload of text and/or audio, deletes any previously assigned files for that user, and updates the `UserAudiobook` row.
+
+- `app/audiobook/forms.py`
+  - `UserAudiobookForm`
+    - Two optional fields:
+      - `text_file` – `.txt` only (validated with `FileAllowed`)
+      - `audio_file` – `.mp3` only
+   
+
+- `app/models/user_audiobook.py`
+  - `UserAudiobook` model
+    - `user_id` → `User.id` (one row per user)
+    - `text_url` (nullable) – public GCS URL for `.txt`
+    - `audio_url` (nullable) – public GCS URL for `.mp3`
+    - `title` – human-readable title derived from the original uploaded filename
+    - `created_at`, `updated_at` timestamps
+  - Imported in `app/models/__init__.py` so it is registered with SQLAlchemy and created by `Base.metadata.create_all`.
+
+- `app/gcs_utils.py`
+  - `upload_file_to_gcs(file_obj, prefix, content_type) -> str`
+    - Uploads the Werkzeug file object to the bucket defined in `Config.GCS_AUDIOBOOK_BUCKET`.
+    - Uses a UUID suffix in the blob name to avoid collisions.
+    - Returns a public URL using the `https://storage.googleapis.com/<bucket>/<blob_name>` pattern.
+  - `delete_file_from_gcs_by_url(url: str) -> None`
+    - Parses the blob name out of a GCS URL for the configured bucket and deletes the object.
+    
+
+### Configuration
+
+- `config.py`
+  - `GCS_AUDIOBOOK_BUCKET = os.getenv("GCS_AUDIOBOOK_BUCKET")`
+
+The bucket is configured with **uniform bucket-level access** and an IAM binding:
+
+- Principal: `allUsers`
+- Role: `Storage Object Viewer`
+
+This makes all objects in the audiobook bucket publicly readable, which is required for the `<audio>` player and text loading in the browser.
+
+### Behaviour
+
+- Upload:
+  - When a teacher uploads new text or audio:
+    - Existing files for that user (if any) are deleted from GCS via `delete_file_from_gcs_by_url`.
+    - New files are uploaded and the URLs are stored in `UserAudiobook`.
+    - If neither text nor audio is present after processing, the `UserAudiobook` row is deleted to keep the data model consistent and allow the user to load their own text or audio temporarily. 
+- View:
+  - The student audiobook page:
+    - Shows the title if present.
+    - Shows the audio player only if `audio_url` is set.
+    - Loads the text via `requests.get(text_url)` and injects it into `<pre id="text-content">` so the existing selection → translate → flashcard flow works without changes to `audiobook.js`.
+
 
 ## Configuration System
 

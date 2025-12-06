@@ -54,6 +54,7 @@ def create_app():
     from .calendar.routes import bp as calendar_bp
     from .staticpages.routes import bp as staticpages_bp
     
+    
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)

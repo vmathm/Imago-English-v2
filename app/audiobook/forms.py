@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired, Length, Regexp
+from flask_wtf.file import FileField, FileAllowed
 
 class UsernameForm(FlaskForm):
     user_name = StringField(
@@ -15,3 +16,20 @@ class UsernameForm(FlaskForm):
         ],
     )
     submit = SubmitField("Save username (Salvar nome de usuário)")
+
+
+
+class UserAudiobookForm(FlaskForm):
+    text_file = FileField(
+        "Text file (.txt) (optional)",
+        validators=[
+            FileAllowed(["txt"], "Only .txt files are allowed.")
+        ]
+    )
+    audio_file = FileField(
+        "Audio file (.mp3) (optional)",
+        validators=[
+            FileAllowed(["mp3"], "Only .mp3 files are allowed.")
+        ]
+    )
+    submit = SubmitField("Upload audiobook")

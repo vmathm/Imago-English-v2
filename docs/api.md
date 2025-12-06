@@ -183,6 +183,37 @@ Serves `audiobook/audiobooks.html`, allowing the user to upload an audio file an
 ### `POST /translate`
 Receives JSON `{"text": "<selected string>"}` 
 
+### `GET /audiobook/view`
+- **Auth**: `login_required` (student or teacher)
+- **Purpose**: Show the audiobook page for the logged-in user.
+- **Behaviour**:
+  - Looks up the `UserAudiobook` row by `current_user.id`.
+  - If a `text_url` exists, fetches the `.txt` from GCS and passes the text into the template as `text_content`.
+  - Renders `audiobooks.html`:
+    - Shows an audio player if `audio_url` is set.
+    - Shows the text in the reader area if `text_content` is available.
+    - Integrates with `static/js/audiobook.js` so users can select text, translate, and create flashcards.
+
+### `POST /audiobook/assign_audiobook/<user_id>`
+- **Auth**: `login_required`, and `current_user.is_teacher()` or `current_user.is_admin()` must be true.
+- **Called from**: Teacher dashboard modal in `partials/teacher_dashboard.html`.
+- **Form**: `UserAudiobookForm`
+  - `text_file` – optional `.txt` file
+  - `audio_file` – optional `.mp3` file
+- **Behaviour**:
+  - Loads or creates a `UserAudiobook` row for the target user.
+  - Derives the `title` from the uploaded filename (prefers the text file name, falls back to audio).
+  - For each file type:
+    - If a new file was provided:
+      - Deletes any existing GCS object for that field.
+      - Uploads the new file and updates the corresponding URL.
+    - If no new file was provided:
+      - Deletes any existing GCS object for that field and clears the URL.
+  - If both `text_url` and `audio_url` end up empty:
+    - Deletes the `UserAudiobook` row.
+    - Flashes a message indicating the audiobook has effectively been cleared.
+  - Redirects back to `/dashboard`.
+
 
 
 ## Calendar
