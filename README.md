@@ -145,9 +145,11 @@ git clone https://github.com/vmathm/imago-english-v2.git
 
 SECRET_KEY=your-secret-key
 ALLOW_SEEDED_USERS=True
+
 ```
 Optional: 
 add DATABASE_URL=sqlite:///instance/app.db= your_database.db to .env
+
 
 
 
@@ -213,7 +215,7 @@ Refer to docs/architecture.md ## Project Structure
 Allows teachers to publish their availability through Google Calendar.  
 - teachers manage their own time window.
 - Students see a list of free slots. 
-- 
+
 ### 1. Prerequisites
 1. Enable the **Google Calendar API** in a Google Cloud project.
 2. Create a **service account** and download its JSON credentials.
@@ -306,7 +308,54 @@ OAUTHLIB_INSECURE_TRANSPORT=1  # Only for development
 
 - flask-login
 
+## Google Cloud Storage Integration
+Enables secure upload, storage, and retrieval of audiobook files (text + audio) using **Google Cloud Storage (GCS)**.
 
+- Teachers can upload `.txt` and `.mp3` files for each student.
+- Files are stored under structured paths inside the GCS bucket.
+- Updates automatically removes old files (each student gets one current .txt + .mp3 available).
+- Using the upload button without selecting any files will remove any current files enabling the user to use the load buttons to upload files manually.
+
+### 1. Prerequisites
+1. Enable **Google Cloud Storage** in your Google Cloud project.
+2. Create a **Service Account** with Storage permissions  
+3. Download the service-account JSON.
+4. Add the following to your `.env` file:
+  ```.env
+  GOOGLE_APPLICATION_CREDENTIALS=/full/path/to/service-account.json
+  GCS_BUCKET_NAME=your-bucket-name
+  ```
+
+### 2. Logic & Flow
+- `gcs_utils.py` loads credentials and initializes a Storage client.
+- On upload:
+  - Old GCS files are deleted (if present).
+  - New files are uploaded to:
+      ```
+      audiobooks/<user_id>/<filename>
+      ```
+  - Public URLs are generated and stored in the database.
+- On submitting the form with **no files**:
+  - Existing text/audio files are deleted.
+  - The corresponding `UserAudiobook` row is removed.
+
+### 3. Routes
+- `POST /assign_audiobook/<user_id>`  
+  Uploads new files or clears existing audiobook data.
+
+- `GET /audiobook/audiobooks`  
+  Loads the audiobook interface (reader + audio player).
+
+- `POST /audiobook/translate`  
+  Sends selected text to Google Translate API and returns the translation.
+
+See [docs/api.md](docs/api.md#-Audiobook)  for detailed payload and response formats.
+
+### 4. Dependencies
+- `google-cloud-storage`
+- `google-auth`
+- `werkzeug` (for `secure_filename`)
+- Flask (Blueprints, CSRF, WTForms)
 
 ## ⚠️ Branding Notice
 The Imago English logo and brand name are property of Vitor Moraes and are **not covered by the MIT License**.  

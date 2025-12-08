@@ -147,9 +147,14 @@ Secrets and third-party credentials (SECRET_KEY, GOOGLE_OAUTH_CLIENT_ID/SECRET, 
 |---------------------------|---------|
 | `SECRET_KEY`              | Flask session encryption and CSRF protection |
 | `SQLALCHEMY_DATABASE_URI` | Database connection string (SQLite) |
-| `SQLALCHEMY_TRACK_MODIFICATIONS` | Performance optimization (set to `False`) |
+| `SQLALCHEMY_TRACK_MODIFICATIONS` | Performance optimization (set to G`False`) |
 | `APP_ENV`     |Sets Development or Production config at config.py |
-
+for Google login:
+| `GOOGLE_OAUTH_CLIENT_ID`  | your-client-id.apps.googleusercontent.com |
+| `GOOGLE_OAUTH_CLIENT_SECRET`| your-secret |
+| `OAUTHLIB_INSECURE_TRANSPORT`| dev mode / http -> allow OAuth over http for Flask-Dance |
+for Google Cloud Storage (Enables teacher to upload audiobook to students)
+| `GCS_AUDIOBOOK_BUCKET`    | Your Google Cloud bucket |
 
 
 ### Switching Environments
