@@ -177,11 +177,6 @@ Handles dark mode switching using Bootstrap 5.3’s `data-bs-theme` attribute.
 
 
 
-
-
-
- 
-
 ### Auto Expand Input Script
 Used to auto-resize textarea inputs in flashcard forms based on their content.
 
@@ -219,6 +214,235 @@ Used to auto-resize textarea inputs in flashcard forms based on their content.
 * Dynamically enable/disable text selection depending on whether the modal is open using toggleSelection()
 
 
+## Dashboard (`dashboard.html`)
+
+The dashboard is the main landing page after login. It adapts to the current user's role (`student`, `teacher`, or `@dmin!`) and aggregates shortcuts, alerts, and personal stats.
+
+### PWA install button
+
+At the bottom-right corner of the screen there is a floating PWA install button:
+
+- Element: `#install-button`
+- Initially hidden (`display:none`) and only shown when `install-prompt.js` fires the custom install event.
+- Label: `📲 Instalar App`
+- Purpose: allow users to install Imago English as a Progressive Web App on supported devices.
+
+### Header and username management
+
+At the top of the dashboard:
+
+- Welcomes the user by `current_user.user_name`.
+- Shows the current role in bold: `({{ current_user.role }})`.
+
+There is a collapsible section to change the username:
+
+- Triggered by a small link-button: “Change username (alterar nome de usuário)”.
+- When expanded, it shows a form (`user_name_form`) that:
+  - Prefills the field with `suggested_username`.
+  - Submits to `dashboard.set_username`.
+- Validation errors are displayed below the field in small red text.
+
+If the user has an assigned teacher (`current_user.assigned_teacher_id`):
+
+- Shows:  
+  `Professor (Teacher): <teacher name>`.
+
+### Flashcards section
+
+The dashboard always shows the user’s flashcard status.
+
+#### Due flashcards alert
+
+If `due_flashcards > 0`:
+
+- Renders a green alert (`alert alert-success`) with:
+  - English message:  
+    “You have **N** flashcard(s) to study today!”
+  - Portuguese translation in `<small>`:  
+    “Você tem **N** flashcard(s) para estudar hoje!” with a 📚 emoji.
+- Includes a “Study (Estudar)” button:
+  - Submits a `GET` form to `flashcard.study`.
+
+#### No due flashcards message
+
+If `due_flashcards == 0`:
+
+- Shows an info alert (`alert alert-info`) with:
+  - “No due flashcards”
+  - Translation: “Nenhum flashcard pendente” with a 🎉 emoji.
+
+### Audiobook alert
+
+If the user has an audiobook linked via `current_user.audiobook`:
+
+- Renders a green alert (`alert alert-success`) right after the flashcard alerts.
+- Content:
+  - English:  
+    `📖🎧 You have a new audiobook activity: <title>.`
+  - Portuguese translation in `<small>`:  
+    “Você tem uma nova atividade de audiobook: **<title>**. Confira na seção de audiobooks.”
+- Includes an “Audiobook” button:
+  - Submits a `GET` form to `audiobook.audiobooks`.
+  - For students, this opens **their own** audiobook page.
+
+If `current_user.audiobook` is `None`, this block is not rendered.
+
+### Role-specific dashboards
+
+Below the alerts, the dashboard injects different partials based on user role:
+
+- `teacher` → includes `partials/teacher_dashboard.html`
+- `@dmin!` → includes `partials/admin_dashboard.html`
+- Students see only the personal stats boxes described below.
+
+---
+
+## Teacher Dashboard (`partials/teacher_dashboard.html`)
+
+Visible only when `current_user.role == 'teacher'`.
+
+### Calendar shortcut
+
+At the top, teachers have a quick access button:
+
+- Form: `GET` to `calendar.teacher_calendar` with `user_name=current_user.user_name`.
+- Button label: `Check Calendar`.
+
+### Assigned students accordion
+
+If `assigned_students` is not empty:
+
+- Shows a “Assigned Students” section.
+- Uses a Bootstrap accordion (`#studentsAccordion`) where each item represents a student.
+- Header:
+  - Displays `student.name`.
+  - If there are unreviewed flashcards (`unreviewed_counts.get(student.id)`), shows a red badge:  
+    `<N> unreviewed`.
+  - The header button is highlighted (`bg-warning-subtle`) when the student has unreviewed cards.
+
+Inside each student’s accordion body:
+
+1. **Student info**
+   - Email, role, ID, and level shown in a small muted paragraph.
+
+2. **Manage flashcards**
+   - Button: “Manage flashcards”.
+   - Link to `flashcard.manage_student(student_id=student.id)`.
+
+3. **Audiobook management**
+   - Button: “Audiobook” — opens a small modal for that specific student:
+     - `data-bs-target="#audiobookModal-{{ student.id }}"`
+   - Below the button, current audiobook info:
+     - If `student.audiobook` exists:
+       - Shows a “Current audiobook” label and a clickable title:
+         - Link: `url_for('audiobook.audiobooks', user_id=student.id)`
+         - Styled as muted, no underline.
+         - When clicked, opens the audiobook page **for that student**, using the logic in `audiobook.routes.audiobooks`.
+     - If no audiobook:
+       - Displays “No audiobook assigned” in muted text.
+
+   - The upload modal for each student:
+     - Form: `POST` to `audiobook.assign_audiobook(user_id=student.id)`.
+     - Two fields:
+       - `text_file` (expected `.txt`).
+       - `audio_file` (expected `.mp3`).
+     - Help text: max ~10 MB total, `.txt` for text and `.mp3` for audio.
+     - Footer with “Cancel” and “Upload” buttons.
+
+4. **Learning language selector**
+   - Form posting to `admin.set_language(student_id=student.id)`.
+   - Select menu with:
+     - `English` (`en`)
+     - `Brazilian Portuguese` (`pt-BR`)
+   - Current value is selected based on `student.learning_language`.
+
+5. **Update level**
+   - Form posting to `admin.update_student_level`.
+   - Uses `change_student_level_form` with:
+     - Hidden `student_id`
+     - `level` select
+     - Submit button (“Update”) in a small input group.
+
+If there are no assigned students:
+
+- Shows: “No students assigned yet.”
+
+Below the student management area, the page continues with “Personal User Information” (teacher’s own profile details).
+
+---
+
+## Admin Dashboard (`partials/admin_dashboard.html`)
+
+Visible only when `current_user.role == '@dmin!'`.
+
+Rendered inside a `section-box` styled container with a title “Admin Controls” and a Bootstrap accordion (`#adminAccordion`).
+
+### Admin actions
+
+Each accordion item wraps a form:
+
+1. **Assign Student to Teacher**
+   - Form: `admin.assign_student`
+   - Fields:
+     - `assign_form.student_id` (select)
+     - `assign_form.teacher_id` (select)
+   - Submit: primary button (“Assign”).
+
+2. **Unassign Student**
+   - Form: `admin.unassign_student`
+   - Field:
+     - `unassign_form.student_id` (select)
+   - Submit: warning button (“Unassign”).
+
+3. **Change User Role**
+   - Form: `admin.change_role`
+   - Fields:
+     - `change_role_form.user_id` (select)
+     - `change_role_form.role` (select)
+   - Submit: secondary button (“Change role”).
+
+4. **Activate / Deactivate User**
+   - Form: `admin.toggle_active_status`
+   - Field:
+     - `toggle_active_status_form.user_id` (select)
+   - Submit: primary button (“Toggle active”).
+
+5. **Hard Delete User**
+   - Form: `admin.delete_user` with JS confirm:
+     - `onsubmit="return confirm('Are you sure you want to delete this user?');"`
+   - Field:
+     - `delete_user_form.user_id` (select)
+   - Submit: danger button (“Hard Delete User”).
+
+Below the admin controls, there is a “Personal User Information” section showing the admin’s own details.
+
+---
+
+## Personal stats boxes
+
+At the bottom of the dashboard, there are small “section-box” panels showing user stats:
+
+1. **Total cards studied**
+   - Label in English and Portuguese.
+   - Value: `current_user.flashcards_studied` with 🃏 emoji.
+
+2. **Study streak**
+   - Label: “Study streak (Sequência de estudos)”.
+   - Shows `current_user.study_streak` and pluralizes “day(s)” in both languages.
+
+
+3. **Max study streak** (teachers only)
+   - Label: “Max study streak (Máxima sequência de estudos)”.
+   - Shows `current_user.max_study_streak` with day(s) in pt/en.
+
+
+4. **Rate 3 percentage** (teachers only)
+   - Label: “Rate 3 percentage (Percentual de notas 3)”.
+   - Calculates:
+     - `studied = current_user.flashcards_studied or 0`
+     - `r3 = current_user.rate_three_count or 0`
+     - `pct = (r3 / studied * 100)` if both > 0, else a fallback (85% for some seeded demo IDs, otherwise 0).
+   - Displays `pct` as a percentage.
 
 
 ## Leaderboard Page

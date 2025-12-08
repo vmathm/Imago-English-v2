@@ -140,14 +140,7 @@
         </strong> 🔥
         </div>
   
-
-
-        {% if current_user.role == 'teacher' %}
-        
-      
-
-
-        
+                
         <div class="section-box">
         Max study streak <br><small>(Máxima sequência de estudos)</small> <br>
         <strong>
@@ -155,6 +148,10 @@
           {{ "day (dia)" if current_user.max_study_streak == 1 else "days (dias)" }}
         </strong> 🏅
         </div>
+
+
+        {% if current_user.role == 'teacher' %}
+
  
 
           <div class="section-box">

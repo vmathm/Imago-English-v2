@@ -177,22 +177,37 @@ Handles flashcards being added to current_user or to student by using a hidden i
 
 ## Audiobook
 
-### `GET /audiobooks`
-Serves `audiobook/audiobooks.html`, allowing the user to upload an audio file and a matching text transcript.
+### `GET /audiobook/audiobooks`
+
+Loads the audiobook reading view.
+
+**Default behavior (student):**
+
+- When called without parameters, returns the audiobook for the currently logged-in user, if available. Otherwise loads the buttons to temporarily load .txt and .mp3 files manually. 
+- If the audiobook has a `text_url`, the server fetches the file from GCS and passes its contents to the template as `text_content`, which is rendered in `audiobooks.html`.
+- If the audiobook has an `audio_url`, `audiobooks.html` renders an `<audio>` player pointing to that URL so the user can listen to the audiobook.
+
+**Teacher/Admin view:**
+
+- Supports an optional query parameter: `user_id`
+- `GET /audiobook/audiobooks?user_id=<student_id>`
+
+Authorization rules:
+
+- Only available to users with role `teacher` or `admin`.
+- Returns `404` if the target user does not exist or is not a student.
+- If the current user is a teacher (not admin), access is only allowed when the student is assigned to that teacher; otherwise a `403` is returned.
+
+Template context:
+
+- `audiobook`: `UserAudiobook` instance for the resolved user (current user or student)
+- `text_content`: text loaded from `text_url` when available
+- `student`: the student being inspected (or `None` when viewing your own audiobook)
+- `target_user`: the user whose audiobook is currently being displayed
 
 ### `POST /translate`
 Receives JSON `{"text": "<selected string>"}` 
 
-### `GET /audiobook/view`
-- **Auth**: `login_required` (student or teacher)
-- **Purpose**: Show the audiobook page for the logged-in user.
-- **Behaviour**:
-  - Looks up the `UserAudiobook` row by `current_user.id`.
-  - If a `text_url` exists, fetches the `.txt` from GCS and passes the text into the template as `text_content`.
-  - Renders `audiobooks.html`:
-    - Shows an audio player if `audio_url` is set.
-    - Shows the text in the reader area if `text_content` is available.
-    - Integrates with `static/js/audiobook.js` so users can select text, translate, and create flashcards.
 
 ### `POST /audiobook/assign_audiobook/<user_id>`
 - **Auth**: `login_required`, and `current_user.is_teacher()` or `current_user.is_admin()` must be true.
