@@ -385,7 +385,20 @@ def manage_student(student_id):
     form = FlashcardForm()
     form.student_id.data = student.id
     flashcards = db_session.query(Flashcard).filter_by(user_id=student_id).order_by(asc(Flashcard.reviewed_by_tc)).all()
+    due_flashcards = db_session.query(func.count(Flashcard.id)).filter(
+        Flashcard.user_id == student_id,
+        or_(
+            Flashcard.next_review == None,
+            Flashcard.next_review <= datetime.now(timezone.utc) - timedelta(hours=3)
+        )
+    ).scalar()
+    
+
+
+
     forms = {c.id: FlashcardForm(obj=c) for c in flashcards}
+
+
 
     return render_template(
         "flashcards/manage_student_cards.html",
@@ -393,6 +406,7 @@ def manage_student(student_id):
         form=form,
         flashcards=flashcards,
         forms=forms,
+        due_flashcards=due_flashcards
     )
 
 

@@ -10,8 +10,8 @@
     {{ "dia (day)" if student.study_streak == 1 else "dias (days)" }}</strong> 🔥<br><br>
     Máxima sequência de estudos (Max Study Streak): <br> <strong>{{ student.max_study_streak }}
     {{ "dia (day)" if student.max_study_streak == 1 else "dias (days)" }}</strong> 🏅<br><br>
-    Total de cartões estudados (Total cards studied): <br> <strong>{{ student.flashcards_studied }}</strong> 🃏<br>
-    <br>
+    Total de flashcards estudados (Total flashcards studied): <br> <strong>{{ student.flashcards_studied }}</strong> 🃏<br>
+  </p>Total de flashcards (Total flashcards): <br> <strong>{{ flashcards|length }}</strong> 🃏</p>
     Rate 3 percentage: <br>
     {% set studied = student.flashcards_studied or 0 %}
     {% set r3 = student.rate_three_count or 0 %}
@@ -19,11 +19,28 @@
         (r3 / studied * 100) if (r3 > 0 and studied > 0)
         else (85 if (student.id|string)|length == 4 else 0)
     ) %}
-    <strong>{{ pct | round(2) }}%</strong> ⭐⭐⭐
+    <strong>{{ pct | round(2) }}%</strong> ⭐⭐⭐ <br>
+    <br>
 
-  
-  </p>
   {% include "partials/add-card-form.html" with context %}
+
+    <hr>
+    <small>
+    {{ due_flashcards or 0 }}
+    {{ 'flashcard' if (due_flashcards or 0) == 1 else 'flashcards' }}
+    to study now.
+    </small>
+
+   <form action="{{ url_for('flashcard.study') }}" method="get">
+   <input type="hidden" name="student_id" value="{{ student.id }}">
+    <button
+      type="submit"
+      class="btn {{ 'btn-primary' if due_flashcards else 'btn-secondary' }}"
+      {{ 'disabled' if not due_flashcards else '' }}
+      aria-disabled="{{ 'false' if due_flashcards else 'true' }}">
+      Study <small>(Estudar)</small>
+    </button>
+  </form>
 
   <form action="{{ url_for('flashcard.study') }}" method="get" class="mb-3">
       <input type="hidden" name="student_id" value="{{ student.id }}">

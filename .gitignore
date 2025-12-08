@@ -203,3 +203,4 @@ secrets/
 backup.sql
 old_imago.dbold_imago.db
 db_backups/
+scripts/migration_GCS_learning_language.py
