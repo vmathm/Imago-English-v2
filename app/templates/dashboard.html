@@ -92,6 +92,29 @@
             </div>
           {% endif %}
 
+
+          {% if current_user.audiobook %}
+          <div class="alert alert-success mt-3 align-items-center">
+            <div>
+              <p>
+                📖🎧You have a new audiobook activity:
+                <strong>{{ current_user.audiobook.title }}</strong>.<br>
+                <small>
+                  (Você tem uma nova atividade de audiobook:
+                  <strong>{{ current_user.audiobook.title }}</strong>.
+                  Confira na seção de audiobooks.)
+                </small>
+              </p>
+            </div>
+
+            <form action="{{ url_for('audiobook.audiobooks') }}" method="get">
+              <button type="submit" class="btn btn-primary">
+                Audiobook
+              </button>
+            </form>
+          </div>
+         {% endif %}
+
         {% if current_user.role == 'teacher' %} 
 
           {% include "partials/teacher_dashboard.html" %}

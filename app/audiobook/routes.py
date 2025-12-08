@@ -17,9 +17,35 @@ bp = Blueprint('audiobook', __name__, url_prefix='/audiobook')
 @bp.route('/audiobooks')
 @login_required
 def audiobooks():
+    from app.models import User, UserAudiobook  # adjust import path if needed
+
+    # Default: current user
+    target_user = current_user
+    student = None
+
+    
+    student_id = request.args.get("user_id", type=str)
+
+    if student_id and student_id != str(current_user.id):
+        
+        if not (current_user.is_teacher() or current_user.is_admin()):
+            abort(403)
+
+        student = db_session.query(User).get(student_id)
+        if not student or student.role != "student":
+            abort(404)
+
+        # If it's a teacher (not admin), enforce assignment
+        if current_user.is_teacher() and not current_user.is_admin():
+            if getattr(student, "assigned_teacher_id", None) != current_user.id:
+                abort(403)
+
+        target_user = student
+
+    # Fetch audiobook for the resolved target user
     audiobook = (
         db_session.query(UserAudiobook)
-        .filter_by(user_id=current_user.id)
+        .filter_by(user_id=target_user.id)
         .first()
     )
 
@@ -31,12 +57,13 @@ def audiobooks():
             text_content = resp.text
         except Exception:
             current_app.logger.exception("Failed to fetch audiobook text from GCS")
-            
 
     return render_template(
-        'audiobooks.html',
+        "audiobooks.html",
         audiobook=audiobook,
         text_content=text_content,
+        student=student,          # None if it's the current_user
+        target_user=target_user,  # whoever we're showing
     )
 
 

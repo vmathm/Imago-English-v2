@@ -43,6 +43,8 @@ class User(UserMixin, Base):
     # Relationships to other tables
     flashcards = relationship('Flashcard', back_populates='user')
     calendar_settings = relationship("CalendarSettings", uselist=False, back_populates="teacher")
+
+    audiobook = relationship("UserAudiobook", back_populates="user", uselist=False)
     
 
 

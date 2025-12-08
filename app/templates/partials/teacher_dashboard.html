@@ -61,6 +61,17 @@
                     data-bs-target="#audiobookModal-{{ student.id }}">
               Audiobook
             </button>
+            <small>Current audiobook: <br>
+                  <small class="d-block mt-1">
+              {% if student.audiobook %}
+                <a href="{{ url_for('audiobook.audiobooks', user_id=student.id) }}"
+                  class="text-muted text-decoration-none">
+                  {{ student.audiobook.title }}
+                </a>
+              {% else %}
+                <span class="text-muted">No audiobook assigned</span>
+              {% endif %}
+            </small>
 
             <div class="mt-3">
               <form method="post"
