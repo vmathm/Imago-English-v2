@@ -65,6 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
+   
   function updateCounter() {
     if (!counterEl) return;
     let remaining;
@@ -491,8 +492,17 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         if (!res.ok) {
-          // You could show an alert here if you want feedback
+          // optional: show error if you want
+          // showFlash("danger", "Não foi possível enviar o pedido de ajuda. Tente novamente.");
           return;
+        }
+
+        // ✅ Show success message to the student
+          if (window.showFlash) {
+        window.showFlash(
+          "Seu professor foi notificado e vai revisar este flashcard.",
+          "success" // or "success", both are mapped in your map
+        );
         }
 
         // Remove this card from the current session
@@ -519,6 +529,7 @@ document.addEventListener("DOMContentLoaded", () => {
         setButtonsEnabled(true);
       }
     }
+
 
     function showNext() {
       const hasQueue = index < queue.length;
