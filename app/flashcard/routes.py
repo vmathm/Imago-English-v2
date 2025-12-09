@@ -247,7 +247,7 @@ def study():
             Flashcard.user_id == target_user_id,
             or_(
                 Flashcard.next_review == None,
-                Flashcard.next_review <= datetime.now(timezone.utc)
+                Flashcard.next_review <= datetime.now(timezone.utc) - timedelta(hours=3)
             )
         )
         .all()
