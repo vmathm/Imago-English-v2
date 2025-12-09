@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import render_template
+from flask import render_template, request
 from flask_login import current_user, login_required
 
 def active_required(view_func=None, *, template_name="inactive_user.html"):
@@ -9,12 +9,11 @@ def active_required(view_func=None, *, template_name="inactive_user.html"):
         @login_required
         def wrapped(*args, **kwargs):
             if not current_user.active:
-                # Just show the “book a free lesson” page
-                return render_template(template_name)
+                # Always render the template
+                return render_template(template_name), 403
             return fn(*args, **kwargs)
         return wrapped
 
-   
     if view_func is None:
         return decorator
     return decorator(view_func)

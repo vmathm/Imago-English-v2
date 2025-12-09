@@ -78,12 +78,12 @@
           <div class="mb-3">
               Repetitions: {{ card.level }} <br>
               {% if card.last_review %}
-                Last: {{ (card.last_review - timedelta(hours=3)).strftime('%Y-%m-%d %H:%M') }}<br>
+                Last: {{ (card.last_review).strftime('%Y-%m-%d %H:%M') }}<br>
               {% else %}
                 Last: never<br>
               {% endif %}
               {% if card.next_review %}
-                Next: {{ (card.next_review - timedelta(hours=3)).strftime('%Y-%m-%d %H:%M') }}
+                Next: {{ (card.next_review).strftime('%Y-%m-%d %H:%M') }}
               {% else %}
                 Next: Never
               {% endif %}

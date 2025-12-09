@@ -153,20 +153,40 @@ if (textBtn && textInput) {
 
     const csrfToken = document
       .querySelector('meta[name="csrf-token"]')
-      .getAttribute("content");
+      ?.getAttribute("content");
 
-    const response = await fetch("/flashcard/addcards", {
-      method: "POST",
-      headers: { "X-CSRFToken": csrfToken },
-      body: formData
-    });
+    try {
+      const response = await fetch("/flashcard/addcards", {
+        method: "POST",
+        headers: {
+          ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
+          "X-Requested-With": "XMLHttpRequest", // optional but consistent
+        },
+        body: formData,
+      });
 
-    const result = await response.json();
-    showFlash(
-      result.message,
-      result.status === "success" ? "success" : "error"
-    );
+      // 🔴 Inactive user → server returned inactive_user.html with 403
+      if (response.status === 403) {
+        const html = await response.text();
+        document.open();
+        document.write(html);
+        document.close();
+        return;
+      }
+
+      // ✅ Active user → JSON with status/message
+      const result = await response.json();
+
+      showFlash(
+        result.message || "Unexpected response.",
+        result.status === "success" ? "success" : "error"
+      );
+    } catch (err) {
+      console.error("Error adding flashcard from audiobook.js:", err);
+      showFlash("Erro ao adicionar o flashcard. Tente novamente.", "error");
+    }
   }
+
 
   function showFlash(msg, kind = "success") {
     const flashDiv = document.createElement("div");

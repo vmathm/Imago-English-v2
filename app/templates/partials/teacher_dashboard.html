@@ -97,7 +97,7 @@
             <!-- 3) Update level -->
             <form action="{{ url_for('admin.update_student_level') }}"
                   method="post"
-                  class="w-100">
+                  class="d-flex gap-2 align-items-center">
               {{ change_student_level_form.csrf_token }}
               {{ change_student_level_form.student_id(value=student.id) }}
 

@@ -19,14 +19,14 @@
       class="btn {{ 'btn-primary' if has_cards else 'btn-secondary' }}"
       {{ '' if has_cards else 'disabled' }}
       aria-disabled="{{ 'false' if has_cards else 'true' }}">
-      Study <small>(Estudar)</small>
+      Study (Estudar)
     </button>
   </form>
+
   {% if not has_cards %}
     <small class="text-muted d-block mt-1">
       No cards due now. (Sem cartões para estudar no momento.)
     </small>
-      <br>
   {% endif %}
 
     <form action="{{ url_for('flashcard.edit_cards') }}" method="get">

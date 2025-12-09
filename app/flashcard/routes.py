@@ -24,7 +24,7 @@ def flashcards():
                 Flashcard.user_id == current_user.id,
                 or_(
                     Flashcard.next_review.is_(None),
-                    Flashcard.next_review <= datetime.now(timezone.utc),
+                    Flashcard.next_review <= datetime.now(timezone.utc) - timedelta(hours=3),
                 ),
             )
             .scalar()
@@ -341,7 +341,7 @@ def review_flashcard():
         Flashcard.user_id == flashcard.user_id,
         or_(
             Flashcard.next_review == None,
-            Flashcard.next_review <= datetime.now(timezone.utc)
+            Flashcard.next_review <= datetime.now(timezone.utc) - timedelta(hours=3)
         )
     ).count()
 

@@ -18,7 +18,7 @@ class UserAudiobook(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = relationship("User", backref="user_audiobook", uselist=False)
+    user = relationship("User", back_populates="audiobook", uselist=False)
 
     __table_args__ = (
         UniqueConstraint("user_id", name="uq_user_audiobooks_user_id"),
