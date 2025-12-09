@@ -21,7 +21,7 @@
 
     <div class="card p-4" style="max-width:540px;margin:2rem auto;">
     
-    <h1 class="mb-3">Demo Login</h1>
+    <h4 class="mb-3">Demo Login</h4>
     <p class="mb-3">Choose a role to preview the app:</p>
     <div class="d-grid gap-2">
         <form action="/auth/demo_login/8000" method="get" style="display:inline;">
@@ -37,6 +37,111 @@
         </form>
     </div>
     <p class="mt-3 small text-muted">Demo mode uses pre-seeded accounts.</p>
+<br>
+    <h6>Suggested Demo Walkthrough:</h6>
+
+    <div class="accordion mt-4" id="demoFlowAccordion">
+  <!-- Step 1: Admin -->
+  <div class="accordion-item bg-transparent border-secondary">
+    <h2 class="accordion-header" id="headingAdmin">
+      <button class="accordion-button collapsed bg-transparent text-light text-start" type="button"
+              data-bs-toggle="collapse" data-bs-target="#collapseAdmin"
+              aria-expanded="false" aria-controls="collapseAdmin">
+        <span class="badge bg-primary me-2">Step 1</span>
+        Start as <strong>Admin</strong>
+      </button>
+    </h2>
+    <div id="collapseAdmin" class="accordion-collapse collapse"
+         aria-labelledby="headingAdmin" data-bs-parent="#demoFlowAccordion">
+      <div class="accordion-body text-start text-muted">
+        <ul class="mb-0">
+          <li>Log in as an <strong>Admin</strong>.</li>
+          <li>On the dashboard, assign one or more <strong>students</strong> (including <strong>Paul</strong>, the sample user for students) to <strong>teacher_0</strong>.</li>
+        </ul>
+        <small class="d-block mt-2">This activates the student and links them to a teacher. Unassigned students cannot use flashcards and are redirected to book a free lesson.</small>
+      </div>
     </div>
+  </div>
+
+  <!-- Step 2: Teacher -->
+  <div class="accordion-item bg-transparent border-secondary mt-2">
+    <h2 class="accordion-header" id="headingTeacher">
+      <button class="accordion-button collapsed bg-transparent text-light" type="button"
+              data-bs-toggle="collapse" data-bs-target="#collapseTeacher"
+              aria-expanded="false" aria-controls="collapseTeacher">
+        <span class="badge bg-primary me-2">Step 2</span>
+        Continue as&nbsp;<strong> Teacher</strong>
+      </button>
+    </h2>
+    <div id="collapseTeacher" class="accordion-collapse collapse"
+         aria-labelledby="headingTeacher" data-bs-parent="#demoFlowAccordion">
+      <div class="accordion-body text-start text-muted">
+        <ul class="mb-0">
+          <li>Log in as a <strong>teacher</strong>.</li>
+          <li>Open the dashboard and go to the assigned student.</li>
+          <li>Upload an <strong>audiobook</strong> for that student.</li>
+          <li>Add and review a few <strong>flashcards</strong> for them.</li>
+          <li>Visit the Calendar section to add <strong>Whatsapp</strong> number and change calendar settings (syncs with Google Calendar and demo teachers have a hardcoded real gmail in use.)</li>
+          <li>Check the calendar link</li>
+        </ul>
+        <small class="d-block mt-2">You’re now using the core teaching tools of the platform.</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3: Student -->
+  <div class="accordion-item bg-transparent border-secondary mt-2">
+    <h2 class="accordion-header" id="headingStudent">
+      <button class="accordion-button collapsed bg-transparent text-light" type="button"
+              data-bs-toggle="collapse" data-bs-target="#collapseStudent"
+              aria-expanded="false" aria-controls="collapseStudent">
+        <span class="badge bg-primary me-2">Step 3</span>
+        Finish as <strong>Student</strong>
+      </button>
+    </h2>
+    <div id="collapseStudent" class="accordion-collapse collapse"
+         aria-labelledby="headingStudent" data-bs-parent="#demoFlowAccordion">
+      <div class="accordion-body text-start text-muted">
+        <ul class="mb-0">
+          <li>Log in as the <strong>assigned student</strong>.</li>
+          <li>Complete a full <strong>flashcard study session</strong>(Optionally ask for help with a card).</li>
+          <li>Open the <strong>audiobook</strong>, highlight text, translate it, and create new flashcards from the text.</li>
+        </ul>
+        <small class="d-block mt-2">This shows the full learner experience: audiobooks + SRS flashcards.</small>
+      </div>
+    </div>
+  </div>
+  <!-- Step 4: Google Login -->
+<!-- Step 4: Google Login -->
+<div class="accordion-item bg-transparent border-secondary mt-2">
+  <h2 class="accordion-header" id="headingGoogle">
+    <button class="accordion-button collapsed bg-transparent text-light" type="button"
+            data-bs-toggle="collapse" data-bs-target="#collapseGoogle"
+            aria-expanded="false" aria-controls="collapseGoogle">
+      <span class="badge bg-primary me-2">Step 4 (Optional)</span>
+      Login with <strong>Google</strong>
+    </button>
+  </h2>
+
+  <div id="collapseGoogle" class="accordion-collapse collapse"
+       aria-labelledby="headingGoogle" data-bs-parent="#demoFlowAccordion">
+    <div class="accordion-body text-start text-muted">
+      <ul class="mb-0">
+        <li>Use the Google login button above to sign in with Google.</li>
+        <li>You will be able to test the Google login flow with a demo account.</li>
+        <li>Optionally change your user role to Teacher and check the <strong>Calendar</strong>
+            with your own synced Google account.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</div>
+<br>
+<small class="text-muted">Prefer the real environment? <br>You can explore the live version at <a href="https://www.imagoenglish.com.br" target="_blank">imagoenglish.com.br</a>.</small>
+
+  
+
+    
+
 
 {% endblock %}

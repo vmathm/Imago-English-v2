@@ -127,9 +127,9 @@
             {{ audiobook_form.hidden_tag() }}
 
             <div class="modal-header py-2">
-              <h5 class="modal-title fs-6" id="audiobookModalLabel-{{ student.id }}">
-                Upload audiobook for {{ student.user_name or student.name }}
-              </h5>
+              <h3 class="modal-title fs-6" id="audiobookModalLabel-{{ student.id }}">
+                Upload or replace audiobook for {{ student.user_name or student.name }}
+              </h3>
               <button type="button"
                       class="btn-close"
                       data-bs-dismiss="modal"
@@ -180,9 +180,9 @@
     </ul>
   </div>
 {% else %}
-  <h2>No students assigned yet.</h2>
+  <h4>No students assigned yet.</h4>
 {% endif %}
 <br><br>
-<h2 class="mb-4">Personal User Information</h2>
+<h4 class="mb-4">Personal User Information</h4>
 
 

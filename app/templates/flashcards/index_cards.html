@@ -28,12 +28,12 @@
       No cards due now. (Sem cartões para estudar no momento.)
     </small>
   {% endif %}
-
+    <br>
     <form action="{{ url_for('flashcard.edit_cards') }}" method="get">
         <button type="submit" class="btn btn-primary">Edit flashcards <small>(Editar flashcards)</small></button>
     </form>
 
-    
+    <br>
 
     {% include "partials/add-card-form.html" %}
 

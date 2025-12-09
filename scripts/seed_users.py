@@ -45,7 +45,7 @@ def main():
                 id=f"900{i}",
                 name=f"teacher{i}",
                 user_name=f"u_name_teacher{i}",
-                email="vitornorace@gmail.com",
+                email="vitornorace@gmail.com", # email hardcoded to allow calendar sync for demo. 
                 role="teacher",
                 join_date=today,
                 active=True,
@@ -78,7 +78,7 @@ def main():
             email=f"{name.lower()}@example.com",
             role="student",
             join_date=today,
-            active=True,
+            active=False,
             points=p,
             study_streak=s,
             max_study_streak=max_s,
