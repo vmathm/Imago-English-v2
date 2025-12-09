@@ -50,7 +50,7 @@
 
             <!-- 1) Manage flashcards -->
             <a href="{{ url_for('flashcard.manage_student', student_id=student.id) }}"
-               class="btn btn-primary btn-sm w-100">
+               class="btn btn-secondary btn-sm w-100">
               Manage flashcards
             </a>
 
@@ -61,8 +61,11 @@
                     data-bs-target="#audiobookModal-{{ student.id }}">
               Audiobook
             </button>
-            <small>Current audiobook: <br>
-                  <small class="d-block mt-1">
+ 
+            <p class="small mb-1">
+              Current audiobook:
+            </p>
+            <small class="d-block mt-1">
               {% if student.audiobook %}
                 <a href="{{ url_for('audiobook.audiobooks', user_id=student.id) }}"
                   class="text-muted text-decoration-none">
@@ -97,14 +100,12 @@
             <!-- 3) Update level -->
             <form action="{{ url_for('admin.update_student_level') }}"
                   method="post"
-                  class="d-flex gap-2 align-items-center">
+                  class="d-flex gap-2 align-items-center mt-2">
               {{ change_student_level_form.csrf_token }}
               {{ change_student_level_form.student_id(value=student.id) }}
 
-              <div class="input-group input-group-sm">
-                {{ change_student_level_form.level(class="form-select") }}
-                {{ change_student_level_form.submit(class="btn btn-secondary") }}
-              </div>
+              {{ change_student_level_form.level(class="form-select form-select-sm w-auto") }}
+              {{ change_student_level_form.submit(class="btn btn-secondary btn-sm") }}
             </form>
 
           </div>
