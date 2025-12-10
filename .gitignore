@@ -199,7 +199,8 @@ cython_debug/
 
 secrets/
 
-
+scripts/backup_db.py
+scripts/streak_task.py
 backup.sql
 old_imago.dbold_imago.db
 db_backups/

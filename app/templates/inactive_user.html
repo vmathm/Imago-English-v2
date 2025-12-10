@@ -1,18 +1,26 @@
 {% extends "layout.html" %}
 
-{% block title %}Usuário Inativo - Imago English{% endblock %}
+{% block title %}Inactive User – Imago English{% endblock %}
 
 {% block main %}
 <div class="container py-4">
-  <h4 class="mb-3">Sua conta ainda não está ativa</h4>
+
+  <h4 class="mb-3">
+    Your account is not active yet
+    <small>(Sua conta ainda não está ativa)</small>
+  </h4>
 
   <p class="mb-4">
-    Para ter acesso às ferramentas de estudo,
-    faça uma aula teste gratuita clicando no botão abaixo.
+    To access the study tools,
+    please book a free trial lesson using the button below.
+    <small>(Para ter acesso às ferramentas de estudo,
+    agende uma aula teste gratuita clicando no botão abaixo.)</small>
   </p>
 
   <a href="/calendar/admin" class="btn btn-primary">
-    Agendar aula teste gratuita
+    Book a free trial lesson
+    <small>(Agendar aula teste gratuita)</small>
   </a>
+
 </div>
 {% endblock %}
