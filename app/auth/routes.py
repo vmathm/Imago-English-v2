@@ -1,15 +1,28 @@
-from flask import Blueprint, redirect, abort, current_app, url_for, session, render_template
-from flask_login import login_user, logout_user
+from flask import Blueprint, redirect, abort, current_app, request, url_for, session, render_template
+from flask_login import login_user, logout_user, current_user
 from app.models import User
 from app.database import db_session
 from flask_dance.contrib.google import make_google_blueprint, google
 from app.services.google_auth import get_google_user_info 
+from urllib.parse import urlparse, urljoin
 import os
+
 
 
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
+
+
+def is_safe_url(target: str) -> bool:
+    host_url = urlparse(request.host_url)
+    redirect_url = urlparse(urljoin(request.host_url, target))
+    return (
+        redirect_url.scheme in ("http", "https")
+        and host_url.netloc == redirect_url.netloc
+    )
+
+    
 
 google_bp = make_google_blueprint(
     client_id=os.getenv("GOOGLE_OAUTH_CLIENT_ID"),
@@ -49,36 +62,39 @@ def demo_login(user_id):
 
 @bp.route("/login/google")
 def login():
-    return redirect(url_for("google.login"))
+    next_url = request.args.get("next") or request.referrer
 
+    if next_url and is_safe_url(next_url):
+        session["post_login_redirect"] = next_url
+
+    return redirect(url_for("google.login"))
 
 
 @bp.route("/login/google/complete")
 def google_complete():
-    
     if not google.authorized:
-        print("Google authorized:", google.authorized)
-        return f"Not authorized. Session: {session}", 403
+        # Not authorized: go back to the login handler
+        return redirect(url_for("auth.login"))
 
-   
     info = get_google_user_info()
 
     email = info["email"]
     name = info.get("name", "No Name")
-    id = info["id"]
+    google_id = info["id"]
+
     user = db_session.query(User).filter_by(email=email).first()
+
     if not user:
         user = User(
-            id=id,
+            id=google_id,
             email=email,
             name=name,
             user_name=email.split("@")[0],
             role="student",
             profilepic=info.get("picture", "none"),
-            learning_language="en"
+            learning_language="en",
         )
-        db_session.add(user)  # only here
-
+        db_session.add(user)
     else:
         if user.user_name is None:
             user.user_name = email.split("@")[0]
@@ -87,8 +103,19 @@ def google_complete():
 
     db_session.commit()
 
-    login_user(user, force=True)
-    return redirect("/dashboard")
+    # actually log in
+    login_user(user, remember=True)
+    session.modified = True
+
+    # DEBUG: verify that login "took" in this request
+    print("After login_user, authenticated:", current_user.is_authenticated)
+
+    # choose where to go next
+    target = session.pop("post_login_redirect", None)
+    if not target or not is_safe_url(target):
+        target = url_for("dashboard.index")  # or your dashboard route name
+
+    return redirect(target)
 
 
 @bp.route("/logout")
