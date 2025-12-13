@@ -35,7 +35,8 @@ google_bp = make_google_blueprint(
     ],
     redirect_url="/auth/login/google/complete"
 )
-
+print("GOOGLE BP CALLBACK URL:", google_bp.redirect_url)
+print("GOOGLE BP NAME:", google_bp.name)
 
 @bp.route('/demo_login/', defaults={"user_id": None})
 @bp.route('/demo_login/<user_id>')

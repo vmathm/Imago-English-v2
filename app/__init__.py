@@ -66,5 +66,12 @@ def create_app():
     app.register_blueprint(calendar_bp)
     app.register_blueprint(google_bp, url_prefix="/login")
     app.register_blueprint(staticpages_bp)
+
+
+    # DEBUG: print routes once at startup
+    print("=== ROUTES CONTAINING GOOGLE ===")
+    for rule in app.url_map.iter_rules():
+        if "google" in rule.endpoint or "google" in rule.rule:
+            print(rule.endpoint, rule.rule)
    
     return app  
