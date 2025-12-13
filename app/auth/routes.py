@@ -1,3 +1,4 @@
+import hashlib
 from flask import Blueprint, redirect, abort, current_app, request, url_for, session, render_template
 from flask_login import login_user, logout_user, current_user
 from app.models import User
@@ -105,6 +106,15 @@ def google_complete():
 
     # actually log in
     login_user(user, remember=True)
+    print("=== GOOGLE CALLBACK ===")
+    print("HOST:", request.host)
+    print("SCHEME:", request.scheme)
+    print("COOKIES SENT:", list(request.cookies.keys()))
+    print(
+    "SECRET FP:",
+    hashlib.sha256(current_app.config["SECRET_KEY"].encode()).hexdigest()[:8]
+    )
+    print("AUTHENTICATED:", current_user.is_authenticated)
     session.modified = True
 
     # DEBUG: verify that login "took" in this request

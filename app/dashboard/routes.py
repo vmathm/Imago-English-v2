@@ -1,4 +1,5 @@
-from flask import Blueprint, flash, render_template, redirect, url_for
+import hashlib
+from flask import Blueprint, current_app, flash, render_template, redirect, request, url_for
 from flask_login import current_user, login_required
 from app.flashcard.form import FlashcardForm
 from app.models import User            
@@ -91,6 +92,15 @@ def get_admin_data():
 
 @bp.route('/')
 def index():
+    print("=== DASHBOARD ===")
+    print("HOST:", request.host)
+    print("SCHEME:", request.scheme)
+    print("COOKIES SENT:", list(request.cookies.keys()))
+    print(
+        "SECRET FP:",
+        hashlib.sha256(current_app.config["SECRET_KEY"].encode()).hexdigest()[:8]
+    )
+    print("AUTHENTICATED:", current_user.is_authenticated)
 
     if not current_user.is_authenticated:
         print("User not authenticated, rendering dashboard without user data.")
