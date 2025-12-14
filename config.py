@@ -40,9 +40,9 @@ class ProdConfig(Config):
     # Strict cookie flags for production
     SESSION_COOKIE_SECURE = True         # HTTPS only
     SESSION_COOKIE_HTTPONLY = True       # not readable by JS
-    SESSION_COOKIE_SAMESITE = "Lax"      # "Strict" can break OAuth; Lax is safe
+    SESSION_COOKIE_SAMESITE = "None"      
     REMEMBER_COOKIE_SECURE = True
     REMEMBER_COOKIE_HTTPONLY = True
     ALLOW_SEEDED_USERS =False
-    REMEMBER_COOKIE_SAMESITE = "Lax"
+    REMEMBER_COOKIE_SAMESITE = "None"
     PREFERRED_URL_SCHEME = "https"
