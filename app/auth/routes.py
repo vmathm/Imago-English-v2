@@ -4,6 +4,7 @@ from flask_login import login_user, logout_user, current_user
 from app.models import User
 from app.database import db_session
 from flask_dance.contrib.google import make_google_blueprint, google
+from flask_dance.consumer import oauth_authorized
 from app.services.google_auth import get_google_user_info 
 from urllib.parse import urlparse, urljoin
 import os
@@ -33,10 +34,14 @@ google_bp = make_google_blueprint(
         "https://www.googleapis.com/auth/userinfo.email",
         "https://www.googleapis.com/auth/userinfo.profile"
     ],
-    redirect_url="/auth/login/google/complete"
-)
+    redirect_url="/auth/login/google/complete")
 print("GOOGLE BP CALLBACK URL:", google_bp.redirect_url)
 print("GOOGLE BP NAME:", google_bp.name)
+
+
+
+
+
 
 @bp.route('/demo_login/', defaults={"user_id": None})
 @bp.route('/demo_login/<user_id>')
@@ -59,6 +64,10 @@ def demo_login(user_id):
     else:
         print("Demo login failed for user:", user_id)
     return redirect("/dashboard")
+
+
+
+
 
 
 

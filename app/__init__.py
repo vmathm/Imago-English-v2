@@ -64,7 +64,7 @@ def create_app():
     app.register_blueprint(audiobook_bp)
     app.register_blueprint(progress_bp)
     app.register_blueprint(calendar_bp)
-    app.register_blueprint(google_bp, url_prefix="/login")
+    app.register_blueprint(google_bp, url_prefix="/auth")
     app.register_blueprint(staticpages_bp)
 
 

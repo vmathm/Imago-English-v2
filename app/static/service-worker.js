@@ -1,48 +1,3 @@
-/* service-worker.js
-   Imago English (v2) — safe caching for auth apps
-   - Cache ONLY static assets
-   - NEVER cache HTML navigations (prevents login loops)
-   - Clean up old caches on update
-*/
-
-const CACHE_VERSION = "v3";
-const CACHE_NAME = `imago-v2-cache-${CACHE_VERSION}`;
-
-// Only precache truly static assets (NO "/" and NO "/dashboard")
-const STATIC_ASSETS = [
-  "/static/css/styles.css",
-  "/static/img/icons/icon-192.png",
-  "/static/img/icons/icon-512.png",
-  "/static/img/icons/maskable-icon.png",
-  "/static/img/icons/apple-touch-icon.png",
-];
-
-// Install: precache static assets and activate ASAP
-self.addEventListener("install", (event) => {
-  self.skipWaiting();
-  event.waitUntil(
-    (async () => {
-      const cache = await caches.open(CACHE_NAME);
-      await cache.addAll(STATIC_ASSETS);
-    })()
-  );
-});
-
-// Activate: delete old caches and take control immediately
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    (async () => {
-      const keys = await caches.keys();
-      await Promise.all(
-        keys
-          .filter((k) => k.startsWith("imago-v2-cache-") && k !== CACHE_NAME)
-          .map((k) => caches.delete(k))
-      );
-      await self.clients.claim();
-    })()
-  );
-});
-
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
@@ -52,15 +7,12 @@ self.addEventListener("fetch", (event) => {
 
   // 2) Never cache auth or API routes
   if (url.pathname.startsWith("/auth/") || url.pathname.startsWith("/api/")) {
-    // Let the browser handle it normally (network)
     return;
   }
 
-  // 3) Never cache navigations (HTML pages). This prevents “logged-out HTML” being
-  //    served after login and causing redirect loops.
+  // 3) Never cache navigations (HTML pages). Let the browser handle it.
   if (req.mode === "navigate") {
-    event.respondWith(fetch(req));
-    return;
+    return;  // Don't intercept navigation requests
   }
 
   // 4) Cache-first ONLY for static files
