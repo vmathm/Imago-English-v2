@@ -92,16 +92,6 @@ def get_admin_data():
 
 @bp.route('/')
 def index():
-    print("=== DASHBOARD ===")
-    print("HOST:", request.host)
-    print("SCHEME:", request.scheme)
-    print("COOKIES SENT:", list(request.cookies.keys()))
-    print(
-        "SECRET FP:",
-        hashlib.sha256(current_app.config["SECRET_KEY"].encode()).hexdigest()[:8]
-    )
-    print("AUTHENTICATED:", current_user.is_authenticated)
-
     if not current_user.is_authenticated:
         print("User not authenticated, rendering dashboard without user data.")
         return render_template('dashboard.html')
@@ -116,7 +106,7 @@ def index():
     user_name_form = UsernameForm(data={"user_name": suggested_username})
     
     
-      # --- Flashcard counts for current user ---
+
     total_flashcards = db_session.query(func.count(Flashcard.id)).filter_by(user_id=current_user.id).scalar()
 
     due_flashcards = db_session.query(func.count(Flashcard.id)).filter(
