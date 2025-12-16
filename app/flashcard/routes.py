@@ -42,7 +42,7 @@ def addcards():
         answer = form.answer.data
 
         student_id = form.student_id.data
-        print(f"Student ID: {student_id}")
+       
         if student_id:
             student = db_session.query(User).filter_by(id=student_id).first()
             
@@ -384,7 +384,18 @@ def manage_student(student_id):
 
     form = FlashcardForm()
     form.student_id.data = student.id
-    flashcards = db_session.query(Flashcard).filter_by(user_id=student_id).order_by(asc(Flashcard.reviewed_by_tc)).all()
+
+    flashcards = (
+    db_session.query(Flashcard)
+    .filter_by(user_id=student_id)
+    .order_by(
+        asc(Flashcard.reviewed_by_tc),
+        Flashcard.next_review.is_(None),  # False (0) first, True (1) last
+        Flashcard.next_review.asc()
+    )
+    .all()
+    )
+    
     due_flashcards = db_session.query(func.count(Flashcard.id)).filter(
         Flashcard.user_id == student_id,
         or_(
