@@ -119,14 +119,21 @@ def main():
         "Destiny": "Destino",
     }
 
+    terms = list(dune_lore_map.items())  # [(eng, pt), ...]
+
     for student in students:
-        for eng_term, pt_term in dune_lore_map.items():
+        # choose which 5 will be unreviewed for THIS student
+        random.shuffle(terms)
+        unreviewed_set = set(terms[:5])  # 5 pairs
+
+        for eng_term, pt_term in terms:
             flashcard = Flashcard(
                 user_id=student.id,
-                question=pt_term,   # Portuguese term
-                answer=eng_term,    # English term
+                question=pt_term,
+                answer=eng_term,
                 next_review=today,
                 created_at=today,
+                reviewed_by_tc=((eng_term, pt_term) not in unreviewed_set),  # only 5 False
             )
             db_session.add(flashcard)
 
