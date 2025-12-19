@@ -25,6 +25,7 @@ def main():
         User(
             id="9990",
             name="admin",
+            user_name="admin",
             email="admin@example.com",
             role="@dmin!",
             join_date=today,
