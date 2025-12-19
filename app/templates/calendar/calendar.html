@@ -3,7 +3,7 @@
 
 {% block main %}
 <div class="container mt-4 mb-5" style="max-width: 700px;">
-  <h4 class="mb-3">Availability for {{ teacher.name }} </h4><small>(Disponibilidade para {{ teacher.name }})</small><br>
+  <h4 class="mb-3">Availability for {{ teacher.user_name if teacher.user_name else teacher.name }} </h4><small>(Disponibilidade para {{ teacher.user_name if teacher.user_name else teacher.name }})</small><br>
   
 
   {% if not teacher.phone %}

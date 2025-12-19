@@ -63,12 +63,20 @@
           </div>
         </div>
 
+        {% if current_user.role == '@dmin!' %}
 
+          {% include "partials/admin_dashboard.html" %}
+      
+        {% elif current_user.role == 'teacher' %} 
+
+          {% include "partials/teacher_dashboard.html" %}
+
+        {% endif %}
 
        
 
         {% if current_user.assigned_teacher_id %} 
-          <p> Professor <small>(Teacher)</small>: <strong>{{ current_user.assigned_teacher.name }}</strong></p>
+          <p> Professor <small>(Teacher)</small>: <strong>{{ current_user.assigned_teacher.user_name if current_user.assigned_teacher.user_name else current_user.assigned_teacher.name }}</strong></p>
         {% endif %}
        
                 {% if due_flashcards > 0 %}
@@ -115,15 +123,6 @@
           </div>
          {% endif %}
 
-        {% if current_user.role == 'teacher' %} 
-
-          {% include "partials/teacher_dashboard.html" %}
-
-         {% elif current_user.role == '@dmin!' %}
-
-          {% include "partials/admin_dashboard.html" %}
-
-        {% endif %}
 
           
         <div class="section-box">

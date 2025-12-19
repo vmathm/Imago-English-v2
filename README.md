@@ -36,6 +36,7 @@ A visual overview of the app
 | Flashcards Section | Study Session |
 |--------------------|---------------|
 | ![Flashcards Section](docs/screenshots/flashcards_section.png) | ![Study Session](docs/screenshots/study_session.png) |
+| ![Edit Cards](docs/screenshots/flashcards_section2.png) | 
 
 ---
 

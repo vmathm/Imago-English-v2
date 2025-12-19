@@ -41,16 +41,21 @@
       <div class="pt-4">
        {% if audiobook %}
 
-          <p>
-            Your teacher has added an audiobook for you. Listen to the audio and
-            use the text below to select words/phrases, see the translation, and create flashcards.
-          </p>
-          <p>
-            <small>
+      <div class="p-3 mb-3 bg-body-tertiary rounded-3 border">
+        <div class="d-flex align-items-start gap-2">
+          
+          <div>
+            <p class="mb-1">
+              Your teacher has added an audiobook for you. Listen to the audio and use the text below
+              to select words/phrases, see the translation, and create flashcards.
+            </p>
+            <small class="text-muted fst-italic">
               (Seu professor adicionou um audiobook para você. Ouça o áudio e use o texto
               abaixo para selecionar palavras/frases, ver a tradução e criar flashcards.)
             </small>
-          </p>
+          </div>
+        </div>
+      </div>
         {% else %}
           <p>
             Upload your audio and text files (.txt format). When you select a word or phrase,
