@@ -39,7 +39,7 @@ A visual overview of the app
 | ![Edit Cards](docs/screenshots/flashcards_section2.png) | 
 
 ---
-
+  
 ### Audiobook Integration
 
 | Audiobook Reader | Create Flashcard Modal |

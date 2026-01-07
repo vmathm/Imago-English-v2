@@ -35,8 +35,7 @@ google_bp = make_google_blueprint(
         "https://www.googleapis.com/auth/userinfo.profile"
     ],
     redirect_url="/auth/login/google/complete")
-print("GOOGLE BP CALLBACK URL:", google_bp.redirect_url)
-print("GOOGLE BP NAME:", google_bp.name)
+
 
 
 
@@ -84,7 +83,6 @@ def login():
 @bp.route("/login/google/complete")
 def google_complete():
     if not google.authorized:
-        # Not authorized: go back to the login handler
         return redirect(url_for("auth.login"))
 
     info = get_google_user_info()
@@ -114,26 +112,13 @@ def google_complete():
 
     db_session.commit()
 
-    # actually log in
     login_user(user, remember=True)
-    print("=== GOOGLE CALLBACK ===")
-    print("HOST:", request.host)
-    print("SCHEME:", request.scheme)
-    print("COOKIES SENT:", list(request.cookies.keys()))
-    print(
-    "SECRET FP:",
-    hashlib.sha256(current_app.config["SECRET_KEY"].encode()).hexdigest()[:8]
-    )
-    print("AUTHENTICATED:", current_user.is_authenticated)
     session.modified = True
 
-    # DEBUG: verify that login "took" in this request
-    print("After login_user, authenticated:", current_user.is_authenticated)
 
-    # choose where to go next
     target = session.pop("post_login_redirect", None)
     if not target or not is_safe_url(target):
-        target = url_for("dashboard.index")  # or your dashboard route name
+        target = url_for("dashboard.index")  
 
     return redirect(target)
 
