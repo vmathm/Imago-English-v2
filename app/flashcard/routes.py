@@ -341,7 +341,7 @@ def review_flashcard():
         Flashcard.user_id == flashcard.user_id,
         or_(
             Flashcard.next_review == None,
-            Flashcard.next_review <= datetime.now(timezone.utc) - timedelta(hours=3)
+            Flashcard.next_review <= now
         )
     ).count()
 
@@ -353,7 +353,8 @@ def review_flashcard():
 
 def update_study_streak(user):
     
-    today = datetime.now(timezone.utc).date()
+    now_sp = datetime.now(timezone.utc) - timedelta(hours=3)  # São Paulo wall-clock (hack)
+    today = now_sp.date()
     yesterday = today - timedelta(days=1)
 
     if user.streak_last_date == yesterday:
