@@ -30,7 +30,11 @@ def create_app():
     app.jinja_env.globals['timedelta'] = timedelta
    
     engine, db_session = init_engine(app)
-    Base.metadata.create_all(engine)
+
+    
+    if app.config.get("AUTO_CREATE_DB"):
+        Base.metadata.create_all(engine)
+   
 
       
     if app.config.get("ALLOW_SEEDED_USERS", False):

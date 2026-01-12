@@ -35,6 +35,7 @@ class DevConfig(Config):
     REMEMBER_COOKIE_SECURE = False
     REMEMBER_COOKIE_HTTPONLY = True
     ALLOW_SEEDED_USERS =True
+    AUTO_CREATE_DB = True
 
 class ProdConfig(Config):
     # Strict cookie flags for production
@@ -46,3 +47,4 @@ class ProdConfig(Config):
     ALLOW_SEEDED_USERS =False
     REMEMBER_COOKIE_SAMESITE = "None"
     PREFERRED_URL_SCHEME = "https"
+    AUTO_CREATE_DB = False

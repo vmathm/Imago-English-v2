@@ -1,17 +1,20 @@
 services:
   web:
     build: .
+    restart: unless-stopped
     env_file: .env
     environment:
       - FLASK_DEBUG=0
-    command: gunicorn -w 2 -b 0.0.0.0:8000 main:app
+    command: sh -c "python scripts/wait_for_db.py && gunicorn -w 2 -b 0.0.0.0:8000 main:app"
     expose:
       - "8000"
-    volumes:
-      - db_data:/app/instance
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   caddy:
     image: caddy:2
+    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
@@ -32,6 +35,11 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
 
 volumes:
   postgres_data:
