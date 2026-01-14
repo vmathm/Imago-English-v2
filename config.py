@@ -35,6 +35,16 @@ class DevConfig(Config):
     REMEMBER_COOKIE_SECURE = False
     REMEMBER_COOKIE_HTTPONLY = True
     ALLOW_SEEDED_USERS =True
+    AUTO_CREATE_DB = False
+
+class DemoConfig(Config):
+    # Demo on Render which uses SQLite so auto-create DB is True. 
+    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+    REMEMBER_COOKIE_SECURE = False
+    REMEMBER_COOKIE_HTTPONLY = True
+    ALLOW_SEEDED_USERS =True
     AUTO_CREATE_DB = True
 
 class ProdConfig(Config):

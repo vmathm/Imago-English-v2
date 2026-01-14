@@ -2,7 +2,7 @@ from flask import Flask
 from werkzeug.middleware.proxy_fix import ProxyFix
 import os
 
-from config import ProdConfig, DevConfig
+from config import DemoConfig, ProdConfig, DevConfig
 from .models.base import Base
 from .database import init_engine
 from .extensions import login_manager
@@ -22,7 +22,16 @@ def create_app():
 
     app = Flask(__name__, static_folder=str(static_dir), static_url_path="/static")
     env = os.getenv("APP_ENV", "development").lower()
-    app.config.from_object(ProdConfig if env == "production" else DevConfig)
+    
+    env = os.getenv("FLASK_ENV", "development")
+
+    if env == "production":
+        app.config.from_object(ProdConfig)
+    elif env == "demo":
+        app.config.from_object(DemoConfig)
+    else:
+        app.config.from_object(DevConfig)
+        
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
     csrf.init_app(app)
     login_manager.init_app(app)
