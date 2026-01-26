@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Numeric
+from decimal import Decimal
 from sqlalchemy.orm import relationship
 from .base import Base
 
@@ -14,7 +15,7 @@ class Flashcard(Base):
 
     # Spaced repetition fields
     level = Column(Integer, nullable=False, default=0) # number of repetitions
-    ease = Column(Integer, nullable=False, default=2)
+    ease = Column(Numeric(3, 2),nullable=False,default=Decimal("2.00"))
     interval = Column(Integer, nullable=False, default=1)
     last_review = Column(DateTime, nullable=True)
     next_review = Column(DateTime, nullable=True)

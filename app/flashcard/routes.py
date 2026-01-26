@@ -9,6 +9,7 @@ from sqlalchemy import func, or_, asc
 import math
 from app.extensions import csrf
 from os import abort
+from decimal import Decimal, ROUND_HALF_UP
 
 bp = Blueprint('flashcard', __name__, url_prefix='/flashcard')
 
@@ -191,7 +192,7 @@ def edit_card(card_id):
             flashcard.question = form.question.data
             flashcard.answer  = form.answer.data
             flashcard.next_review = datetime.now(timezone.utc) - timedelta(hours=3)
-            flashcard.ease = 1.3
+            flashcard.ease = normalize_ease(1.3)
             flashcard.interval = 1
            
             if is_teacher_of_student or current_user.is_admin():
@@ -298,7 +299,7 @@ def review_flashcard():
     
     if rating == 1:
         flashcard.level += 1
-        flashcard.ease = 1.3
+          flashcard.ease = normalize_ease(1.3)
         flashcard.interval = MIN_INTERVAL
         flashcard.last_review = now
         flashcard.next_review = now + timedelta(seconds=3)
@@ -307,7 +308,7 @@ def review_flashcard():
     elif rating == 2:
         award_points(recipient, 2)
         flashcard.level += 1
-        flashcard.ease = 1.3
+          flashcard.ease = normalize_ease(1.3)
         flashcard.interval = MIN_INTERVAL
         flashcard.last_review = now
         next_review = now + timedelta(days=1)
@@ -323,7 +324,7 @@ def review_flashcard():
             (flashcard.ease + 0.5 - (5 - rating) * (0.08 + (5 - rating) * 0.02)) / 2,
             2.5,
         )
-        flashcard.ease = max(new_ease, 1.3)
+        flashcard.ease = normalize_ease(max(new_ease, 1.3))
 
         new_interval = int(math.ceil(flashcard.interval * flashcard.ease))
         flashcard.interval = min(MAX_INTERVAL, new_interval)
@@ -485,3 +486,6 @@ def flag_card():
 
 
 
+
+def normalize_ease(value):
+    return Decimal(str(value)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
