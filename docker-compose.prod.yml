@@ -5,9 +5,9 @@ services:
     env_file: .env
     environment:
       - FLASK_DEBUG=0 
-      - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/service-account.json
+      - GOOGLE_APPLICATION_CREDENTIALS=/run/imago/secrets/service-account.json
     volumes:
-      - /home/ubuntu/imago-secrets/service-account.json:/run/secrets/service-account.json:ro
+      - /home/ubuntu/imago/secrets/service-account.json:/run/imago/secrets/service-account.json:ro
     command: sh -c "python scripts/wait_for_db.py && gunicorn -w 2 -b 0.0.0.0:8000 main:app"
     expose:
       - "8000"
