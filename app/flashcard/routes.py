@@ -299,7 +299,7 @@ def review_flashcard():
     
     if rating == 1:
         flashcard.level += 1
-          flashcard.ease = normalize_ease(1.3)
+        flashcard.ease = normalize_ease(1.3)
         flashcard.interval = MIN_INTERVAL
         flashcard.last_review = now
         flashcard.next_review = now + timedelta(seconds=3)
@@ -308,7 +308,7 @@ def review_flashcard():
     elif rating == 2:
         award_points(recipient, 2)
         flashcard.level += 1
-          flashcard.ease = normalize_ease(1.3)
+        flashcard.ease = normalize_ease(1.3)
         flashcard.interval = MIN_INTERVAL
         flashcard.last_review = now
         next_review = now + timedelta(days=1)
