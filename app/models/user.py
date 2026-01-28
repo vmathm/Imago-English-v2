@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, Integer, Date, ForeignKey
+from sqlalchemy import Column, String, Boolean, Integer, Date, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.hybrid import hybrid_property
 from flask_login import UserMixin
