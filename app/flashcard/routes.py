@@ -320,10 +320,11 @@ def review_flashcard():
         recipient.flashcards_studied = (recipient.flashcards_studied or 0) + 1
 
         flashcard.level += 1
-        new_ease = min(
-            (flashcard.ease + 0.5 - (5 - rating) * (0.08 + (5 - rating) * 0.02)) / 2,
-            2.5,
-        )
+        new_ease = (
+            flashcard.ease
+            + Decimal("0.5")
+            - Decimal(5 - rating) * (Decimal("0.08") + Decimal(5 - rating) * Decimal("0.02"))
+        ) / Decimal("2")
         flashcard.ease = normalize_ease(max(new_ease, 1.3))
 
         new_interval = int(math.ceil(flashcard.interval * flashcard.ease))
