@@ -1,3 +1,9 @@
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   web:
     build: .
@@ -14,6 +20,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    logging: *default-logging
 
   caddy:
     image: caddy:2
@@ -27,6 +34,7 @@ services:
       - caddy_config:/config
     depends_on:
       - web
+    logging: *default-logging
 
   postgres:
     image: postgres:16
@@ -43,6 +51,7 @@ services:
       interval: 3s
       timeout: 3s
       retries: 20
+    logging: *default-logging
 
 volumes:
   postgres_data:
