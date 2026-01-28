@@ -8,11 +8,11 @@ class User(UserMixin, Base):
     __tablename__ = 'users'
 
     id = Column(String(50), primary_key=True)
-    name = Column(String(15), nullable=False)
-    user_name = Column(String(20), nullable=True)
+    name = Column(String(120), nullable=False)
+    user_name = Column(String(50), nullable=True)
     email = Column(String(254), nullable=False, server_default='none')
-    phone = Column(String(15), nullable=True)
-    profilepic = Column(String(300), nullable=False, server_default='none')
+    phone = Column(String(25), nullable=True)
+    profilepic = Column(Text, nullable=False, server_default='none')
     level = Column(String(2), nullable=True)
     role = Column(String(10), nullable=False)  # 'student', 'teacher', 'admin'
 
