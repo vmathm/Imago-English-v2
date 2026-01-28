@@ -7,7 +7,7 @@ class UserAudiobook(Base):
     __tablename__ = "user_audiobooks"
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
 
     text_url = Column(String(500), nullable=True)   # GCS URL to .txt
     audio_url = Column(String(500), nullable=True)  # GCS URL to .mp3
