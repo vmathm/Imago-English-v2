@@ -1,4 +1,4 @@
-DC = docker compose -f docker-compose.prod.yml
+DC = docker-compose -f docker-compose.prod.yml
 
 up:
 	$(DC) up -d
@@ -17,3 +17,7 @@ build:
 
 shell:
 	$(DC) exec web bash
+
+ps:
+	$(DC) ps
+
