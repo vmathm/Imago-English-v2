@@ -5,17 +5,35 @@ services:
       - FLASK_APP=main.py
       - FLASK_RUN_HOST=0.0.0.0
       - FLASK_RUN_PORT=5000
-      - FLASK_DEBUG=1   # 0 for production
+      - FLASK_DEBUG=1
+      - DATABASE_URL=${DATABASE_URL}
     ports:
-      - "0.0.0.0:5000:5000"        # container:5000 -> host:5000
-
+      - "5000:5000"
     volumes:
-      - .:/app             # live reload when code changes
-      - db_data:/app/instance  # named volume for the DB
-
+      - .:/app
     env_file:
       - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: sh -c "flask run"
 
-    command: sh -c "mkdir -p instance && flask run"
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"   # <-- this is the key for running alembic locally
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
 volumes:
-  db_data:
+  postgres_data:
