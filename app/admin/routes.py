@@ -106,10 +106,7 @@ def delete_user():
         user = db_session.query(User).filter_by(id=form.user_id.data).first()
 
         if user and user.role != '@dmin!' and user.id != current_user.id and user.role != 'teacher':
-            flashcards = db_session.query(Flashcard).filter_by(user_id=user.id).all()
-            for fc in flashcards:
-                db_session.delete(fc)
-
+    
             db_session.delete(user)
             db_session.commit()
             flash(f"User {user.name} and their flashcards have been deleted", 'success')
