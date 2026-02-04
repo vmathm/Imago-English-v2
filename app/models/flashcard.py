@@ -28,7 +28,7 @@ class Flashcard(Base):
     created_at = Column(DateTime, nullable=False)
 
     # Relationship to User
-    user_id = Column(String(50), ForeignKey('users.id'), nullable=False)
+    user_id = Column(String(50), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     user = relationship("User", back_populates="flashcards")
 
     def to_dict(self):
