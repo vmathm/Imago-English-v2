@@ -516,6 +516,21 @@ def flag_card():
 
     db_session.commit()
 
+    due_left = (
+        db_session.query(Flashcard)
+        .filter(
+            Flashcard.user_id == current_user.id,
+            or_(
+                Flashcard.next_review.is_(None),
+                Flashcard.next_review <= now_utc(),
+            ),
+        )
+        .count()
+    )
+
+    if due_left == 0:
+        update_study_streak(current_user)
+
     return jsonify(
         {
             "status": "success",
