@@ -530,6 +530,7 @@ def flag_card():
 
     if due_left == 0:
         update_study_streak(current_user)
+    db_session.commit() 
 
     return jsonify(
         {
