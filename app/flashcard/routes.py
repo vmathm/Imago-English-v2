@@ -1,169 +1,189 @@
-from flask import Blueprint, request, redirect, url_for, flash, render_template, jsonify
+from flask import Blueprint, request, redirect, url_for, flash, render_template, jsonify, abort
 from flask_login import current_user, login_required
 from app.database import db_session
 from app.decorators import active_required
 from app.flashcard.form import FlashcardForm
 from app.models import Flashcard, User
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, time
 from sqlalchemy import func, or_, asc
 import math
 from app.extensions import csrf
-from os import abort
 from decimal import Decimal, ROUND_HALF_UP
+from zoneinfo import ZoneInfo
 
-bp = Blueprint('flashcard', __name__, url_prefix='/flashcard')
+bp = Blueprint("flashcard", __name__, url_prefix="/flashcard")
+
+SP_TZ = ZoneInfo("America/Sao_Paulo")
+UTC_TZ = ZoneInfo("UTC")
 
 
+# ----------------------------
+# Time helpers (single source of truth)
+# ----------------------------
+def now_utc() -> datetime:
+    return datetime.now(tz=UTC_TZ)
+
+def now_sp() -> datetime:
+    return datetime.now(tz=SP_TZ)
+
+def sp_midnight_utc_for_date(d) -> datetime:
+    """
+    Take a local São Paulo date and return its midnight converted to UTC.
+    """
+    local_midnight = datetime.combine(d, time.min).replace(tzinfo=SP_TZ)
+    return local_midnight.astimezone(UTC_TZ)
+
+def sp_midnight_utc_days_from_now(days: int) -> datetime:
+    """
+    Midnight São Paulo of (today + days), converted to UTC.
+    """
+    target_date = (now_sp().date() + timedelta(days=days))
+    return sp_midnight_utc_for_date(target_date)
+
+
+# ----------------------------
+# Decimal helper
+# ----------------------------
+def normalize_ease(value):
+    return Decimal(str(value)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+# ----------------------------
+# Routes
+# ----------------------------
 @bp.route("/flashcards", methods=["GET"])
 @login_required
 def flashcards():
+    total_flashcards = (
+        db_session.query(func.count(Flashcard.id))
+        .filter(Flashcard.user_id == current_user.id)
+        .scalar()
+        or 0
+    )
 
-    total_flashcards = db_session.query(func.count(Flashcard.id)).filter_by(user_id=current_user.id).scalar()
     due_count = (
-            db_session.query(func.count(Flashcard.id))
-            .filter(
-                Flashcard.user_id == current_user.id,
-                or_(
-                    Flashcard.next_review.is_(None),
-                    Flashcard.next_review <= datetime.now(timezone.utc) - timedelta(hours=3),
-                ),
-            )
-            .scalar()
+        db_session.query(func.count(Flashcard.id))
+        .filter(
+            Flashcard.user_id == current_user.id,
+            or_(
+                Flashcard.next_review.is_(None),
+                Flashcard.next_review <= now_utc(),
+            ),
         )
+        .scalar()
+        or 0
+    )
 
-    has_cards = (due_count or 0) > 0
-    return render_template("flashcards/index_cards.html", form=FlashcardForm(), has_cards=has_cards, due_count=due_count, total_flashcards=total_flashcards)
+    has_cards = due_count > 0
+    return render_template(
+        "flashcards/index_cards.html",
+        form=FlashcardForm(),
+        has_cards=has_cards,
+        due_count=due_count,
+        total_flashcards=total_flashcards,
+    )
+
 
 @bp.route("/addcards", methods=["POST"])
 @active_required
 def addcards():
     form = FlashcardForm()
-    if form.validate_on_submit():
-        question = form.question.data
-        answer = form.answer.data
+    if not form.validate_on_submit():
+        return jsonify({"status": "error", "message": "Something went wrong. Please check your input."})
 
-        student_id = form.student_id.data
-       
-        if student_id:
-            student = db_session.query(User).filter_by(id=student_id).first()
-            
-            if not student:
-                flash("Student not found.", "danger")
-                return redirect(url_for("dashboard.index"))
+    question = form.question.data
+    answer = form.answer.data
+    student_id = form.student_id.data
 
-            if current_user.is_teacher():
-                if student.assigned_teacher_id != current_user.id:
-                    flash("You cannot add cards for this student.", "danger")
-                    return redirect(url_for("dashboard.index"))
-            elif not current_user.is_admin():
-                flash("Unauthorized.", "danger")
-                return redirect(url_for("dashboard.index"))
+    # Decide card owner
+    if student_id:
+        if not (current_user.is_teacher() or current_user.is_admin()):
+            return jsonify({"status": "error", "message": "Unauthorized."}), 403
 
-            flashcard_owner_id = student.id
-        else:
-            flashcard_owner_id = current_user.id
+        student = db_session.query(User).filter_by(id=student_id).first()
+        if not student:
+            return jsonify({"status": "error", "message": "Student not found."}), 404
 
-        
-        existing = db_session.query(Flashcard).filter_by(
-            question=question,
-            user_id=flashcard_owner_id
-        ).first()
+        if current_user.is_teacher() and student.assigned_teacher_id != current_user.id:
+            return jsonify({"status": "error", "message": "You cannot add cards for this student."}), 403
 
-        if existing:
-            message = "Flashcard already exists!"
-            return jsonify({"status": "error", "message": message})
-        
+        flashcard_owner_id = student.id
+    else:
+        flashcard_owner_id = current_user.id
 
-        unreviewed_limit = True if db_session.query(Flashcard).filter_by(user_id=flashcard_owner_id, reviewed_by_tc=False).count() >= 5 else False
-        if unreviewed_limit:
-            message = "Você não pode ter mais de 5 cartões não revisados."
-            return jsonify({"status": "error", "message": message})
+    # Prevent duplicates (same question per user)
+    existing = (
+        db_session.query(Flashcard)
+        .filter_by(question=question, user_id=flashcard_owner_id)
+        .first()
+    )
+    if existing:
+        return jsonify({"status": "error", "message": "Flashcard already exists!"})
 
-       
-        new_flashcard = Flashcard(
-            question=question,
-            answer=answer,
-            user_id=flashcard_owner_id,
-            reviewed_by_tc= True if current_user.is_teacher() else False,
-            created_at=datetime.now(timezone.utc)
-        )
+    # Unreviewed limit
+    unreviewed_count = (
+        db_session.query(Flashcard)
+        .filter_by(user_id=flashcard_owner_id, reviewed_by_tc=False)
+        .count()
+    )
+    if unreviewed_count >= 5:
+        return jsonify({"status": "error", "message": "Você não pode ter mais de 5 cartões não revisados."})
 
-        db_session.add(new_flashcard)
-        db_session.commit()
+    new_flashcard = Flashcard(
+        question=question,
+        answer=answer,
+        user_id=flashcard_owner_id,
+        reviewed_by_tc=True if current_user.is_teacher() else False,
+        created_at=now_utc(),
+    )
 
-        message = "Flashcard added successfully!"
-        return jsonify({"status": "success", "message": message})
-   
+    db_session.add(new_flashcard)
+    db_session.commit()
 
-    message = "Something went wrong. Please check your input."
-    return jsonify({"status": "error", "message": message})
-   
-
-
-        
-
-
-
-
-
+    return jsonify({"status": "success", "message": "Flashcard added successfully!"})
 
 
 @bp.route("/edit_cards", methods=["GET"])
 @active_required
 def edit_cards():
-    
     if current_user.is_student():
-        flashcards = (
-            db_session.query(Flashcard)
-            .filter_by(user_id=current_user.id)
-            .all()
-        )
-        forms = {card.id: FlashcardForm(obj=card) for card in flashcards} 
+        flashcards = db_session.query(Flashcard).filter_by(user_id=current_user.id).all()
+        forms = {card.id: FlashcardForm(obj=card) for card in flashcards}
         return render_template("flashcards/edit_cards.html", flashcards=flashcards, forms=forms)
 
     if current_user.is_teacher() or current_user.is_admin():
-        student_id = request.args.get("student_id") 
-
+        student_id = request.args.get("student_id")
         if not student_id:
             flash("Please select a student to view their flashcards.", "warning")
             return redirect(url_for("dashboard.index"))
 
-        
         student = db_session.query(User).filter_by(id=student_id).first()
         if not student:
             flash("Student not found.", "danger")
             return redirect(url_for("dashboard.index"))
 
-        
         if current_user.is_teacher() and student.assigned_teacher_id != current_user.id:
             flash("You are not authorized to view this student's flashcards.", "danger")
             return redirect(url_for("dashboard.index"))
 
-        flashcards = (
-            db_session.query(Flashcard)
-            .filter_by(user_id=student_id)
-            .all()
-        )
-        return render_template("edit.html", flashcards=flashcards)   
+        flashcards = db_session.query(Flashcard).filter_by(user_id=student_id).all()
+        return render_template("edit.html", flashcards=flashcards)
 
-    
     flash("Access denied.", "danger")
     return redirect(url_for("dashboard.index"))
-
 
 
 @bp.route("/edit_card/<int:card_id>", methods=["POST"])
 @active_required
 def edit_card(card_id):
-    flashcard = db_session.query(Flashcard).get(card_id)
-
+    flashcard = db_session.get(Flashcard, card_id)
     if not flashcard:
         return jsonify({"status": "error", "message": "Flashcard not found."}), 404
 
     is_owner = flashcard.user_id == current_user.id
     is_teacher_of_student = (
-        current_user.is_teacher() and
-        flashcard.user.assigned_teacher_id == current_user.id
+        current_user.is_teacher()
+        and getattr(flashcard.user, "assigned_teacher_id", None) == current_user.id
     )
 
     if not (is_owner or is_teacher_of_student or current_user.is_admin()):
@@ -172,52 +192,51 @@ def edit_card(card_id):
     form = FlashcardForm()
     action = request.form.get("action")
 
-    
     if action == "mark_reviewed_tc":
         if not (is_teacher_of_student or current_user.is_admin()):
             return jsonify({"status": "error", "message": "Not authorized."}), 403
-       
-       
+
         flashcard.reviewed_by_tc = True
         db_session.commit()
-        return jsonify({
-            "status": "success",
-            "message": "Marked as reviewed by teacher.",
-            "card_id": flashcard.id,
-            "reviewed_by_tc": True
-        })
+        return jsonify(
+            {
+                "status": "success",
+                "message": "Marked as reviewed by teacher.",
+                "card_id": flashcard.id,
+                "reviewed_by_tc": True,
+            }
+        )
 
-    if form.validate_on_submit():
-        if action == "edit":
-            flashcard.question = form.question.data
-            flashcard.answer  = form.answer.data
-            flashcard.next_review = datetime.now(timezone.utc) - timedelta(hours=3)
-            flashcard.ease = normalize_ease(1.3)
-            flashcard.interval = 1
-           
-            if is_teacher_of_student or current_user.is_admin():
-                flashcard.reviewed_by_tc = True
-            else:
-                flashcard.reviewed_by_tc = False
+    if not form.validate_on_submit():
+        return jsonify({"status": "error", "message": "Form validation failed."}), 400
 
-            db_session.commit()
-            return jsonify({
+    if action == "edit":
+        flashcard.question = form.question.data
+        flashcard.answer = form.answer.data
+
+        # Make it due again immediately (UTC now)
+        flashcard.next_review = now_utc()
+        flashcard.ease = normalize_ease(1.3)
+        flashcard.interval = 1
+
+        flashcard.reviewed_by_tc = True if (is_teacher_of_student or current_user.is_admin()) else False
+
+        db_session.commit()
+        return jsonify(
+            {
                 "status": "success",
                 "message": "Flashcard updated!",
                 "card_id": flashcard.id,
-                "reviewed_by_tc": flashcard.reviewed_by_tc
-            })
+                "reviewed_by_tc": flashcard.reviewed_by_tc,
+            }
+        )
 
-        elif action == "delete":
-            db_session.delete(flashcard)
-            db_session.commit()
-            return jsonify({"status": "success", "message": "Flashcard deleted!"})
+    if action == "delete":
+        db_session.delete(flashcard)
+        db_session.commit()
+        return jsonify({"status": "success", "message": "Flashcard deleted!"})
 
-    return jsonify({"status": "error", "message": "Form validation failed."}), 400
-
-
-
-
+    return jsonify({"status": "error", "message": "Unknown action."}), 400
 
 
 @bp.route("/study")
@@ -230,40 +249,34 @@ def study():
     if student_id:
         if not (current_user.is_teacher() or current_user.is_admin()):
             abort(403)
+
         student = db_session.query(User).filter_by(id=student_id).first()
-        if not student or (
-            current_user.is_teacher() and student.assigned_teacher_id != current_user.id
-        ):
+        if not student:
             abort(403)
+
+        if current_user.is_teacher() and student.assigned_teacher_id != current_user.id:
+            abort(403)
+
         target_user_id = student.id
 
     due_cards = (
-        db_session.query(
-            Flashcard.id,
-            Flashcard.question,
-            Flashcard.answer,
-            Flashcard.level
-        )
+        db_session.query(Flashcard.id, Flashcard.question, Flashcard.answer, Flashcard.level)
         .filter(
             Flashcard.user_id == target_user_id,
             or_(
-                Flashcard.next_review == None,
-                Flashcard.next_review <= datetime.now(timezone.utc) - timedelta(hours=3)
-            )
+                Flashcard.next_review.is_(None),
+                Flashcard.next_review <= now_utc(),
+            ),
         )
         .all()
     )
 
-    cards_data = [
-        {"id": card.id, "question": card.question, "answer": card.answer, "level": card.level}
-        for card in due_cards
-    ]
+    cards_data = [{"id": c.id, "question": c.question, "answer": c.answer, "level": c.level} for c in due_cards]
 
     if not cards_data:
         flash("Você não tem flashcards para estudar.", "info")
 
     return render_template("flashcards/study.html", cards=cards_data, student_id=student_id)
-
 
 
 @bp.route("/review_flashcard", methods=["POST"])
@@ -273,79 +286,107 @@ def review_flashcard():
     Update flashcard scheduling when a rating (1, 2, or 3) is submitted from study.js.
     Also update study streak if this was the last due flashcard of the day.
     """
-    data = request.get_json() or {} 
+    data = request.get_json(silent=True) or {}
     card_id = data.get("card_id")
-    rating = int(data.get("rating"))
+    rating_raw = data.get("rating")
 
-    MIN_INTERVAL, MAX_INTERVAL = 1, 365
-    flashcard = db_session.query(Flashcard).get(str(card_id))
+    if not card_id or rating_raw is None:
+        return jsonify({"status": "error", "message": "Missing card_id or rating."}), 400
+
+    try:
+        rating = int(rating_raw)
+    except (TypeError, ValueError):
+        return jsonify({"status": "error", "message": "Invalid rating."}), 400
+
+    if rating not in (1, 2, 3):
+        return jsonify({"status": "error", "message": "Rating must be 1, 2, or 3."}), 400
+
+    flashcard = db_session.get(Flashcard, int(card_id))
     if not flashcard:
         return jsonify({"status": "error", "message": "Flashcard not found."}), 404
 
-    now = datetime.now(timezone.utc) - timedelta(hours=3)
+    MIN_INTERVAL, MAX_INTERVAL = 1, 365
+    now = now_utc()
 
-    def award_points(user, pts):
-        user.points = user.points + pts
+    def award_points(user, pts: int):
+        user.points = (user.points or 0) + int(pts)
 
     def get_recipient():
+        # Teacher reviewing their own cards -> teacher gets points
         if current_user.role == "teacher" and flashcard.user_id == current_user.id:
             return current_user
+
+        # Teacher/Admin reviewing a student's cards -> student gets points
         if current_user.role in ("teacher", "@dmin!") and flashcard.user_id != current_user.id:
             return db_session.query(User).filter(User.id == flashcard.user_id).first()
+
+        # Student studying
         return current_user
 
     recipient = get_recipient()
+    if not recipient:
+        return jsonify({"status": "error", "message": "Recipient user not found."}), 500
 
-    
+    # Always count studied cards
+    recipient.flashcards_studied = (recipient.flashcards_studied or 0) + 1
+
     if rating == 1:
         flashcard.level += 1
         flashcard.ease = normalize_ease(1.3)
         flashcard.interval = MIN_INTERVAL
         flashcard.last_review = now
+
+        # keep it "in-session" quickly, still stored as UTC
         flashcard.next_review = now + timedelta(seconds=3)
-        recipient.flashcards_studied = (recipient.flashcards_studied or 0) + 1
 
     elif rating == 2:
         award_points(recipient, 2)
+
         flashcard.level += 1
         flashcard.ease = normalize_ease(1.3)
         flashcard.interval = MIN_INTERVAL
         flashcard.last_review = now
-        next_review = now + timedelta(days=1)
-        flashcard.next_review = next_review.replace(hour=0, minute=0, second=0, microsecond=0)
-        recipient.flashcards_studied = (recipient.flashcards_studied or 0) + 1
 
-    else:
+        # Tomorrow at São Paulo midnight, stored in UTC
+        flashcard.next_review = sp_midnight_utc_days_from_now(1)
+
+    else:  # rating == 3
         recipient.rate_three_count = (recipient.rate_three_count or 0) + 1
-        recipient.flashcards_studied = (recipient.flashcards_studied or 0) + 1
 
         flashcard.level += 1
+
         new_ease = (
             flashcard.ease
             + Decimal("0.5")
             - Decimal(5 - rating) * (Decimal("0.08") + Decimal(5 - rating) * Decimal("0.02"))
         ) / Decimal("2")
-        flashcard.ease = normalize_ease(max(new_ease, 1.3))
+        flashcard.ease = normalize_ease(max(new_ease, Decimal("1.3")))
 
-        new_interval = int(math.ceil(flashcard.interval * flashcard.ease))
-        flashcard.interval = min(MAX_INTERVAL, new_interval)
+        new_interval = int(math.ceil(float(flashcard.interval) * float(flashcard.ease)))
+        flashcard.interval = min(MAX_INTERVAL, max(MIN_INTERVAL, new_interval))
 
         award_points(recipient, max(int(flashcard.interval / 2), 1))
 
         flashcard.last_review = now
-        next_review = now + timedelta(days=flashcard.interval)
-        flashcard.next_review = next_review.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        # Interval days later at São Paulo midnight, stored in UTC
+        target_date = now_sp().date() + timedelta(days=flashcard.interval)
+        flashcard.next_review = sp_midnight_utc_for_date(target_date)
 
     db_session.commit()
 
-    
-    due_left = db_session.query(Flashcard).filter(
-        Flashcard.user_id == flashcard.user_id,
-        or_(
-            Flashcard.next_review == None,
-            Flashcard.next_review <= now
+    # Re-check due using REAL UTC now (not the São Paulo hack)
+    due_left = (
+        db_session.query(Flashcard)
+        .filter(
+            Flashcard.user_id == flashcard.user_id,
+            or_(
+                Flashcard.next_review.is_(None),
+                Flashcard.next_review <= now_utc(),
+            ),
         )
-    ).count()
+        .count()
+    )
 
     if due_left == 0:
         update_study_streak(recipient)
@@ -353,66 +394,77 @@ def review_flashcard():
 
     return jsonify({"status": "success"})
 
-def update_study_streak(user):
-    
-    now_sp = datetime.now(timezone.utc) - timedelta(hours=3)  # São Paulo wall-clock (hack)
-    today = now_sp.date()
-    yesterday = today - timedelta(days=1)
 
-    if user.streak_last_date == yesterday:
+def update_study_streak(user: User):
+    """
+    Streak rules (based on São Paulo local dates):
+    - If last == yesterday -> streak += 1
+    - If last != today and last != yesterday -> reset to 1
+    - If last == today -> unchanged
+    """
+    today_sp = now_sp().date()
+    yesterday_sp = today_sp - timedelta(days=1)
+
+    last = user.streak_last_date  # should be a DATE column ideally
+
+    if last == yesterday_sp:
         user.study_streak = (user.study_streak or 0) + 1
-        user.streak_last_date = today
-    elif user.streak_last_date not in (today, yesterday):
-        user.study_streak = 1
-        user.streak_last_date = today
+        user.streak_last_date = today_sp
 
-    # Update max_study_streak
-    if user.study_streak and user.study_streak > (user.max_study_streak or 0):
+    elif last != today_sp:
+        # Includes last is None, or older than yesterday
+        user.study_streak = 1
+        user.streak_last_date = today_sp
+
+    # Track max streak
+    if (user.study_streak or 0) > (user.max_study_streak or 0):
         user.max_study_streak = user.study_streak
 
-    # Always recompute max_points as points × max_study_streak
+    # Your chosen formula: points × max_study_streak
     user.max_points = (user.points or 0) * (user.max_study_streak or 0)
+
 
 @bp.route("/manage/<student_id>", methods=["GET"])
 @active_required
 def manage_student(student_id):
-    if not current_user.is_teacher() and not current_user.is_admin():
+    if not (current_user.is_teacher() or current_user.is_admin()):
         abort(403)
 
     student = db_session.query(User).filter_by(id=student_id).first()
-    if not student or (
-        current_user.is_teacher() and student.assigned_teacher_id != current_user.id
-    ):
+    if not student:
+        abort(403)
+
+    if current_user.is_teacher() and student.assigned_teacher_id != current_user.id:
         abort(403)
 
     form = FlashcardForm()
     form.student_id.data = student.id
 
     flashcards = (
-    db_session.query(Flashcard)
-    .filter_by(user_id=student_id)
-    .order_by(
-        asc(Flashcard.reviewed_by_tc),
-        Flashcard.next_review.is_(None),  # False (0) first, True (1) last
-        Flashcard.next_review.asc()
-    )
-    .all()
-    )
-    
-    due_flashcards = db_session.query(func.count(Flashcard.id)).filter(
-        Flashcard.user_id == student_id,
-        or_(
-            Flashcard.next_review == None,
-            Flashcard.next_review <= datetime.now(timezone.utc) - timedelta(hours=3)
+        db_session.query(Flashcard)
+        .filter_by(user_id=student_id)
+        .order_by(
+            asc(Flashcard.reviewed_by_tc),
+            Flashcard.next_review.is_(None),
+            Flashcard.next_review.asc(),
         )
-    ).scalar()
-    
+        .all()
+    )
 
-
+    due_flashcards = (
+        db_session.query(func.count(Flashcard.id))
+        .filter(
+            Flashcard.user_id == student_id,
+            or_(
+                Flashcard.next_review.is_(None),
+                Flashcard.next_review <= now_utc(),
+            ),
+        )
+        .scalar()
+        or 0
+    )
 
     forms = {c.id: FlashcardForm(obj=c) for c in flashcards}
-
-
 
     return render_template(
         "flashcards/manage_student_cards.html",
@@ -420,7 +472,7 @@ def manage_student(student_id):
         form=form,
         flashcards=flashcards,
         forms=forms,
-        due_flashcards=due_flashcards
+        due_flashcards=due_flashcards,
     )
 
 
@@ -430,27 +482,19 @@ def manage_student(student_id):
 def flag_card():
     """
     Let the user mark a flashcard as problematic during study mode.
-
-    Effects:
-    - Append a short note to flashcard.question (if not already present)
-    - Set next_review = today + 7 days (rounded to midnight)
-    - Mark reviewed_by_tc = False so it appears in teacher review queue
-    - Remove from current study session on the frontend
     """
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     card_id = data.get("card_id")
     reason_key = data.get("reason")
 
     if not card_id or not reason_key:
         return jsonify({"status": "error", "message": "Missing card_id or reason."}), 400
 
-    flashcard = db_session.query(Flashcard).get(card_id)
+    flashcard = db_session.get(Flashcard, int(card_id))
     if not flashcard:
         return jsonify({"status": "error", "message": "Flashcard not found."}), 404
 
-
-    is_owner = flashcard.user_id == current_user.id
-    if not is_owner:
+    if flashcard.user_id != current_user.id:
         return jsonify({"status": "error", "message": "Not authorized."}), 403
 
     REASON_LABELS = {
@@ -458,35 +502,25 @@ def flag_card():
         "talk_next_class": "I want to talk about this flashcard in my next class",
         "has_mistake": "I think this flashcard has a mistake",
     }
-
     reason_text = REASON_LABELS.get(reason_key, "Flagged for review")
 
-    # Append a note to the question if it's not already there
     note = f"[NOTE] {reason_text}"
     if note not in (flashcard.question or ""):
-        flashcard.question = (flashcard.question or "").strip()
-        if flashcard.question:
-            flashcard.question = f"{flashcard.question} ({note})"
-        else:
-            flashcard.question = note
+        base = (flashcard.question or "").strip()
+        flashcard.question = f"{base} ({note})" if base else note
 
-    now = datetime.now(timezone.utc)
-    next_review = now + timedelta(days=7)
-    flashcard.next_review = next_review.replace(hour=0, minute=0, second=0, microsecond=0)
-
+    # 7 days later, São Paulo midnight -> UTC
+    target_date = now_sp().date() + timedelta(days=7)
+    flashcard.next_review = sp_midnight_utc_for_date(target_date)
     flashcard.reviewed_by_tc = False
 
     db_session.commit()
 
-    return jsonify({
-        "status": "success",
-        "message": "Seu professor foi notificado.",
-        "card_id": flashcard.id,
-        "reason": reason_key,
-    })
-
-
-
-
-def normalize_ease(value):
-    return Decimal(str(value)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return jsonify(
+        {
+            "status": "success",
+            "message": "Seu professor foi notificado.",
+            "card_id": flashcard.id,
+            "reason": reason_key,
+        }
+    )
