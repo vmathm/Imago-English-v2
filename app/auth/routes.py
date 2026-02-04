@@ -1,6 +1,8 @@
+from datetime import datetime
 import hashlib
 from flask import Blueprint, redirect, abort, current_app, request, url_for, session, render_template
 from flask_login import login_user, logout_user, current_user
+from app.flashcard.routes import SP_TZ
 from app.models import User
 from app.database import db_session
 from flask_dance.contrib.google import make_google_blueprint, google
@@ -102,6 +104,7 @@ def google_complete():
             role="student",
             profilepic=info.get("picture", "none"),
             learning_language="en",
+            join_date= datetime.now(SP_TZ).date()
         )
         db_session.add(user)
     else:
