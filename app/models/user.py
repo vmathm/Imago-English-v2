@@ -41,7 +41,13 @@ class User(UserMixin, Base):
     assigned_teacher = relationship('User', remote_side=[id], backref='assigned_students')
 
     # Relationships to other tables
-    flashcards = relationship('Flashcard', back_populates='user')
+    flashcards = relationship(
+    "Flashcard",
+    back_populates="user",
+    cascade="all, delete-orphan",
+    passive_deletes=True,
+    )
+    
     calendar_settings = relationship("CalendarSettings", uselist=False, back_populates="teacher")
 
     audiobook = relationship(
