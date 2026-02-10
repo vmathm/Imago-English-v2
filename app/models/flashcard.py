@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, N
 from decimal import Decimal
 from sqlalchemy.orm import relationship
 from .base import Base
+from app.utils.time import utcnow
 
 class Flashcard(Base):
     __tablename__ = 'flashcards'
@@ -17,15 +18,15 @@ class Flashcard(Base):
     level = Column(Integer, nullable=False, default=0) # number of repetitions
     ease = Column(Numeric(3, 2),nullable=False,default=Decimal("2.00"))
     interval = Column(Integer, nullable=False, default=1)
-    last_review = Column(DateTime, nullable=True)
-    next_review = Column(DateTime, nullable=True)
+    last_review = Column(DateTime(timezone=True), nullable=True)
+    next_review = Column(DateTime(timezone=True), nullable=True)
 
     # Visibility & source
     show_answer = Column(Boolean, nullable=False, default=False)
     reviewed_by_tc = Column(Boolean, nullable=False, default=False)
     add_by_tc = Column(Boolean, nullable=False, default=False)
     add_by_user = Column(Boolean, nullable=False, default=False)
-    created_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=utcnow)
 
     # Relationship to User
     user_id = Column(String(50), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)

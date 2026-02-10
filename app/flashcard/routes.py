@@ -4,41 +4,17 @@ from app.database import db_session
 from app.decorators import active_required
 from app.flashcard.form import FlashcardForm
 from app.models import Flashcard, User
-from datetime import datetime, timedelta, time
 from sqlalchemy import func, or_, asc
 import math
 from app.extensions import csrf
 from decimal import Decimal, ROUND_HALF_UP
-from zoneinfo import ZoneInfo
+from app.utils.time import utcnow, now_sp, sp_midnight_as_utc, sp_midnight_utc_days_from_now
+from datetime import timedelta
+
 
 bp = Blueprint("flashcard", __name__, url_prefix="/flashcard")
 
-SP_TZ = ZoneInfo("America/Sao_Paulo")
-UTC_TZ = ZoneInfo("UTC")
 
-
-# ----------------------------
-# Time helpers (single source of truth)
-# ----------------------------
-def now_utc() -> datetime:
-    return datetime.now(tz=UTC_TZ)
-
-def now_sp() -> datetime:
-    return datetime.now(tz=SP_TZ)
-
-def sp_midnight_utc_for_date(d) -> datetime:
-    """
-    Take a local São Paulo date and return its midnight converted to UTC.
-    """
-    local_midnight = datetime.combine(d, time.min).replace(tzinfo=SP_TZ)
-    return local_midnight.astimezone(UTC_TZ)
-
-def sp_midnight_utc_days_from_now(days: int) -> datetime:
-    """
-    Midnight São Paulo of (today + days), converted to UTC.
-    """
-    target_date = (now_sp().date() + timedelta(days=days))
-    return sp_midnight_utc_for_date(target_date)
 
 
 # ----------------------------
@@ -67,7 +43,7 @@ def flashcards():
             Flashcard.user_id == current_user.id,
             or_(
                 Flashcard.next_review.is_(None),
-                Flashcard.next_review <= now_utc(),
+                Flashcard.next_review <= utcnow(),
             ),
         )
         .scalar()
@@ -134,7 +110,7 @@ def addcards():
         answer=answer,
         user_id=flashcard_owner_id,
         reviewed_by_tc=True if current_user.is_teacher() else False,
-        created_at=now_utc(),
+        created_at=utcnow(),
     )
 
     db_session.add(new_flashcard)
@@ -215,7 +191,7 @@ def edit_card(card_id):
         flashcard.answer = form.answer.data
 
         # Make it due again immediately (UTC now)
-        flashcard.next_review = now_utc()
+        flashcard.next_review = utcnow()
         flashcard.ease = normalize_ease(1.3)
         flashcard.interval = 1
 
@@ -265,7 +241,7 @@ def study():
             Flashcard.user_id == target_user_id,
             or_(
                 Flashcard.next_review.is_(None),
-                Flashcard.next_review <= now_utc(),
+                Flashcard.next_review <= utcnow(),
             ),
         )
         .all()
@@ -306,7 +282,7 @@ def review_flashcard():
         return jsonify({"status": "error", "message": "Flashcard not found."}), 404
 
     MIN_INTERVAL, MAX_INTERVAL = 1, 365
-    now = now_utc()
+    now = utcnow()
 
     def award_points(user, pts: int):
         user.points = (user.points or 0) + int(pts)
@@ -337,7 +313,7 @@ def review_flashcard():
         flashcard.last_review = now
 
         # keep it "in-session" quickly, still stored as UTC
-        flashcard.next_review = now + timedelta(seconds=3)
+        flashcard.next_review = now 
 
     elif rating == 2:
         award_points(recipient, 2)
@@ -371,7 +347,7 @@ def review_flashcard():
 
         # Interval days later at São Paulo midnight, stored in UTC
         target_date = now_sp().date() + timedelta(days=flashcard.interval)
-        flashcard.next_review = sp_midnight_utc_for_date(target_date)
+        flashcard.next_review = sp_midnight_as_utc(target_date)
 
     db_session.commit()
 
@@ -382,7 +358,7 @@ def review_flashcard():
             Flashcard.user_id == flashcard.user_id,
             or_(
                 Flashcard.next_review.is_(None),
-                Flashcard.next_review <= now_utc(),
+                Flashcard.next_review <= utcnow(),
             ),
         )
         .count()
@@ -457,7 +433,7 @@ def manage_student(student_id):
             Flashcard.user_id == student_id,
             or_(
                 Flashcard.next_review.is_(None),
-                Flashcard.next_review <= now_utc(),
+                Flashcard.next_review <= utcnow(),
             ),
         )
         .scalar()
@@ -522,7 +498,7 @@ def flag_card():
             Flashcard.user_id == current_user.id,
             or_(
                 Flashcard.next_review.is_(None),
-                Flashcard.next_review <= now_utc(),
+                Flashcard.next_review <= utcnow(),
             ),
         )
         .count()

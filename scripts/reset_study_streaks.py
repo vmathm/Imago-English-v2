@@ -11,59 +11,81 @@ from sqlalchemy import or_, exists
 from app import create_app
 from app.database import db_session
 from app.models import User, Flashcard
+try:
+    from app.utils.time import utcnow, now_sp
+except Exception as e:
+    print("[reset_study_streaks] IMPORT ERROR:", e)
+    raise
+
+# Prefer the shared helpers if you created them:
+# from app.utils.time import utcnow, now_sp, sp_midnight_as_utc
+# But to keep this script self-contained and robust for cron, we define minimal equivalents here.
+
+SP_TZ = ZoneInfo("America/Sao_Paulo")
+
+
+def now_sp() -> datetime:
+    return datetime.now(SP_TZ)
+
+
+def end_of_day_sp_as_utc(d) -> datetime:
+    """
+    São Paulo end-of-day for date d (23:59:59.999999 SP), converted to UTC (aware).
+    Used as the cutoff to answer: "was this card due at any time yesterday?"
+    """
+    end_sp = datetime.combine(d, time.max, tzinfo=SP_TZ)
+    return end_sp.astimezone(timezone.utc)
 
 
 def reset_study_streaks():
-    tz_sp = ZoneInfo("America/Sao_Paulo")
+    sp_now = now_sp()
+    utc_now = sp_now.astimezone(timezone.utc)
 
-    now_sp = datetime.now(tz_sp)
-    now_utc = now_sp.astimezone(timezone.utc)
-
-    today_sp = now_sp.date()
+    today_sp = sp_now.date()
     yesterday_sp = today_sp - timedelta(days=1)
 
-    # End of "yesterday" in São Paulo time (23:59:59.999999)
-    end_of_yesterday_sp = datetime.combine(yesterday_sp, time.max, tzinfo=tz_sp)
-
-    # Convert to UTC because DB timestamps (created_at / next_review) are UTC
-    end_of_yesterday_utc = end_of_yesterday_sp.astimezone(timezone.utc)
+    cutoff_utc = end_of_day_sp_as_utc(yesterday_sp)
 
     print(
-        f"[reset_study_streaks] RUN | now_sp={now_sp.isoformat()} | "
-        f"now_utc={now_utc.isoformat()} | yesterday_sp={yesterday_sp.isoformat()} | "
-        f"end_of_yesterday_utc={end_of_yesterday_utc.isoformat()}"
+        f"[reset_study_streaks] RUN | now_sp={sp_now.isoformat()} | "
+        f"now_utc={utc_now.isoformat()} | yesterday_sp={yesterday_sp.isoformat()} | "
+        f"cutoff_utc(end_of_yesterday_sp)={cutoff_utc.isoformat()}"
     )
 
     reset_count = 0
 
     try:
+        # If your user table is large later, you can filter here.
+        # For now this is fine.
         users = db_session.query(User).all()
 
         for user in users:
-            # Condition A: user did NOT study yesterday (or today)
-            # If they studied today already, we don't want to reset.
-            missed_day = user.streak_last_date not in (yesterday_sp, today_sp)
+            # If they studied yesterday or today, we do not reset.
+            last = user.streak_last_date  # DATE (São Paulo local date)
+            missed_day = last not in (yesterday_sp, today_sp)
 
-            # Condition B: user HAD at least one card that was due "yesterday"
-            # - it existed by end of yesterday (created_at <= cutoff)
-            # - and next_review is NULL or <= cutoff
+            # Only bother checking due cards if they actually have a streak.
+            has_streak = (user.study_streak or 0) > 0
+            if not (missed_day and has_streak):
+                continue
+
+            # "Had due yesterday" means: by the end of yesterday SP (converted to UTC),
+            # the user had at least one card that existed and was due.
+            #
+            # Since timestamps are stored as UTC-aware, compare in UTC-aware instants.
             had_due_yesterday = db_session.query(
                 exists().where(
                     Flashcard.user_id == user.id,
-                    Flashcard.created_at <= end_of_yesterday_utc,
+                    Flashcard.created_at <= cutoff_utc,
                     or_(
                         Flashcard.next_review.is_(None),
-                        Flashcard.next_review <= end_of_yesterday_utc,
+                        Flashcard.next_review <= cutoff_utc,
                     ),
                 )
             ).scalar()
 
-            # Only act if they actually had a streak to reset (optional but cleaner)
-            has_streak = (user.study_streak or 0) > 0
-
             if missed_day and had_due_yesterday and has_streak:
                 reset_count += 1
-
                 print(
                     f"[RESET] user_id={user.id} | name={getattr(user, 'name', None)!r} | "
                     f"study_streak_before={user.study_streak} | streak_last_date={user.streak_last_date} | "
@@ -71,7 +93,7 @@ def reset_study_streaks():
                 )
                 print(
                     f"        details: missed_day={missed_day} (expected {yesterday_sp} or {today_sp}), "
-                    f"had_due_yesterday={had_due_yesterday}, cutoff_utc={end_of_yesterday_utc.isoformat()}"
+                    f"had_due_yesterday={had_due_yesterday}, cutoff_utc={cutoff_utc.isoformat()}"
                 )
 
                 user.study_streak = 0

@@ -1,6 +1,7 @@
-from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
+
+from app.utils.time import utcnow
 from .base import Base
 
 class UserAudiobook(Base):
@@ -21,12 +22,15 @@ class UserAudiobook(Base):
 
     created_at = Column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        default=utcnow
     )
+
     updated_at = Column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        default=utcnow,
+        onupdate=utcnow
     )
 
     user = relationship("User", back_populates="audiobook")
