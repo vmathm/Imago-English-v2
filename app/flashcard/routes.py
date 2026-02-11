@@ -486,8 +486,7 @@ def flag_card():
         flashcard.question = f"{base} ({note})" if base else note
 
     # 7 days later, São Paulo midnight -> UTC
-    target_date = now_sp().date() + timedelta(days=7)
-    flashcard.next_review = sp_midnight_utc_for_date(target_date)
+    flashcard.next_review = sp_midnight_utc_days_from_now(7)
     flashcard.reviewed_by_tc = False
 
     db_session.commit()
