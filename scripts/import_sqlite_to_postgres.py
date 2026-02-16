@@ -4,9 +4,29 @@ from collections import defaultdict, deque
 
 from sqlalchemy import create_engine, MetaData, Table, select, text
 from sqlalchemy.engine import Engine
-
+from datetime import datetime, timedelta, time as dtime
 
 EXCLUDE_TABLES = {"alembic_version"}
+
+
+def _parse_dt(value):
+    """
+    SQLite sometimes returns datetime as a string like:
+      '2026-02-12 00:00:00.000000'
+    or as a Python datetime depending on driver settings.
+    """
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, str):
+        # Handle both with and without microseconds
+        for fmt in ("%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d %H:%M:%S"):
+            try:
+                return datetime.strptime(value, fmt)
+            except ValueError:
+                pass
+    return value  # fallback: leave unchanged
 
 
 def reflect(engine: Engine) -> MetaData:
@@ -87,6 +107,16 @@ def copy_table(source_engine: Engine, target_engine: Engine, table_name: str, ba
             if not rows:
                 break
             payload = [dict(zip(common_cols, row)) for row in rows]
+            payload = [dict(zip(common_cols, row)) for row in rows]
+
+            # ✅ Fix "day-based" next_review values imported from SQLite:
+            # only shift rows scheduled at exactly 00:00:00 (UTC midnight) → 03:00:00 (SP midnight in UTC).
+            if table_name == "flashcards" and "next_review" in common_cols:
+                for r in payload:
+                    nr = _parse_dt(r.get("next_review"))
+                    if isinstance(nr, datetime) and nr.time() == dtime(0, 0, 0):
+                        r["next_review"] = nr + timedelta(hours=3)
+                        
             tgt_conn.execute(tgt.insert(), payload)
             inserted += len(payload)
 
