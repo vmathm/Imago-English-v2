@@ -106,7 +106,7 @@ def copy_table(source_engine: Engine, target_engine: Engine, table_name: str, ba
             rows = result.fetchmany(batch_size)
             if not rows:
                 break
-            payload = [dict(zip(common_cols, row)) for row in rows]
+            
             payload = [dict(zip(common_cols, row)) for row in rows]
 
             # ✅ Fix "day-based" next_review values imported from SQLite:
