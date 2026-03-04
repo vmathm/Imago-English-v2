@@ -30,7 +30,7 @@ services:
       - FLASK_DEBUG=0
       - GOOGLE_APPLICATION_CREDENTIALS=/run/imago/secrets/service-account.json
     volumes:
-      - /home/ubuntu/imago/secrets/service-account.json:/run/imago/secrets/service-account.json:ro
+      - /home/ubuntu/imago/secrets/service-account.json:/run/imago/secrets/service-account.json:ro  
     command: sh -c "python scripts/wait_for_db.py && gunicorn -w 2 -b 0.0.0.0:8000 main:app"
     expose:
       - "8000"
@@ -61,7 +61,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d postgres"]
       interval: 3s
       timeout: 3s
       retries: 20
@@ -71,3 +71,4 @@ volumes:
   postgres_data:
   caddy_data:
   caddy_config:
+  

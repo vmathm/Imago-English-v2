@@ -2,6 +2,10 @@ imagoenglish.com.br {
     reverse_proxy web_prod:8000
 }
 
+www.imagoenglish.com.br {
+    redir https://imagoenglish.com.br{uri} permanent
+}
+
 staging.imagoenglish.com.br {
     reverse_proxy web_staging:8000
 }
