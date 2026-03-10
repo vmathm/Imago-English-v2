@@ -1,3 +1,11 @@
+imagoenglish.com {
+    redir https://www.imagoenglish.com.br{uri} permanent
+}
+
+www.imagoenglish.com {
+    redir https://www.imagoenglish.com.br{uri} permanent
+}
+
 imagoenglish.com.br {
     reverse_proxy web_prod:8000
 }
