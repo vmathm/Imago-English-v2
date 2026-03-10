@@ -210,3 +210,7 @@ caddyfile.local
 .env*
 *.db
 backup*.db
+
+
+docker-compose.prod-local.override.yml
+Makefile
