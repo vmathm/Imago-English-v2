@@ -115,6 +115,19 @@ def google_complete():
 
     db_session.commit()
 
+    pending_teacher_id = session.pop("pending_teacher_id", None)
+
+    if pending_teacher_id and user.role == "student":
+        teacher = (
+            db_session.query(User)
+            .filter_by(id=pending_teacher_id, role="teacher")
+            .first()
+        )
+
+        if teacher and not user.assigned_teacher_id:
+            user.assigned_teacher_id = teacher.id
+            db_session.commit()
+
     login_user(user, remember=True)
     session.modified = True
 
@@ -130,3 +143,21 @@ def google_complete():
 def logout():
     logout_user()
     return redirect(url_for("home.index"))
+
+
+@bp.route("/join/<user_name>")
+def join_teacher(user_name):
+
+    print("JOIN LINK HIT:", user_name)
+    teacher = (
+        db_session.query(User)
+        .filter_by(user_name=user_name, role="teacher")
+        .first()
+    )
+
+    if not teacher:
+        abort(404)
+
+    session["pending_teacher_id"] = teacher.id
+
+    return redirect(url_for("auth.login"))
