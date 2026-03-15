@@ -195,7 +195,7 @@ def edit_card(card_id):
         flashcard.ease = normalize_ease(1.3)
         flashcard.interval = 1
 
-        flashcard.reviewed_by_tc = True if (is_teacher_of_student or current_user.is_admin()) else False
+        flashcard.reviewed_by_tc = True if (is_teacher_of_student or current_user.is_teacher()) else False
 
         db_session.commit()
         return jsonify(
