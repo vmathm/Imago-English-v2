@@ -128,7 +128,7 @@ def google_complete():
         if teacher and not user.assigned_teacher_id:
             user.assigned_teacher_id = teacher.id
 
-        if pending_activation:
+        if pending_activation and is_new_user:
             user.active = True
 
     db_session.commit()
