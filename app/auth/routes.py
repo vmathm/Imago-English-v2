@@ -94,6 +94,7 @@ def google_complete():
     google_id = info["id"]
 
     user = db_session.query(User).filter_by(email=email).first()
+    is_new_user = False
 
     if not user:
         user = User(
@@ -104,18 +105,18 @@ def google_complete():
             role="student",
             profilepic=info.get("picture", "none"),
             learning_language="en",
-            join_date= datetime.now(SP_TZ).date()
+            join_date=datetime.now(SP_TZ).date()
         )
         db_session.add(user)
+        is_new_user = True
     else:
         if user.user_name is None:
             user.user_name = email.split("@")[0]
         user.name = name
         user.profilepic = info.get("picture", "none")
 
-    db_session.commit()
-
     pending_teacher_id = session.pop("pending_teacher_id", None)
+    pending_activation = session.pop("pending_activation", False)
 
     if pending_teacher_id and user.role == "student":
         teacher = (
@@ -126,15 +127,18 @@ def google_complete():
 
         if teacher and not user.assigned_teacher_id:
             user.assigned_teacher_id = teacher.id
-            db_session.commit()
+
+        if pending_activation:
+            user.active = True
+
+    db_session.commit()
 
     login_user(user, remember=True)
     session.modified = True
 
-
     target = session.pop("post_login_redirect", None)
     if not target or not is_safe_url(target):
-        target = url_for("dashboard.index")  
+        target = url_for("dashboard.index")
 
     return redirect(target)
 
@@ -159,5 +163,6 @@ def join_teacher(user_name):
         abort(404)
 
     session["pending_teacher_id"] = teacher.id
+    session["pending_activation"] = True
 
     return redirect(url_for("auth.login"))
