@@ -54,7 +54,6 @@ class ProdConfig(Config):
     SESSION_COOKIE_SAMESITE = "None"      
     REMEMBER_COOKIE_SECURE = True
     REMEMBER_COOKIE_HTTPONLY = True
-    ALLOW_SEEDED_USERS =False
     REMEMBER_COOKIE_SAMESITE = "None"
     PREFERRED_URL_SCHEME = "https"
     AUTO_CREATE_DB = False

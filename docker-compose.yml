@@ -17,6 +17,8 @@ services:
       postgres:
         condition: service_healthy
     command: sh -c "flask run"
+    stdin_open: true
+    tty: true
 
   postgres:
     image: postgres:16

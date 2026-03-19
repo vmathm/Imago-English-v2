@@ -1,7 +1,7 @@
 from .base import Base
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
+from app.utils.time import utcnow
 
 class CalendarSettings(Base):
     __tablename__ = "calendar_settings"
@@ -12,8 +12,19 @@ class CalendarSettings(Base):
     available_saturday = Column(Boolean, default=False)
     available_sunday = Column(Boolean, default=True)
     show_today = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=utcnow
+    )
+
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=utcnow,
+        onupdate=utcnow
+    )
     lesson_duration = Column(Integer, default=30)  # in minutes 
 
     teacher_id = Column(String(50), ForeignKey("users.id"), unique=True)

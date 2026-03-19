@@ -2,7 +2,7 @@ from datetime import datetime
 import hashlib
 from flask import Blueprint, redirect, abort, current_app, request, url_for, session, render_template
 from flask_login import login_user, logout_user, current_user
-from app.flashcard.routes import SP_TZ
+from app.utils.time import SP_TZ
 from app.models import User
 from app.database import db_session
 from flask_dance.contrib.google import make_google_blueprint, google
@@ -94,6 +94,7 @@ def google_complete():
     google_id = info["id"]
 
     user = db_session.query(User).filter_by(email=email).first()
+    is_new_user = False
 
     if not user:
         user = User(
@@ -104,24 +105,40 @@ def google_complete():
             role="student",
             profilepic=info.get("picture", "none"),
             learning_language="en",
-            join_date= datetime.now(SP_TZ).date()
+            join_date=datetime.now(SP_TZ).date()
         )
         db_session.add(user)
+        is_new_user = True
     else:
         if user.user_name is None:
             user.user_name = email.split("@")[0]
         user.name = name
         user.profilepic = info.get("picture", "none")
 
+    pending_teacher_id = session.pop("pending_teacher_id", None)
+    pending_activation = session.pop("pending_activation", False)
+
+    if pending_teacher_id and user.role == "student":
+        teacher = (
+            db_session.query(User)
+            .filter_by(id=pending_teacher_id, role="teacher")
+            .first()
+        )
+
+        if teacher and not user.assigned_teacher_id:
+            user.assigned_teacher_id = teacher.id
+
+        if pending_activation and is_new_user:
+            user.active = True
+
     db_session.commit()
 
     login_user(user, remember=True)
     session.modified = True
 
-
     target = session.pop("post_login_redirect", None)
     if not target or not is_safe_url(target):
-        target = url_for("dashboard.index")  
+        target = url_for("dashboard.index")
 
     return redirect(target)
 
@@ -130,3 +147,22 @@ def google_complete():
 def logout():
     logout_user()
     return redirect(url_for("home.index"))
+
+
+@bp.route("/join/<user_name>")
+def join_teacher(user_name):
+
+    print("JOIN LINK HIT:", user_name)
+    teacher = (
+        db_session.query(User)
+        .filter_by(user_name=user_name, role="teacher")
+        .first()
+    )
+
+    if not teacher:
+        abort(404)
+
+    session["pending_teacher_id"] = teacher.id
+    session["pending_activation"] = True
+
+    return redirect(url_for("auth.login"))
