@@ -56,6 +56,12 @@ class User(UserMixin, Base):
     uselist=False,
     passive_deletes=True,
     )
+
+    tenant = relationship(
+    "Tenant",
+    back_populates="owner",
+    uselist=False,
+)
     
 
 
