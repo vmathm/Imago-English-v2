@@ -165,6 +165,8 @@ class Subscription(Base):
         passive_deletes=True,
     )
 
+    user = relationship("User")
+
 
 class Payment(Base):
     """

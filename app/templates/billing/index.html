@@ -1,0 +1,511 @@
+{% extends "layout.html" %}
+
+{% block title %}Billing{% endblock %}
+
+{% block main %}
+<div class="container mt-4">
+    <h1>Billing</h1>
+
+    {% if view_type == "admin" %}
+        <div class="alert alert-info mt-3">
+            Admin billing settings page is not built yet.
+        </div>
+    {% elif view_type == "teacher" %}
+        <p class="text-muted">
+            Manage your Asaas settings and check your students' billing mode.
+        </p>
+
+        <div class="accordion" id="billingAccordion">
+
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingAsaas">
+                    <button
+                        class="accordion-button"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseAsaas"
+                        aria-expanded="true"
+                        aria-controls="collapseAsaas"
+                    >
+                        Asaas Settings
+                    </button>
+                </h2>
+
+                <div
+                    id="collapseAsaas"
+                    class="accordion-collapse collapse show"
+                    aria-labelledby="headingAsaas"
+                    data-bs-parent="#billingAccordion"
+                >
+                    <div class="accordion-body">
+                        <form method="POST">
+                            {{ settings_form.hidden_tag() }}
+
+                            <div class="mb-3">
+                                {{ settings_form.api_key.label(class="form-label") }}
+
+                                {% if billing_account %}
+                                    {{ settings_form.api_key(class="form-control", placeholder="•••••••••• (leave blank to keep current key)") }}
+                                    <div class="form-text">
+                                        API key already saved. Leave blank to keep it unchanged.
+                                    </div>
+                                {% else %}
+                                    {{ settings_form.api_key(class="form-control") }}
+                                {% endif %}
+
+                                {% for error in settings_form.api_key.errors %}
+                                    <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="mb-3">
+                                {{ settings_form.webhook_auth_token.label(class="form-label") }}
+
+                                {% if billing_account %}
+                                    {{ settings_form.webhook_auth_token(class="form-control", placeholder="•••••••••• (leave blank to keep current token)") }}
+                                    <div class="form-text">
+                                        Webhook token already saved. Leave blank to keep it unchanged.
+                                    </div>
+                                {% else %}
+                                    {{ settings_form.webhook_auth_token(class="form-control") }}
+                                {% endif %}
+
+                                {% for error in settings_form.webhook_auth_token.errors %}
+                                    <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="form-check mb-2">
+                                {{ settings_form.is_sandbox(class="form-check-input") }}
+                                {{ settings_form.is_sandbox.label(class="form-check-label") }}
+                            </div>
+
+                            <div class="form-check mb-3">
+                                {{ settings_form.active(class="form-check-input") }}
+                                {{ settings_form.active.label(class="form-check-label") }}
+                            </div>
+
+                            {{ settings_form.submit(class="btn btn-primary") }}
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item mt-3">
+                <h2 class="accordion-header" id="headingStudents">
+                    <button
+                        class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseStudents"
+                        aria-expanded="false"
+                        aria-controls="collapseStudents"
+                    >
+                        Student Billing Status
+                    </button>
+                </h2>
+
+                <div
+                    id="collapseStudents"
+                    class="accordion-collapse collapse"
+                    aria-labelledby="headingStudents"
+                    data-bs-parent="#billingAccordion"
+                >
+                    <div class="accordion-body">
+                        {% if students %}
+                            <div class="table-responsive">
+                                <table class="table table-striped align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Student</th>
+                                            <th>Email</th>
+                                            <th>Billing Mode</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for student in students %}
+                                            <tr>
+                                                <td>{{ student.name }}</td>
+                                                <td>{{ student.email }}</td>
+                                                <td>
+                                                    {% if student.billing_mode == "external" %}
+                                                        <span class="badge bg-secondary">External</span>
+                                                    {% elif student.billing_mode == "internal" %}
+                                                        <span class="badge bg-primary">Internal</span>
+                                                    {% else %}
+                                                        <span class="badge bg-light text-dark">
+                                                            {{ student.billing_mode or "Not set" }}
+                                                        </span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="mb-0">No students assigned to you yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+
+
+                    <div class="accordion-item mt-3">
+            <h2 class="accordion-header" id="headingPlans">
+                <button
+                    class="accordion-button collapsed"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapsePlans"
+                    aria-expanded="false"
+                    aria-controls="collapsePlans"
+                >
+                    Plans
+                </button>
+            </h2>
+
+            <div
+                id="collapsePlans"
+                class="accordion-collapse collapse"
+                aria-labelledby="headingPlans"
+                data-bs-parent="#billingAccordion"
+            >
+                <div class="accordion-body">
+
+                    <!-- Create plan (placeholder for now) -->
+                    <div class="mb-4">
+                        <h5>Create Plan</h5>
+                        <p class="text-muted mb-2">
+                            Plan creation UI coming next.
+                        </p>
+                        <button class="btn btn-outline-primary btn-sm" disabled>
+                            Create Plan
+                        </button>
+                    </div>
+
+                    <hr>
+
+                    <div class="mb-4">
+                    <h5>Create Plan</h5>
+
+                    <form method="POST" action="{{ url_for('billing.create_plan') }}">
+                        {{ plan_form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            {{ plan_form.name.label(class="form-label") }}
+                            {{ plan_form.name(class="form-control") }}
+                            {% for error in plan_form.name.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ plan_form.amount_reais.label(class="form-label") }}
+                            {{ plan_form.amount_reais(class="form-control") }}
+                            {% for error in plan_form.amount_reais.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ plan_form.currency.label(class="form-label") }}
+                            {{ plan_form.currency(class="form-select") }}
+                            {% for error in plan_form.currency.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ plan_form.interval.label(class="form-label") }}
+                            {{ plan_form.interval(class="form-select") }}
+                            {% for error in plan_form.interval.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="form-check mb-3">
+                            {{ plan_form.active(class="form-check-input") }}
+                            {{ plan_form.active.label(class="form-check-label") }}
+                        </div>
+
+                        {{ plan_form.submit(class="btn btn-primary") }}
+                    </form>
+                </div>
+
+                <hr>
+              
+                <div>
+                <h5>Existing Plans</h5>
+
+                {% if plans %}
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Amount</th>
+                                    <th>Currency</th>
+                                    <th>Interval</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for plan in plans %}
+                                    <tr>
+                                        <td>{{ plan.name }}</td>
+                                        <td>R$ {{ "%.2f"|format(plan.amount_cents / 100) }}</td>
+                                        <td>{{ plan.currency }}</td>
+                                        <td>{{ plan.interval|capitalize }}</td>
+                                        <td>
+                                            {% if plan.active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                        <form method="POST" action="{{ url_for('billing.toggle_plan', plan_id=plan.id) }}">
+                                        {{ plan_form.hidden_tag() }}
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                            {% if plan.active %}Deactivate{% else %}Activate{% endif %}
+                                        </button>
+                                        </form>
+                                        </td>
+                                    </tr>
+      
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>  
+                {% else %}
+                    <p class="text-muted mb-0">
+                        No plans yet.
+                    </p>
+                {% endif %}
+            </div>
+
+                </div>
+
+
+            
+            </div>
+
+           <div class="accordion-item mt-3">
+                <h2 class="accordion-header" id="headingSubscriptions">
+                    <button
+                        class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseSubscriptions"
+                        aria-expanded="false"
+                        aria-controls="collapseSubscriptions"
+                    >
+                        Create Subscription
+                    </button>
+                </h2>
+
+                <div
+                    id="collapseSubscriptions"
+                    class="accordion-collapse collapse"
+                    aria-labelledby="headingSubscriptions"
+                    data-bs-parent="#billingAccordion"
+                >
+                    <div class="accordion-body">
+
+       
+                            
+
+                            <div class="mb-3">
+                        
+                                <form method="POST" action="{{ url_for('billing.create_subscription') }}">
+
+                                    {{ subscription_form.hidden_tag() }}
+
+                                    <div class="mb-3">
+                                        {{ subscription_form.student_id.label(class="form-label") }}
+                                        {{ subscription_form.student_id(class="form-select") }}
+                                        {% for error in subscription_form.student_id.errors %}
+                                            <div class="text-danger small">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+
+                                    <!-- Plan -->
+                                    <div class="mb-3">
+                                        {{ subscription_form.plan_id.label(class="form-label") }}
+                                        {{ subscription_form.plan_id(class="form-select") }}
+                                        {% for error in subscription_form.plan_id.errors %}
+                                            <div class="text-danger small">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+
+                                    {{ subscription_form.submit(class="btn btn-primary") }}
+
+                                </form>
+                            </div>
+
+
+
+
+
+                            <div class="accordion-item mt-3">
+                            <h2 class="accordion-header" id="headingExistingSubscriptions">
+                                <button
+                                    class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#collapseExistingSubscriptions"
+                                    aria-expanded="false"
+                                    aria-controls="collapseExistingSubscriptions"
+                                >
+                                    Existing Subscriptions
+                                </button>
+                            </h2>
+
+                            <div
+                                id="collapseExistingSubscriptions"
+                                class="accordion-collapse collapse"
+                                aria-labelledby="headingExistingSubscriptions"
+                                data-bs-parent="#billingAccordion"
+                            >
+                                <div class="accordion-body">
+                                    {% if subscriptions %}
+                                        <div class="table-responsive">
+                                            <table class="table table-striped align-middle">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Student</th>
+                                                        <th>Plan</th>
+                                                        <th>Status</th>
+                                                        <th>Provider</th>
+                                                        <th>Created</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for subscription in subscriptions %}
+                                                        <tr>
+                                                            <td>{{ subscription.user.name if subscription.user else subscription.user_id }}</td>
+                                                            <td>{{ subscription.plan.name if subscription.plan else subscription.plan_id }}</td>
+                                                            <td>
+                                                                {% if subscription.status == "active" %}
+                                                                    <span class="badge bg-success">Active</span>
+                                                                {% elif subscription.status == "incomplete" %}
+                                                                    <span class="badge bg-warning text-dark">Incomplete</span>
+                                                                {% elif subscription.status == "past_due" %}
+                                                                    <span class="badge bg-danger">Past Due</span>
+                                                                {% elif subscription.status == "canceled" %}
+                                                                    <span class="badge bg-secondary">Canceled</span>
+                                                                {% else %}
+                                                                    <span class="badge bg-light text-dark">{{ subscription.status }}</span>
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>{{ subscription.provider }}</td>
+                                                            <td>{{ subscription.created_at.strftime("%Y-%m-%d %H:%M") if subscription.created_at else "-" }}</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% else %}
+                                        <p class="mb-0">No subscriptions yet.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+             
+                       
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item mt-3">
+            <h2 class="accordion-header" id="headingExistingSubscriptions">
+                <button
+                    class="accordion-button collapsed"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseExistingSubscriptions"
+                    aria-expanded="false"
+                    aria-controls="collapseExistingSubscriptions"
+                >
+                    Existing Subscriptions
+                </button>
+            </h2>
+
+            <div
+                id="collapseExistingSubscriptions"
+                class="accordion-collapse collapse"
+                aria-labelledby="headingExistingSubscriptions"
+                data-bs-parent="#billingAccordion"
+            >
+                <div class="accordion-body">
+                    {% if subscriptions %}
+                        <div class="table-responsive">
+                            <table class="table table-striped align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Plan</th>
+                                        <th>Status</th>
+                                        <th>Provider</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for subscription in subscriptions %}
+                                        <tr>
+                                            <td>{{ subscription.user.name if subscription.user else subscription.user_id }}</td>
+                                            <td>{{ subscription.plan.name if subscription.plan else subscription.plan_id }}</td>
+                                            <td>
+                                                {% if subscription.status == "active" %}
+                                                    <span class="badge bg-success">Active</span>
+                                                {% elif subscription.status == "incomplete" %}
+                                                    <span class="badge bg-warning text-dark">Incomplete</span>
+                                                {% elif subscription.status == "past_due" %}
+                                                    <span class="badge bg-danger">Past Due</span>
+                                                {% elif subscription.status == "canceled" %}
+                                                    <span class="badge bg-secondary">Canceled</span>
+                                                {% else %}
+                                                    <span class="badge bg-light text-dark">{{ subscription.status }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ subscription.provider }}</td>
+                                            <td>{{ subscription.created_at.strftime("%Y-%m-%d %H:%M") if subscription.created_at else "-" }}</td>
+                                            <td>
+                                            {% if subscription.status != "canceled" %}
+                                                <form method="POST" action="{{ url_for('billing.cancel_subscription', subscription_id=subscription.id) }}">
+                                                    {{ subscription_form.hidden_tag() }}
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        Cancel
+                                                    </button>
+                                                </form>
+                                            {% else %}
+                                                <span class="text-muted small">No actions</span>
+                                            {% endif %}
+                                        </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="mb-0">No subscriptions yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        </div>
+
+        </div>
+
+
+        
+    {% endif %}
+</div>
+{% endblock %}
