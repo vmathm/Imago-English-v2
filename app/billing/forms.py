@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import BooleanField, HiddenField, IntegerField, SelectField, StringField, SubmitField
-from wtforms.validators import DataRequired, Length, NumberRange, Optional
+from wtforms.validators import DataRequired, Length, NumberRange, Optional, Regexp
 
 
 class AsaasSettingsForm(FlaskForm):
@@ -23,30 +23,37 @@ class AsaasSettingsForm(FlaskForm):
 
 
 
+from wtforms import BooleanField, SelectMultipleField
+from wtforms.validators import Optional
 
 class PlanForm(FlaskForm):
-    name = StringField(
-        "Plan name",
-        validators=[DataRequired(), Length(min=2, max=120)]
-    )
+    name = StringField("Plan name", validators=[DataRequired()])
     amount_reais = IntegerField(
         "Amount (R$)",
-        validators=[DataRequired(), NumberRange(min=1, max=100000)]
+        validators=[DataRequired(), NumberRange(min=1)]
     )
     currency = SelectField(
         "Currency",
         choices=[("BRL", "BRL")],
         validators=[DataRequired()],
-        default="BRL",
     )
     interval = SelectField(
         "Interval",
-        choices=[("month", "Monthly")],
+        choices=[("monthly", "Monthly")],
         validators=[DataRequired()],
-        default="month",
     )
     active = BooleanField("Active", default=True)
-    submit = SubmitField("Create Plan")
+
+    available_to_all_students = BooleanField("Make available to all my students")
+
+    eligible_student_ids = SelectMultipleField(
+        "Specific students",
+        coerce=str,
+        choices=[],
+        validators=[Optional()],
+    )
+
+    submit = SubmitField("Create plan")
 
 
 class SubscriptionForm(FlaskForm):
@@ -63,3 +70,10 @@ class SubscriptionForm(FlaskForm):
         choices=[],
     )
     submit = SubmitField("Create Subscription")
+
+
+
+class StudentBillingForm(FlaskForm):
+    plan_id = HiddenField(validators=[DataRequired()])
+    cpf_cnpj = StringField("CPF ou CNPJ", validators=[DataRequired()])
+    submit = SubmitField("Assinar")

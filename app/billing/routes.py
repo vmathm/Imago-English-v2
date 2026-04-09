@@ -11,15 +11,19 @@ if user.admin -> show billing info for all teachers + link to Asaas dashboard (a
 if user.student -> show their billing info + if due, show link to payment page
 '''
 
+
+
 from flask import abort, render_template, redirect, url_for, flash
 from flask_login import current_user, login_required
-from werkzeug.exceptions import Forbidden, abort
+from werkzeug.exceptions import Forbidden
 
 from app.billing import bp
-from app.billing.forms import AsaasSettingsForm, PlanForm, SubscriptionForm
+from app.billing.forms import AsaasSettingsForm, PlanForm, StudentBillingForm, SubscriptionForm
 from app.database import db_session
 from app.models.billing import Subscription, Tenant, TenantBillingAccount, Plan
 from app.models.user import User
+from app.services.asaas import AsaasServiceError, ensure_customer_for_user, create_subscription as asaas_create_subscription    
+from sqlalchemy import or_
 
 
 def generate_slug(name: str) -> str:
@@ -124,6 +128,21 @@ def index():
     .order_by(Plan.active.desc(), Plan.created_at.desc())
     .all()
     )
+
+    assigned_students = (
+    db_session.query(User)
+    .filter_by(role="student", assigned_teacher_id=current_user.id)
+    .order_by(User.name.asc())
+    .all()
+)
+
+    plan_form.eligible_student_ids.choices = [
+    (
+        student.id,
+        f"{student.name} ({student.email})" if student.email else student.name
+    )
+    for student in assigned_students
+]
     
 
     subscription_form = SubscriptionForm()
@@ -152,13 +171,13 @@ def index():
         tenant=tenant,
         billing_account=billing_account,
         students=students,
+        assigned_students=assigned_students,
         settings_form=settings_form,
         plan_form=plan_form,
         plans=plans,
         subscription_form=subscription_form,
         subscriptions=subscriptions,
     )
-
 
 
 
@@ -196,8 +215,37 @@ def create_plan():
 
     plan_form = PlanForm()
 
+    assigned_students = (
+        db_session.query(User)
+        .filter_by(role="student", assigned_teacher_id=current_user.id)
+        .order_by(User.name.asc())
+        .all()
+    )
+
+    plan_form.eligible_student_ids.choices = [
+        (
+            student.id,
+            f"{student.name} ({student.email})" if student.email else student.name
+        )
+        for student in assigned_students
+    ]
+
     if not plan_form.validate_on_submit():
         flash("Please correct the plan form errors.", "danger")
+        return redirect(url_for("billing.index"))
+
+    if (
+        not plan_form.available_to_all_students.data
+        and not plan_form.eligible_student_ids.data
+    ):
+        flash("Select at least one student or mark the plan as available to all students.", "danger")
+        return redirect(url_for("billing.index"))
+
+    allowed_student_ids = {student.id for student in assigned_students}
+    submitted_student_ids = set(plan_form.eligible_student_ids.data or [])
+
+    if not submitted_student_ids.issubset(allowed_student_ids):
+        flash("One or more selected students are invalid.", "danger")
         return redirect(url_for("billing.index"))
 
     plan = Plan(
@@ -207,9 +255,20 @@ def create_plan():
         currency=plan_form.currency.data,
         interval=plan_form.interval.data,
         active=plan_form.active.data,
+        available_to_all_students=plan_form.available_to_all_students.data,
     )
 
     db_session.add(plan)
+    db_session.flush()
+
+    if not plan_form.available_to_all_students.data:
+        selected_students = (
+            db_session.query(User)
+            .filter(User.id.in_(plan_form.eligible_student_ids.data))
+            .all()
+        )
+        plan.eligible_students = selected_students
+
     db_session.commit()
 
     flash("Plan created successfully.", "success")
@@ -254,107 +313,6 @@ def toggle_plan(plan_id):
 
 
 
-@bp.route("/subscriptions/create", methods=["POST"])
-@login_required
-def create_subscription():
-    if current_user.is_admin():
-        return redirect(url_for("billing.index"))
-
-    if not current_user.is_teacher():
-        raise Forbidden("You are not allowed to manage subscriptions.")
-
-    tenant = (
-        db_session.query(Tenant)
-        .filter_by(owner_user_id=current_user.id)
-        .first()
-    )
-    if tenant is None:
-        abort(404)
-
-    students = (
-        db_session.query(User)
-        .filter_by(role="student", assigned_teacher_id=current_user.id)
-        .order_by(User.name.asc())
-        .all()
-    )
-
-    plans = (
-        db_session.query(Plan)
-        .filter_by(tenant_id=tenant.id)
-        .order_by(Plan.active.desc(), Plan.created_at.desc())
-        .all()
-    )
-
-    subscription_form = SubscriptionForm()
-    subscription_form.student_id.choices = [
-        (student.id, f"{student.name} ({student.email})")
-        for student in students
-    ]
-    subscription_form.plan_id.choices = [
-        (plan.id, f"{plan.name} — R$ {plan.amount_cents / 100:.2f}")
-        for plan in plans
-        if plan.active
-    ]
-
-    if not subscription_form.validate_on_submit():
-        flash("Please correct the subscription form errors.", "danger")
-        return redirect(url_for("billing.index"))
-
-    student = (
-        db_session.query(User)
-        .filter_by(
-            id=subscription_form.student_id.data,
-            role="student",
-            assigned_teacher_id=current_user.id,
-        )
-        .first()
-    )
-    if student is None:
-        abort(404)
-
-    plan = (
-        db_session.query(Plan)
-        .filter_by(
-            id=subscription_form.plan_id.data,
-            tenant_id=tenant.id,
-            active=True,
-        )
-        .first()
-    )
-    if plan is None:
-        abort(404)
-
-    existing_subscription = (
-        db_session.query(Subscription)
-        .filter(
-            Subscription.tenant_id == tenant.id,
-            Subscription.user_id == student.id,
-            Subscription.plan_id == plan.id,
-            Subscription.status.in_(["active", "incomplete", "past_due"]),
-        )
-        .first()
-    )
-
-    if existing_subscription:
-        flash("This student already has an active subscription for this plan.", "warning")
-        return redirect(url_for("billing.index"))
-
-    subscription = Subscription(
-        tenant_id=tenant.id,
-        user_id=student.id,
-        plan_id=plan.id,
-        status="incomplete",
-        provider="asaas",
-    )
-    print(subscription)
-    db_session.add(subscription)
-    db_session.commit()
-
-    flash("Subscription created locally.", "success")
-    return redirect(url_for("billing.index"))
-
-
-
 @bp.route("/subscriptions/<int:subscription_id>/cancel", methods=["POST"])
 @login_required
 def cancel_subscription(subscription_id):
@@ -389,3 +347,166 @@ def cancel_subscription(subscription_id):
 
     flash("Subscription canceled locally.", "success")
     return redirect(url_for("billing.index"))
+
+
+
+
+
+@bp.route("/subscription", methods=["GET"])
+@login_required
+def student_subscription():
+    if current_user.is_admin() or current_user.is_teacher():
+        return redirect(url_for("billing.index"))
+
+    subscription = (
+        db_session.query(Subscription)
+        .filter_by(user_id=current_user.id)
+        .order_by(Subscription.created_at.desc())
+        .first()
+    )
+
+    available_plans = []
+
+    if current_user.assigned_teacher_id:
+        tenant = (
+            db_session.query(Tenant)
+            .filter_by(owner_user_id=current_user.assigned_teacher_id)
+            .first()
+        )
+
+        if tenant:
+            available_plans = (
+                db_session.query(Plan)
+                .filter(
+                    Plan.tenant_id == tenant.id,
+                    Plan.active.is_(True),
+                    or_(
+                        Plan.available_to_all_students.is_(True),
+                        Plan.eligible_students.any(User.id == current_user.id),
+                    ),
+                )
+                .order_by(Plan.amount_cents.asc(), Plan.created_at.desc())
+                .all()
+            )
+
+    billing_form = StudentBillingForm()
+
+    return render_template(
+        "billing/student_billing.html",
+        subscription=subscription,
+        billing_form=billing_form,
+        available_plans=available_plans,
+    )
+
+
+@bp.route("/subscription", methods=["POST"])
+@login_required
+def create_student_subscription():
+    if current_user.is_admin() or current_user.is_teacher():
+        return redirect(url_for("billing.index"))
+
+    form = StudentBillingForm()
+
+    if not form.validate_on_submit():
+        print("DEBUG subscription form.errors:", form.errors)
+        print("DEBUG subscription form.data:", form.data)
+        flash(f"Dados de cobrança inválidos: {form.errors}", "danger")
+        return redirect(url_for("billing.student_subscription"))
+
+    if not current_user.assigned_teacher_id:
+        flash("Nenhum plano está disponível para sua conta.", "warning")
+        return redirect(url_for("billing.student_subscription"))
+
+    tenant = (
+        db_session.query(Tenant)
+        .filter_by(owner_user_id=current_user.assigned_teacher_id)
+        .first()
+    )
+
+    if tenant is None:
+        flash("Nenhum plano está disponível para sua conta.", "warning")
+        return redirect(url_for("billing.student_subscription"))
+
+    try:
+        plan_id = int(form.plan_id.data)
+    except (TypeError, ValueError):
+        flash("Plano inválido.", "danger")
+        return redirect(url_for("billing.student_subscription"))
+
+    plan = (
+        db_session.query(Plan)
+        .filter(
+            Plan.id == plan_id,
+            Plan.tenant_id == tenant.id,
+            Plan.active.is_(True),
+            or_(
+                Plan.available_to_all_students.is_(True),
+                Plan.eligible_students.any(User.id == current_user.id),
+            ),
+        )
+        .first()
+    )
+
+    if plan is None:
+        flash("Plano inválido ou indisponível para sua conta.", "danger")
+        return redirect(url_for("billing.student_subscription"))
+
+    existing_subscription = (
+        db_session.query(Subscription)
+        .filter(
+            Subscription.user_id == current_user.id,
+            Subscription.status.in_(["active", "incomplete", "past_due"]),
+        )
+        .order_by(Subscription.created_at.desc())
+        .first()
+    )
+
+    if existing_subscription:
+        flash("Você já possui uma assinatura em andamento.", "warning")
+        return redirect(url_for("billing.student_subscription"))
+
+    ASAAS_CYCLE_MAP = {
+            "monthly": "MONTHLY",
+            "month": "MONTHLY",
+            "weekly": "WEEKLY",
+            "yearly": "YEARLY",
+    }
+
+    try:
+        customer_id = ensure_customer_for_user(
+            tenant_id=plan.tenant_id,
+            user=current_user,
+            cpf_cnpj=form.cpf_cnpj.data,
+        )
+
+        asaas_subscription = asaas_create_subscription(
+            tenant_id=plan.tenant_id,
+            customer_id=customer_id,
+            amount_cents=plan.amount_cents,
+            description=f"Assinatura {plan.name}",
+            cycle=ASAAS_CYCLE_MAP.get(plan.interval, "MONTHLY"),
+            billing_type="PIX",
+        )
+
+        subscription = Subscription(
+            tenant_id=plan.tenant_id,
+            user_id=current_user.id,
+            plan_id=plan.id,
+            status="incomplete",
+            provider="asaas",
+            provider_subscription_id=asaas_subscription.get("id"),
+        )
+
+        db_session.add(subscription)
+        db_session.commit()
+
+    except AsaasServiceError as exc:
+        db_session.rollback()
+        flash(str(exc), "danger")
+        return redirect(url_for("billing.student_subscription"))
+
+    flash("Assinatura criada com sucesso.", "success")
+    return redirect(url_for("billing.student_subscription"))
+
+
+

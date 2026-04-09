@@ -226,6 +226,26 @@
                         </div>
 
                         <div class="form-check mb-3">
+                        {{ plan_form.available_to_all_students(class="form-check-input") }}
+                        {{ plan_form.available_to_all_students.label(class="form-check-label") }}
+                        {% for error in plan_form.available_to_all_students.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ plan_form.eligible_student_ids.label(class="form-label") }}
+                        {{ plan_form.eligible_student_ids(class="form-select", multiple=True, size=6) }}
+                        <div class="form-text">
+                            Hold Ctrl (or Cmd on Mac) to select more than one student.
+                            Ignore this field if the plan is available to all students.
+                        </div>
+                        {% for error in plan_form.eligible_student_ids.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                        <div class="form-check mb-3">
                             {{ plan_form.active(class="form-check-input") }}
                             {{ plan_form.active.label(class="form-check-label") }}
                         </div>
@@ -293,134 +313,7 @@
             
             </div>
 
-           <div class="accordion-item mt-3">
-                <h2 class="accordion-header" id="headingSubscriptions">
-                    <button
-                        class="accordion-button collapsed"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#collapseSubscriptions"
-                        aria-expanded="false"
-                        aria-controls="collapseSubscriptions"
-                    >
-                        Create Subscription
-                    </button>
-                </h2>
-
-                <div
-                    id="collapseSubscriptions"
-                    class="accordion-collapse collapse"
-                    aria-labelledby="headingSubscriptions"
-                    data-bs-parent="#billingAccordion"
-                >
-                    <div class="accordion-body">
-
-       
-                            
-
-                            <div class="mb-3">
-                        
-                                <form method="POST" action="{{ url_for('billing.create_subscription') }}">
-
-                                    {{ subscription_form.hidden_tag() }}
-
-                                    <div class="mb-3">
-                                        {{ subscription_form.student_id.label(class="form-label") }}
-                                        {{ subscription_form.student_id(class="form-select") }}
-                                        {% for error in subscription_form.student_id.errors %}
-                                            <div class="text-danger small">{{ error }}</div>
-                                        {% endfor %}
-                                    </div>
-
-                                    <!-- Plan -->
-                                    <div class="mb-3">
-                                        {{ subscription_form.plan_id.label(class="form-label") }}
-                                        {{ subscription_form.plan_id(class="form-select") }}
-                                        {% for error in subscription_form.plan_id.errors %}
-                                            <div class="text-danger small">{{ error }}</div>
-                                        {% endfor %}
-                                    </div>
-
-                                    {{ subscription_form.submit(class="btn btn-primary") }}
-
-                                </form>
-                            </div>
-
-
-
-
-
-                            <div class="accordion-item mt-3">
-                            <h2 class="accordion-header" id="headingExistingSubscriptions">
-                                <button
-                                    class="accordion-button collapsed"
-                                    type="button"
-                                    data-bs-toggle="collapse"
-                                    data-bs-target="#collapseExistingSubscriptions"
-                                    aria-expanded="false"
-                                    aria-controls="collapseExistingSubscriptions"
-                                >
-                                    Existing Subscriptions
-                                </button>
-                            </h2>
-
-                            <div
-                                id="collapseExistingSubscriptions"
-                                class="accordion-collapse collapse"
-                                aria-labelledby="headingExistingSubscriptions"
-                                data-bs-parent="#billingAccordion"
-                            >
-                                <div class="accordion-body">
-                                    {% if subscriptions %}
-                                        <div class="table-responsive">
-                                            <table class="table table-striped align-middle">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Student</th>
-                                                        <th>Plan</th>
-                                                        <th>Status</th>
-                                                        <th>Provider</th>
-                                                        <th>Created</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {% for subscription in subscriptions %}
-                                                        <tr>
-                                                            <td>{{ subscription.user.name if subscription.user else subscription.user_id }}</td>
-                                                            <td>{{ subscription.plan.name if subscription.plan else subscription.plan_id }}</td>
-                                                            <td>
-                                                                {% if subscription.status == "active" %}
-                                                                    <span class="badge bg-success">Active</span>
-                                                                {% elif subscription.status == "incomplete" %}
-                                                                    <span class="badge bg-warning text-dark">Incomplete</span>
-                                                                {% elif subscription.status == "past_due" %}
-                                                                    <span class="badge bg-danger">Past Due</span>
-                                                                {% elif subscription.status == "canceled" %}
-                                                                    <span class="badge bg-secondary">Canceled</span>
-                                                                {% else %}
-                                                                    <span class="badge bg-light text-dark">{{ subscription.status }}</span>
-                                                                {% endif %}
-                                                            </td>
-                                                            <td>{{ subscription.provider }}</td>
-                                                            <td>{{ subscription.created_at.strftime("%Y-%m-%d %H:%M") if subscription.created_at else "-" }}</td>
-                                                        </tr>
-                                                    {% endfor %}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    {% else %}
-                                        <p class="mb-0">No subscriptions yet.</p>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-
-             
-                       
-
-                    </div>
-                </div>
-            </div>
+              
 
             <div class="accordion-item mt-3">
             <h2 class="accordion-header" id="headingExistingSubscriptions">

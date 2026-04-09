@@ -59,11 +59,33 @@ class User(UserMixin, Base):
     )
 
     tenant = relationship(
-    "Tenant",
-    back_populates="owner",
-    uselist=False,
-)
-    
+        "Tenant",
+        back_populates="owner",
+        uselist=False,
+        foreign_keys="Tenant.owner_user_id",
+    )
+
+    eligible_plans = relationship(
+        "Plan",
+        secondary="plan_students",
+        back_populates="eligible_students",
+    )
+
+    subscriptions = relationship(
+        "Subscription",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+    payments = relationship(
+        "Payment",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+    asaas_customer_id = Column(String(80), nullable=True, unique=True, index=True)
 
 
 

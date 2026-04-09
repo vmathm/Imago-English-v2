@@ -1,14 +1,38 @@
+from __future__ import annotations
+
+from datetime import date, timedelta
+from logging import config
+import re
+from urllib import response
+
 import requests
 
-from app.models.billing import TenantBillingAccount
 from app.database import db_session
-
-
-ASAAS_BASE_URL = "https://api-sandbox.asaas.com/v3"
+from app.models.billing import TenantBillingAccount
+from app.models.user import User
 
 
 class AsaasServiceError(Exception):
     pass
+
+
+def _normalize_cpf_cnpj(value: str) -> str:
+    digits = re.sub(r"\D", "", value or "")
+    return digits
+
+
+def _raise_for_asaas_error(response: requests.Response, action: str) -> None:
+    if response.ok:
+        return
+
+    try:
+        payload = response.json()
+    except Exception:
+        payload = response.text
+
+    raise AsaasServiceError(
+        f"Asaas {action} failed: {response.status_code} - {payload}"
+    )
 
 
 def get_active_billing_account_for_tenant(tenant_id: int) -> TenantBillingAccount:
@@ -50,3 +74,201 @@ def get_account_config_for_tenant(tenant_id: int) -> dict:
         "base_url": get_asaas_base_url(account.is_sandbox),
         "headers": build_asaas_headers(account.api_key),
     }
+
+
+def create_customer(
+    *,
+    tenant_id: int,
+    user: User,
+    cpf_cnpj: str,
+) -> dict:
+    """
+    Create an Asaas customer and persist user.asaas_customer_id.
+
+    We do NOT store cpf/cnpj in our DB. It is only sent to Asaas here.
+    """
+    if user.asaas_customer_id:
+        raise AsaasServiceError("User already has an Asaas customer id.")
+
+    if not user.name or not user.name.strip():
+        raise AsaasServiceError("User must have a name before creating an Asaas customer.")
+
+    normalized_cpf_cnpj = _normalize_cpf_cnpj(cpf_cnpj)
+    if len(normalized_cpf_cnpj) not in {11, 14}:
+        raise AsaasServiceError("CPF/CNPJ inválido.")
+
+    email = (user.email or "").strip()
+    if not email or email == "none":
+        email = None
+
+    phone = (user.phone or "").strip() or None
+
+    config = get_account_config_for_tenant(tenant_id)
+
+    payload = {
+        "name": user.name.strip(),
+        "cpfCnpj": normalized_cpf_cnpj,
+    }
+
+    if email:
+        payload["email"] = email
+
+    if phone:
+        payload["mobilePhone"] = phone
+
+    response = requests.post(
+        f"{config['base_url']}/customers",
+        json=payload,
+        headers=config["headers"],
+        timeout=20,
+    )
+
+    _raise_for_asaas_error(response, "customer creation")
+
+    data = response.json()
+    customer_id = data.get("id")
+
+    if not customer_id:
+        raise AsaasServiceError("Asaas customer creation succeeded but returned no customer id.")
+
+    user.asaas_customer_id = customer_id
+    db_session.commit()
+
+    return data
+
+
+def ensure_customer_for_user(
+    *,
+    tenant_id: int,
+    user: User,
+    cpf_cnpj: str | None = None,
+) -> str:
+    """
+    Return existing Asaas customer id, or create the customer if needed.
+
+    If the user has no customer id yet, cpf_cnpj is required.
+    """
+    if user.asaas_customer_id:
+        return user.asaas_customer_id
+
+    if not cpf_cnpj:
+        raise AsaasServiceError("CPF/CNPJ is required to create the Asaas customer.")
+
+    customer_data = create_customer(
+        tenant_id=tenant_id,
+        user=user,
+        cpf_cnpj=cpf_cnpj,
+    )
+    return customer_data["id"]
+
+
+def create_subscription(
+    *,
+    tenant_id: int,
+    customer_id: str,
+    amount_cents: int,
+    description: str,
+    cycle: str = "MONTHLY",
+    billing_type: str = "PIX",
+    next_due_date: date | None = None,
+) -> dict:
+    """
+    Create an Asaas subscription.
+
+    Asaas expects cycle values like MONTHLY and a first due date.
+    """
+    if not customer_id:
+        raise AsaasServiceError("Missing Asaas customer id.")
+
+    if amount_cents <= 0:
+        raise AsaasServiceError("Subscription amount must be greater than zero.")
+
+    if next_due_date is None:
+        next_due_date = date.today() + timedelta(days=1)
+
+    config = get_account_config_for_tenant(tenant_id)
+
+
+
+    payload = {
+        "customer": customer_id,
+        "billingType": billing_type,
+        "value": amount_cents / 100,
+        "nextDueDate": next_due_date.isoformat(),
+        "cycle": cycle,
+        "description": description,
+    }
+    print("=== ASAAS SUBSCRIPTION DEBUG ===")
+    print("URL:", f"{config['base_url']}/subscriptions")
+    safe_headers = {
+    "accept": config["headers"].get("accept"),
+    "content-type": config["headers"].get("content-type"),
+    "access_token": "***masked***",
+    }
+    print("HEADERS:", safe_headers)
+    print("PAYLOAD:", payload)
+    print("================================")
+
+    response = requests.post(
+        f"{config['base_url']}/subscriptions",
+        json=payload,
+        headers=config["headers"],
+        timeout=20,
+    )
+    print("ASAAS STATUS:", response.status_code)
+    print("ASAAS BODY:", response.text)
+
+    _raise_for_asaas_error(response, "subscription creation")
+
+    data = response.json()
+    subscription_id = data.get("id")
+
+    if not subscription_id:
+        raise AsaasServiceError("Asaas subscription creation succeeded but returned no subscription id.")
+
+    return data
+
+
+def create_pix_payment(
+    *,
+    tenant_id: int,
+    customer_id: str,
+    amount_cents: int,
+    description: str,
+    due_date: date | None = None,
+) -> dict:
+    if not customer_id:
+        raise AsaasServiceError("Missing Asaas customer id.")
+
+    if amount_cents <= 0:
+        raise AsaasServiceError("Payment amount must be greater than zero.")
+
+    config = get_account_config_for_tenant(tenant_id)
+
+    if due_date is None:
+        due_date = date.today() + timedelta(days=1)
+
+    payload = {
+        "customer": customer_id,
+        "billingType": "PIX",
+        "value": amount_cents / 100,
+        "dueDate": due_date.isoformat(),
+        "description": description,
+    }
+
+    response = requests.post(
+        f"{config['base_url']}/payments",
+        json=payload,
+        headers=config["headers"],
+        timeout=20,
+    )
+
+    _raise_for_asaas_error(response, "PIX payment creation")
+
+    data = response.json()
+    payment_id = data.get("id")
+
+    if not payment_id:
+        raise AsaasServiceError("Asaas PIX payment creation succeeded but returned no payment id.")
+
+    return data

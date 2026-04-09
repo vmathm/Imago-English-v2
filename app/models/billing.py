@@ -8,6 +8,7 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     ForeignKey,
+    Table,
     Text,
     UniqueConstraint,
     Index,
@@ -19,7 +20,12 @@ from app.utils.time import utcnow
 from .base import Base
 
 
-
+plan_students = Table(
+    "plan_students",
+    Base.metadata,
+    Column("plan_id", Integer, ForeignKey("plans.id", ondelete="CASCADE"), primary_key=True),
+    Column("user_id", String(50), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+)
 
 class Tenant(Base):
     """
@@ -121,6 +127,14 @@ class Plan(Base):
         passive_deletes=True,
     )
 
+    available_to_all_students = Column(Boolean, nullable=False, default=False)
+
+    eligible_students = relationship(
+        "User",
+        secondary=plan_students,
+        back_populates="eligible_plans",
+    )
+
 
 class Subscription(Base):
     """
@@ -165,7 +179,7 @@ class Subscription(Base):
         passive_deletes=True,
     )
 
-    user = relationship("User")
+    user = relationship("User", back_populates="subscriptions")
 
 
 class Payment(Base):
@@ -207,6 +221,8 @@ class Payment(Base):
 
     subscription = relationship("Subscription", back_populates="payments")
     tenant = relationship("Tenant")
+
+    user = relationship("User", back_populates="payments")
 
 
 class WebhookEvent(Base):
