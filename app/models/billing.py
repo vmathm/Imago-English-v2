@@ -215,6 +215,7 @@ class Payment(Base):
     # Optional cache fields (nice for rendering without extra API call)
     pix_qr_code = Column(Text, nullable=True)
     pix_copy_paste = Column(Text, nullable=True)
+    pix_expires_at = Column(DateTime(timezone=True), nullable=True)
 
     paid_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=False, default=utcnow)

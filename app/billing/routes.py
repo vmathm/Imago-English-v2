@@ -13,6 +13,8 @@ if user.student -> show their billing info + if due, show link to payment page
 
 
 
+from datetime import datetime, timezone
+
 from flask import abort, render_template, redirect, url_for, flash
 from flask_login import current_user, login_required
 from werkzeug.exceptions import Forbidden
@@ -20,9 +22,9 @@ from werkzeug.exceptions import Forbidden
 from app.billing import bp
 from app.billing.forms import AsaasSettingsForm, PlanForm, StudentBillingForm, SubscriptionForm
 from app.database import db_session
-from app.models.billing import Subscription, Tenant, TenantBillingAccount, Plan
+from app.models.billing import Payment, Subscription, Tenant, TenantBillingAccount, Plan
 from app.models.user import User
-from app.services.asaas import AsaasServiceError, ensure_customer_for_user, create_subscription as asaas_create_subscription    
+from app.services.asaas import AsaasServiceError, ensure_customer_for_user, create_subscription as asaas_create_subscription, get_subscription_payments, get_pix_qr_code    
 from sqlalchemy import or_
 
 
@@ -389,13 +391,23 @@ def student_subscription():
                 .all()
             )
 
+    latest_payment = (
+    db_session.query(Payment)
+    .filter_by(user_id=current_user.id)
+    .order_by(Payment.id.desc())
+    .first()
+)
+
     billing_form = StudentBillingForm()
+    
+
 
     return render_template(
         "billing/student_billing.html",
         subscription=subscription,
         billing_form=billing_form,
         available_plans=available_plans,
+        latest_payment=latest_payment,
     )
 
 
@@ -492,12 +504,60 @@ def create_student_subscription():
             tenant_id=plan.tenant_id,
             user_id=current_user.id,
             plan_id=plan.id,
-            status="incomplete",
+            status=(asaas_subscription.get("status") or "incomplete").lower(),
             provider="asaas",
             provider_subscription_id=asaas_subscription.get("id"),
         )
 
         db_session.add(subscription)
+        db_session.flush()
+
+        payments_data = get_subscription_payments(
+            tenant_id=plan.tenant_id,
+            subscription_id=asaas_subscription["id"],
+        )
+
+        payments_list = payments_data.get("data", [])
+        first_payment = payments_list[0] if payments_list else None
+
+        if not first_payment:
+            raise AsaasServiceError(
+                "Subscription created, but no generated payment was returned by Asaas."
+            )
+
+        payment = Payment(
+            tenant_id=plan.tenant_id,
+            user_id=current_user.id,
+            subscription_id=subscription.id,
+            provider="asaas",
+            provider_payment_id=first_payment["id"],
+            status=(first_payment.get("status") or "pending").lower(),
+            amount_cents=plan.amount_cents,
+            currency=plan.currency,
+            billing_type=first_payment.get("billingType", "PIX"),
+        )
+        db_session.add(payment)
+
+        pix_data = get_pix_qr_code(
+            tenant_id=plan.tenant_id,
+            payment_id=first_payment["id"],
+        )
+
+        expires_str = pix_data.get("expirationDate")
+        expires_at = None
+
+        if expires_str:
+            try:
+                expires_at = datetime.fromisoformat(expires_str)
+                if expires_at.tzinfo is None:
+                    expires_at = expires_at.replace(tzinfo=timezone.utc)
+            except ValueError:
+                expires_at = None
+
+        payment.pix_qr_code = pix_data.get("encodedImage")
+        payment.pix_copy_paste = pix_data.get("payload")
+        payment.pix_expires_at = expires_at
+
         db_session.commit()
 
     except AsaasServiceError as exc:

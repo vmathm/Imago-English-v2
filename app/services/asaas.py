@@ -272,3 +272,43 @@ def create_pix_payment(
         raise AsaasServiceError("Asaas PIX payment creation succeeded but returned no payment id.")
 
     return data
+
+
+def get_subscription_payments(
+    *,
+    tenant_id: int,
+    subscription_id: str,
+) -> dict:
+    if not subscription_id:
+        raise AsaasServiceError("Missing Asaas subscription id.")
+
+    config = get_account_config_for_tenant(tenant_id)
+
+    response = requests.get(
+        f"{config['base_url']}/subscriptions/{subscription_id}/payments",
+        headers=config["headers"],
+        timeout=20,
+    )
+
+    _raise_for_asaas_error(response, "subscription payments lookup")
+    return response.json()
+
+
+def get_pix_qr_code(
+    *,
+    tenant_id: int,
+    payment_id: str,
+) -> dict:
+    if not payment_id:
+        raise AsaasServiceError("Missing Asaas payment id.")
+
+    config = get_account_config_for_tenant(tenant_id)
+
+    response = requests.get(
+        f"{config['base_url']}/payments/{payment_id}/pixQrCode",
+        headers=config["headers"],
+        timeout=20,
+    )
+
+    _raise_for_asaas_error(response, "PIX QR code lookup")
+    return response.json()

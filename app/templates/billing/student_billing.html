@@ -200,5 +200,34 @@
         </div>
 
     </div>
+
+
+{% if latest_payment and (latest_payment.pix_qr_code or latest_payment.pix_copy_paste) %}
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="card-title">Pagamento PIX</h5>
+
+            {% if latest_payment.pix_qr_code %}
+                <img
+                    src="data:image/png;base64,{{ latest_payment.pix_qr_code }}"
+                    alt="PIX QR Code"
+                    class="img-fluid mb-3"
+                    style="max-width: 280px;"
+                >
+            {% endif %}
+
+            {% if latest_payment.pix_copy_paste %}
+                <label class="form-label">Código PIX copia e cola</label>
+                <textarea class="form-control" rows="4" readonly>{{ latest_payment.pix_copy_paste }}</textarea>
+            {% endif %}
+
+            {% if latest_payment.pix_expires_at %}
+                <div class="form-text mt-2">
+                    Expira em: {{ latest_payment.pix_expires_at }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
 </div>
 {% endblock %}
