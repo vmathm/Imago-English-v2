@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 from logging import config
 import re
 from urllib import response
+from zoneinfo import ZoneInfo
 
+from flask import jsonify
 import requests
 
 from app.database import db_session
-from app.models.billing import TenantBillingAccount
+from app.models.billing import Payment, TenantBillingAccount
 from app.models.user import User
 
 
@@ -312,3 +314,80 @@ def get_pix_qr_code(
 
     _raise_for_asaas_error(response, "PIX QR code lookup")
     return response.json()
+
+import requests
+
+def asaas_request(tenant_id: int, method: str, path: str, json=None):
+    config = get_account_config_for_tenant(tenant_id)
+
+    url = f"{config['base_url']}{path}"
+
+    response = requests.request(
+        method,
+        url,
+        headers=config["headers"],
+        json=json,
+        timeout=20,
+    )
+
+    _raise_for_asaas_error(response, f"{method} {path}")
+
+    return response.json()
+
+
+def get_subscription(
+    *,
+    tenant_id: int,
+    subscription_id: str,
+) -> dict:
+    if not subscription_id:
+        raise AsaasServiceError("Missing Asaas subscription id.")
+
+    config = get_account_config_for_tenant(tenant_id)
+
+    response = requests.get(
+        f"{config['base_url']}/subscriptions/{subscription_id}",
+        headers=config["headers"],
+        timeout=20,
+    )
+
+    _raise_for_asaas_error(response, "subscription lookup")
+    return response.json()
+
+
+def parse_asaas_date(value: str | None):
+    if not value:
+        return None
+
+    try:
+        # Asaas nextDueDate usually comes as YYYY-MM-DD
+        dt = datetime.strptime(value, "%Y-%m-%d")
+        return dt.replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+    
+def normalize_asaas_status(status: str | None) -> str:
+    return (status or "").strip().lower()
+
+
+SP_TZ = ZoneInfo("America/Sao_Paulo")
+UTC_TZ = timezone.utc
+
+def parse_asaas_due_date_as_sp_end_of_day(value: str | None):
+    if not value:
+        return None
+
+    try:
+        # Asaas date format: YYYY-MM-DD
+        due_date = datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+    sp_end = datetime.combine(
+        due_date,
+        time(23, 59, 59, 999999),
+        tzinfo=SP_TZ,
+    )
+
+    return sp_end.astimezone(UTC_TZ)
+

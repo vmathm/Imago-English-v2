@@ -13,9 +13,10 @@ if user.student -> show their billing info + if due, show link to payment page
 
 
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
-from flask import abort, render_template, redirect, url_for, flash
+from flask import abort, jsonify, render_template, redirect, request, url_for, flash
 from flask_login import current_user, login_required
 from werkzeug.exceptions import Forbidden
 
@@ -24,8 +25,9 @@ from app.billing.forms import AsaasSettingsForm, PlanForm, StudentBillingForm, S
 from app.database import db_session
 from app.models.billing import Payment, Subscription, Tenant, TenantBillingAccount, Plan
 from app.models.user import User
-from app.services.asaas import AsaasServiceError, ensure_customer_for_user, create_subscription as asaas_create_subscription, get_subscription_payments, get_pix_qr_code    
+from app.services.asaas import SP_TZ, AsaasServiceError, ensure_customer_for_user, create_subscription as asaas_create_subscription, get_subscription_payments, get_pix_qr_code, get_subscription, normalize_asaas_status, parse_asaas_date, parse_asaas_due_date_as_sp_end_of_day
 from sqlalchemy import or_
+from app.extensions import csrf
 
 
 def generate_slug(name: str) -> str:
@@ -397,17 +399,42 @@ def student_subscription():
     .order_by(Payment.id.desc())
     .first()
 )
+    
+    payment_date_sp = None
+    expiring_date_sp = None
+    days_left = None
+
+    if latest_payment and latest_payment.paid_at:
+        payment_date_sp = latest_payment.paid_at.astimezone(SP_TZ)
+
+    if subscription and subscription.current_period_end:
+        expiring_date_sp = subscription.current_period_end.astimezone(SP_TZ)
+
+        now_sp = datetime.now(timezone.utc).astimezone(SP_TZ)
+        days_left = max((expiring_date_sp.date() - now_sp.date()).days, 0)
+
 
     billing_form = StudentBillingForm()
+
+    is_pix_valid = (
+    latest_payment
+    and latest_payment.status in ["pending", "awaiting_payment"]
+    and latest_payment.pix_expires_at
+    and latest_payment.pix_expires_at > datetime.now(timezone.utc)
+)
+    sp_tz = ZoneInfo("America/Sao_Paulo")
     
-
-
     return render_template(
         "billing/student_billing.html",
         subscription=subscription,
         billing_form=billing_form,
         available_plans=available_plans,
         latest_payment=latest_payment,
+        payment_date_sp=payment_date_sp,
+        expiring_date_sp=expiring_date_sp,
+        days_left=days_left,
+        is_pix_valid=is_pix_valid,
+        sp_tz=sp_tz
     )
 
 
@@ -463,25 +490,44 @@ def create_student_subscription():
         flash("Plano inválido ou indisponível para sua conta.", "danger")
         return redirect(url_for("billing.student_subscription"))
 
+    # Block a new signup flow if there is already a subscription in progress.
+    # This does NOT mean the user has paid access yet.
     existing_subscription = (
         db_session.query(Subscription)
         .filter(
             Subscription.user_id == current_user.id,
-            Subscription.status.in_(["active", "incomplete", "past_due"]),
+            Subscription.status.in_(["active", "inactive"]),
         )
         .order_by(Subscription.created_at.desc())
         .first()
     )
 
     if existing_subscription:
-        flash("Você já possui uma assinatura em andamento.", "warning")
-        return redirect(url_for("billing.student_subscription"))
+        latest_existing_payment = (
+            db_session.query(Payment)
+            .filter(Payment.subscription_id == existing_subscription.id)
+            .order_by(Payment.created_at.desc())
+            .first()
+        )
+
+        if latest_existing_payment and latest_existing_payment.status in [
+            "pending",
+            "awaiting_payment",
+            "received",
+            "confirmed",
+        ]:
+            flash(
+                "Você já possui uma cobrança/assinatura em andamento. "
+                "Use o pagamento atual ou aguarde a atualização.",
+                "warning",
+            )
+            return redirect(url_for("billing.student_subscription"))
 
     ASAAS_CYCLE_MAP = {
-            "monthly": "MONTHLY",
-            "month": "MONTHLY",
-            "weekly": "WEEKLY",
-            "yearly": "YEARLY",
+        "monthly": "MONTHLY",
+        "month": "MONTHLY",
+        "weekly": "WEEKLY",
+        "yearly": "YEARLY",
     }
 
     try:
@@ -500,11 +546,12 @@ def create_student_subscription():
             billing_type="PIX",
         )
 
+
         subscription = Subscription(
             tenant_id=plan.tenant_id,
             user_id=current_user.id,
             plan_id=plan.id,
-            status=(asaas_subscription.get("status") or "incomplete").lower(),
+            status=(asaas_subscription.get("status") or "inactive").lower(),
             provider="asaas",
             provider_subscription_id=asaas_subscription.get("id"),
         )
@@ -558,15 +605,138 @@ def create_student_subscription():
         payment.pix_copy_paste = pix_data.get("payload")
         payment.pix_expires_at = expires_at
 
+    
         db_session.commit()
 
     except AsaasServiceError as exc:
         db_session.rollback()
         flash(str(exc), "danger")
         return redirect(url_for("billing.student_subscription"))
+    except Exception as exc:
+        db_session.rollback()
+        print("DEBUG create_student_subscription unexpected error:", exc)
+        flash("Não foi possível gerar a cobrança no momento.", "danger")
+        return redirect(url_for("billing.student_subscription"))
 
-    flash("Assinatura criada com sucesso.", "success")
+    flash(
+        "Cobrança gerada com sucesso. Faça o pagamento para ativar sua assinatura.",
+        "success",
+    )
     return redirect(url_for("billing.student_subscription"))
 
 
 
+
+PAID_PAYMENT_STATUSES = {"received", "confirmed", "paid"}
+OPEN_PAYMENT_STATUSES = {"pending", "awaiting_payment"}
+PROBLEM_PAYMENT_STATUSES = {"overdue", "failed", "canceled", "cancelled"}
+
+@bp.route("/webhook/asaas", methods=["POST"])
+@csrf.exempt
+def asaas_webhook():
+    data = request.get_json(silent=True) or {}
+
+    event = data.get("event", "")
+    payment_data = data.get("payment") or {}
+    subscription_data = data.get("subscription") or {}
+
+    if event == "PAYMENT_CREATED":
+    # optional: update local payment status to pending
+        return jsonify({"ok": True}), 200
+
+    provider_payment_id = payment_data.get("id")
+    provider_subscription_id = (
+        payment_data.get("subscription")
+        or subscription_data.get("id")
+    )
+
+    payment_status = normalize_asaas_status(payment_data.get("status"))
+
+    print("=== ASAAS WEBHOOK DEBUG ===")
+    print("event:", event)
+    print("provider_payment_id:", provider_payment_id)
+    print("provider_subscription_id:", provider_subscription_id)
+    print("payment_status:", payment_status)
+
+    try:
+        payment = None
+
+        if provider_payment_id:
+            payment = (
+                db_session.query(Payment)
+                .filter_by(provider_payment_id=provider_payment_id)
+                .first()
+            )
+
+        if payment is None and provider_subscription_id:
+            payment = (
+                db_session.query(Payment)
+                .join(Subscription, Payment.subscription_id == Subscription.id)
+                .filter(Subscription.provider_subscription_id == provider_subscription_id)
+                .order_by(Payment.created_at.desc())
+                .first()
+            )
+
+        if payment is None:
+            print("Webhook received, but no local payment matched.")
+            return jsonify({"ok": True, "message": "payment not found locally"}), 200
+
+        if payment_status:
+            payment.status = payment_status
+
+        subscription = (
+            db_session.query(Subscription)
+            .filter_by(id=payment.subscription_id)
+            .first()
+        )
+
+        user = db_session.query(User).filter_by(id=payment.user_id).first()
+
+        if user is None:
+            db_session.commit()
+            return jsonify({"ok": True, "message": "user not found"}), 200
+
+
+        if payment_status in PAID_PAYMENT_STATUSES:
+            if payment.paid_at is None:
+                payment.paid_at = datetime.now(timezone.utc)
+
+            user.active = True
+
+            if subscription is not None:
+                subscription.status = "active"
+                subscription.current_period_start = payment.paid_at
+
+                if subscription.provider_subscription_id:
+                    try:
+                        asaas_subscription = get_subscription(
+                            tenant_id=subscription.tenant_id,
+                            subscription_id=subscription.provider_subscription_id,
+                        )
+                        next_due_date = parse_asaas_due_date_as_sp_end_of_day(
+                            asaas_subscription.get("nextDueDate")
+                        )
+                        if next_due_date is not None:
+                            subscription.current_period_end = next_due_date
+
+                    except AsaasServiceError as exc:
+                        print("Could not refresh Asaas subscription after payment:", exc)
+
+
+        elif payment_status in OPEN_PAYMENT_STATUSES:
+            if subscription is not None and not subscription.status:
+                subscription.status = "pending"
+
+        elif payment_status in PROBLEM_PAYMENT_STATUSES:
+            # conservative first version:
+            # do not deactivate automatically unless you are sure that is the rule you want
+            if subscription is not None:
+                subscription.status = payment_status
+
+        db_session.commit()
+        return jsonify({"ok": True}), 200
+
+    except Exception as exc:
+        db_session.rollback()
+        print("ASAAS WEBHOOK ERROR:", exc)
+        return jsonify({"ok": False}), 500
