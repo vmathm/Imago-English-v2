@@ -1,11 +1,12 @@
 from datetime import datetime
 from flask import Blueprint, redirect, abort, current_app, request, url_for, session, render_template
-from flask_login import login_user, logout_user, current_user
+from flask_login import login_user, logout_user
 from app.utils.time import SP_TZ
 from app.models import User
 from app.database import db_session
 from flask_dance.contrib.google import make_google_blueprint, google
 from app.services.google_auth import get_google_user_info
+from app.services.access import sync_internal_access
 from urllib.parse import urlparse, urljoin
 import os
 
@@ -69,6 +70,9 @@ def demo_login(user_id):
     user = db_session.query(User).filter_by(id=user_id).first()
     if not user:
         return render_template("demo_login.html")
+    
+    sync_internal_access(user)
+    db_session.commit()
 
     success = login_user(user)
     print(f"Demo login {'successful' if success else 'failed'} for user: {user_id}")
@@ -153,6 +157,8 @@ def google_complete():
         if pending_activation and is_new_user:
             user.active = True
 
+
+    sync_internal_access(user)
     db_session.commit()
 
     login_user(user, remember=True)
