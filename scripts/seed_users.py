@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import timedelta
 import os
 import sys
 import random
@@ -11,17 +11,18 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from app.models.user import User
 from app.models.flashcard import Flashcard
 from app.database import db_session
-
-today = datetime.now(timezone.utc).date()
+from app.utils.time import now_sp
 
 
 def main():
+    today = now_sp().date()
+
     if db_session.query(User).count() > 0:
         print("⚠️ Database already has users, skipping seed.")
         return
 
-    # Admin user
     users = [
+        # Admin
         User(
             id="9990",
             name="admin",
@@ -30,14 +31,58 @@ def main():
             role="@dmin!",
             join_date=today,
             active=True,
-            learning_language="en",  # default: learning English
-        )
+            learning_language="en",
+        ),
+
+        # External users
+        User(
+            id="external_active",
+            email="external_active@test.com",
+            name="External Active",
+            user_name="external_active",
+            role="student",
+            billing_mode="external",
+            active=True,
+            join_date=today,
+        ),
+        User(
+            id="external_inactive",
+            email="external_inactive@test.com",
+            name="External Inactive",
+            user_name="external_inactive",
+            role="student",
+            billing_mode="external",
+            active=False,
+            join_date=today,
+        ),
+
+        # Internal users
+        User(
+            id="internal_trial_active",
+            email="internal_trial_active@test.com",
+            name="Internal Trial Active",
+            user_name="internal_trial_active",
+            role="student",
+            billing_mode="internal",
+            active=True,
+            join_date=today,
+        ),
+        User(
+            id="internal_trial_expired",
+            email="internal_trial_expired@test.com",
+            name="Internal Trial Expired",
+            user_name="internal_trial_expired",
+            role="student",
+            billing_mode="internal",
+            active=True,  # login logic should deactivate
+            join_date=today - timedelta(days=7),
+        ),
     ]
 
     # Teachers
     for i in range(5):
-        p = random.randint(50, 500)        # current points
-        s = random.randint(0, 30)          # current streak
+        p = random.randint(50, 500)
+        s = random.randint(0, 30)
         max_s = max(s, s + random.randint(0, 10))
         fc_studied = random.randint(150, 600) + p // 3 + s * 2
 
@@ -46,16 +91,16 @@ def main():
                 id=f"900{i}",
                 name=f"teacher{i}",
                 user_name=f"u_name_teacher{i}",
-                email="vitornorace@gmail.com", # email hardcoded to allow calendar sync for demo. 
+                email="vitornorace@gmail.com",  # for calendar demo
                 role="teacher",
                 join_date=today,
                 active=True,
                 points=p,
                 study_streak=s,
                 max_study_streak=max_s,
-                max_points=p * max_s,   # <-- formula
+                max_points=p * max_s,
                 flashcards_studied=fc_studied,
-                learning_language="en",  # default: learning English
+                learning_language="en",
             )
         )
 
@@ -75,7 +120,7 @@ def main():
         student = User(
             id=f"800{i}",
             name=name,
-            user_name=f"{name}",
+            user_name=name,
             email=f"{name.lower()}@example.com",
             role="student",
             join_date=today,
@@ -85,19 +130,20 @@ def main():
             max_study_streak=max_s,
             max_points=p * max_s,
             flashcards_studied=fc_studied,
-            learning_language="en",  # default: learning English
+            learning_language="en",
         )
+
         users.append(student)
         students.append(student)
 
-    # Commit users
+    # Save users
     for user in users:
         if not db_session.query(User).filter_by(id=user.id).first():
             db_session.add(user)
 
     db_session.commit()
 
-    # Fixed flashcards for students
+    # Flashcards
     dune_lore_map = {
         "Desert": "Deserto",
         "Sand": "Areia",
@@ -120,12 +166,11 @@ def main():
         "Destiny": "Destino",
     }
 
-    terms = list(dune_lore_map.items())  # [(eng, pt), ...]
+    terms = list(dune_lore_map.items())
 
     for student in students:
-        # choose which 5 will be unreviewed for THIS student
         random.shuffle(terms)
-        unreviewed_set = set(terms[:5])  # 5 pairs
+        unreviewed_set = set(terms[:5])
 
         for eng_term, pt_term in terms:
             flashcard = Flashcard(
@@ -134,13 +179,13 @@ def main():
                 answer=eng_term,
                 next_review=today,
                 created_at=today,
-                reviewed_by_tc=((eng_term, pt_term) not in unreviewed_set),  # only 5 False
+                reviewed_by_tc=((eng_term, pt_term) not in unreviewed_set),
             )
             db_session.add(flashcard)
 
     db_session.commit()
 
-    print("✅ Seeded admin, 5 teachers, 15 students, and 10 fixed flashcards each.")
+    print("✅ Seeded admin, users, teachers, students, and flashcards.")
 
 
 if __name__ == "__main__":

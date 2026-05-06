@@ -26,6 +26,24 @@
      <h4>Welcome, {{ current_user.user_name }}</h4> 
      <small><strong>({{ current_user.role }})</strong></small>
 
+     {% if subscription_days_remaining in [1, 2, 3] %}
+    <div class="alert alert-warning">
+        Sua assinatura expira em {{ subscription_days_remaining }} dia{{ "s" if subscription_days_remaining != 1 else "" }}.
+        Renove agora para continuar usando o app.
+    </div>
+    {% endif %}
+
+
+    {% if trial_days_remaining in [1, 2, 3] %}
+    <div class="alert alert-warning">
+        Seu teste gratuito termina em {{ trial_days_remaining }} dia{{ "s" if trial_days_remaining != 1 else "" }}.
+        <br>
+        <a href="{{ url_for('billing.student_subscription') }}" class="btn btn-primary mt-2">
+            Assinar agora
+        </a>
+    </div>
+    {% endif %}
+
         <div class="mt-1">
           <small class="text-muted">
             <button

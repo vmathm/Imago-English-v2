@@ -28,6 +28,7 @@ from app.models.user import User
 from app.services.asaas import SP_TZ, AsaasServiceError, ensure_customer_for_user, create_subscription as asaas_create_subscription, get_subscription_payments, get_pix_qr_code, get_subscription, normalize_asaas_status, parse_asaas_date, parse_asaas_due_date_as_sp_end_of_day
 from sqlalchemy import or_
 from app.extensions import csrf
+from app.services.access import trial_days_left, subscription_days_left
 
 
 def generate_slug(name: str) -> str:
@@ -423,6 +424,15 @@ def student_subscription():
     and latest_payment.pix_expires_at > datetime.now(timezone.utc)
 )
     sp_tz = ZoneInfo("America/Sao_Paulo")
+
+    trial_days_remaining = None
+    subscription_days_remaining = None
+
+    if current_user.billing_mode == "internal":
+        subscription_days_remaining = subscription_days_left(current_user)
+
+    if subscription_days_remaining is None:
+        trial_days_remaining = trial_days_left(current_user)
     
     return render_template(
         "billing/student_billing.html",
@@ -434,7 +444,9 @@ def student_subscription():
         expiring_date_sp=expiring_date_sp,
         days_left=days_left,
         is_pix_valid=is_pix_valid,
-        sp_tz=sp_tz
+        sp_tz=sp_tz,
+        trial_days_remaining=trial_days_remaining,
+        subscription_days_remaining=subscription_days_remaining
     )
 
 

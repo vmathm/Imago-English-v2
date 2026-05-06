@@ -4,7 +4,6 @@
 
 {% block main %}
 
-
 {% set interval_labels = {
     "monthly": "Mensal",
     "MONTHLY": "Mensal",
@@ -14,6 +13,7 @@
     "yearly": "Anual",
     "YEARLY": "Anual"
 } %}
+
 <div class="container mt-4">
     <h1>Minha Assinatura</h1>
 
@@ -25,30 +25,51 @@
     {% set has_paid_access = latest_payment and latest_payment.status in paid_statuses %}
     {% set has_open_payment = latest_payment and latest_payment.status in pending_statuses %}
 
+    {% set is_internal = current_user.billing_mode == 'internal' %}
+    {% set trial_active = trial_days_remaining is not none and trial_days_remaining > 0 %}
+    {% set trial_expired = trial_days_remaining == 0 %}
+    {% set subscription_active = subscription_days_remaining is not none and subscription_days_remaining > 0 %}
+    {% set subscription_expired = subscription_days_remaining == 0 %}
+
     <div class="accordion mt-3" id="studentBillingAccordion">
 
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingCurrentSubscription">
-                <button
-                    class="accordion-button"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#collapseCurrentSubscription"
-                    aria-expanded="true"
-                    aria-controls="collapseCurrentSubscription"
-                >
+                <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapseCurrentSubscription">
                     Assinatura Atual
                 </button>
             </h2>
 
-            <div
-                id="collapseCurrentSubscription"
-                class="accordion-collapse collapse show"
-                aria-labelledby="headingCurrentSubscription"
-                data-bs-parent="#studentBillingAccordion"
-            >
+            <div id="collapseCurrentSubscription" class="accordion-collapse collapse show">
                 <div class="accordion-body">
+
+                    {% if is_internal %}
+
+                        {% if trial_active %}
+                            <div class="alert alert-info">
+                                Você está no período de teste gratuito.<br>
+                                Restam <strong>{{ trial_days_remaining }}</strong> dia{{ "s" if trial_days_remaining != 1 else "" }}.
+                            </div>
+
+                        {% elif trial_expired and not subscription_active %}
+                            <div class="alert alert-danger">
+                                Seu período de teste gratuito expirou.<br>
+                                Escolha um plano abaixo para continuar usando o app.
+                            </div>
+
+                        {% elif subscription_expired %}
+                            <div class="alert alert-danger">
+                                Sua assinatura expirou.<br>
+                                Gere uma nova cobrança para continuar.
+                            </div>
+
+                        {% endif %}
+
+                    {% endif %}
+
                     {% if subscription %}
+
                         <p class="mb-2">
                             <strong>Status:</strong>
 
@@ -64,230 +85,113 @@
                                 {% else %}
                                     <span class="badge bg-light text-dark">{{ latest_payment.status }}</span>
                                 {% endif %}
-                            {% elif subscription %}
-                                <span class="badge bg-info text-dark">Assinatura criada</span>
                             {% else %}
-                                <span class="badge bg-light text-dark">Sem assinatura</span>
+                                <span class="badge bg-info text-dark">Assinatura criada</span>
                             {% endif %}
                         </p>
 
                         {% if subscription.plan %}
-                            <p class="mb-2">
-                                <strong>Plano:</strong> {{ subscription.plan.name }}
-                            </p>
+                            <p class="mb-2"><strong>Plano:</strong> {{ subscription.plan.name }}</p>
                             <p class="mb-2">
                                 <strong>Valor:</strong>
                                 R$ {{ "%.2f"|format(subscription.plan.amount_cents / 100) }}
                             </p>
                             <p class="mb-2">
                                 <strong>Intervalo:</strong>
-                                {% if subscription and subscription.plan %}
                                 {{ interval_labels.get(subscription.plan.interval, subscription.plan.interval) }}
-                                {% else %}
-                                —
-                                {% endif %} 
                             </p>
                         {% endif %}
 
-                 {% if payment_date_sp %}
-                    <p class="mb-2">
-                        <strong>Pagamento confirmado em:</strong>
-                        {{ payment_date_sp.strftime("%d/%m/%Y %H:%M") }}
-                    </p>
-                {% endif %}
+                        {% if payment_date_sp %}
+                            <p class="mb-2">
+                                <strong>Pagamento confirmado em:</strong>
+                                {{ payment_date_sp.strftime("%d/%m/%Y %H:%M") }}
+                            </p>
+                        {% endif %}
 
-                {% if expiring_date_sp %}
-                    <p class="mb-2">
-                        <strong>Válida até:</strong>
-                        {{ expiring_date_sp.strftime("%d/%m/%Y") }}
-                    </p>
-                    <div class="form-text mb-2">
-                        Acesso válido até 23:59 desse dia no horário de São Paulo.
-                    </div>
-                {% endif %}
+                        {% if expiring_date_sp %}
+                            <p class="mb-2">
+                                <strong>Válida até:</strong>
+                                {{ expiring_date_sp.strftime("%d/%m/%Y") }}
+                            </p>
+                            <div class="form-text mb-2">
+                                Acesso válido até 23:59 desse dia no horário de São Paulo.
+                            </div>
+                        {% endif %}
 
-                {% if days_left is not none %}
-                    <p class="mb-0">
-                        <strong>Dias restantes:</strong>
-                        {{ days_left }}
-                    </p>
-                {% endif %}
-                {% else %}
-                    <p class="mb-0">Você ainda não possui uma assinatura.</p>
-                {% endif %}
+                        {% if days_left is not none %}
+                            <p class="mb-0">
+                                <strong>Dias restantes:</strong>
+                                {{ days_left }}
+                            </p>
+                        {% endif %}
+
+                    {% endif %}        
+
                 </div>
             </div>
         </div>
 
         <div class="accordion-item mt-3">
-            <h2 class="accordion-header" id="headingAvailablePlans">
-                <button
-                    class="accordion-button collapsed"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#collapseAvailablePlans"
-                    aria-expanded="false"
-                    aria-controls="collapseAvailablePlans"
-                >
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapseAvailablePlans">
                     Planos Disponíveis
                 </button>
             </h2>
 
-            <div
-                id="collapseAvailablePlans"
-                class="accordion-collapse collapse"
-                aria-labelledby="headingAvailablePlans"
-                data-bs-parent="#studentBillingAccordion"
-            >
+            <div id="collapseAvailablePlans" class="accordion-collapse collapse">
                 <div class="accordion-body">
+
                     {% if has_paid_access %}
                         <div class="alert alert-warning">
                             Você já possui uma assinatura com pagamento confirmado.
                         </div>
                     {% elif has_open_payment %}
                         <div class="alert alert-warning">
-                            Você já possui uma cobrança pendente. Use o PIX atual ou aguarde a atualização do pagamento.
+                            Você já possui uma cobrança pendente.
                         </div>
                     {% endif %}
 
-            {% if available_plans %}
-                <div class="accordion" id="plansAccordion">
-                    {% for plan in available_plans %}
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="headingPlan{{ plan.id }}">
-                                <button
-                                    class="accordion-button {% if not loop.first %}collapsed{% endif %}"
-                                    type="button"
-                                    data-bs-toggle="collapse"
-                                    data-bs-target="#collapsePlan{{ plan.id }}"
-                                    aria-expanded="{% if loop.first %}true{% else %}false{% endif %}"
-                                    aria-controls="collapsePlan{{ plan.id }}"
-                                >
-                                    {{ plan.name }}
-                                </button>
-                            </h2>
+                    {% if available_plans %}
+                        {% for plan in available_plans %}
+                            <div class="mb-3">
+                                <h5>{{ plan.name }}</h5>
+                                <p>R$ {{ "%.2f"|format(plan.amount_cents / 100) }}</p>
 
-                            <div
-                                id="collapsePlan{{ plan.id }}"
-                                class="accordion-collapse collapse {% if loop.first %}show{% endif %}"
-                                aria-labelledby="headingPlan{{ plan.id }}"
-                                data-bs-parent="#plansAccordion"
-                            >
-                                <div class="accordion-body">
-                                    <p class="mb-2">
-                                        <strong>Valor:</strong>
-                                        R$ {{ "%.2f"|format(plan.amount_cents / 100) }}
-                                    </p>
+                                <form method="post" action="{{ url_for('billing.create_student_subscription') }}">
+                                    <input type="hidden" name="csrf_token" value="{{ billing_form.csrf_token._value() }}">
+                                    <input type="hidden" name="plan_id" value="{{ plan.id }}">
 
-                                    <p class="mb-3">
-                                        <strong>Intervalo:</strong>
-                                        {{ interval_labels.get(plan.interval, plan.interval) }}
-                                    </p>
+                                    {{ billing_form.cpf_cnpj(class="form-control mb-2") }}
 
-                                    <form method="post" action="{{ url_for('billing.create_student_subscription') }}">
-                                        <input type="hidden" name="csrf_token" value="{{ billing_form.csrf_token._value() }}">
-                                        <input type="hidden" name="plan_id" value="{{ plan.id }}">
-
-                                        <div class="mb-3">
-                                            {{ billing_form.cpf_cnpj.label(class="form-label") }}
-                                            {{ billing_form.cpf_cnpj(
-                                                class="form-control",
-                                                placeholder="Digite seu CPF ou CNPJ"
-                                            ) }}
-
-                                            <div class="form-text">
-                                                Esse dado será usado apenas para criar sua cobrança no Asaas.
-                                            </div>
-
-                                            {% if billing_form.cpf_cnpj.errors %}
-                                                {% for error in billing_form.cpf_cnpj.errors %}
-                                                    <div class="text-danger small">{{ error }}</div>
-                                                {% endfor %}
-                                            {% endif %}
-                                        </div>
-
-                                        <button
-                                            type="submit"
-                                            class="btn btn-primary"
-                                            {% if has_paid_access or has_open_payment %}disabled{% endif %}
-                                        >
-                                            {% if has_paid_access %}
-                                                Assinatura já ativa
-                                            {% elif has_open_payment %}
-                                                Cobrança pendente
-                                            {% else %}
-                                                Assinar plano
-                                            {% endif %}
-                                        </button>
-                                    </form>
-                                </div>
+                                    <button class="btn btn-primary"
+                                            {% if has_paid_access or has_open_payment %}disabled{% endif %}>
+                                        Assinar plano
+                                    </button>
+                                </form>
                             </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p class="mb-0">Nenhum plano disponível no momento.</p>
-            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+
                 </div>
             </div>
         </div>
 
     </div>
 
-{% set pending_statuses = ["pending", "awaiting_payment"] %}
-
-    {% if latest_payment %}
-
-       {% if is_pix_valid %}
-
-        <!-- ✅ PIX BLOCK -->
+    {% if latest_payment and is_pix_valid %}
         <div class="mt-3">
-
-            <h5 class="mb-2">Pagamento via PIX</h5>
-
-            <div class="alert alert-info">
-                Faça o pagamento abaixo para ativar sua assinatura.
-            </div>
+            <h5>Pagamento via PIX</h5>
 
             {% if latest_payment.pix_qr_code %}
-                <div class="text-center mb-3">
-                    <img 
-                        src="data:image/png;base64,{{ latest_payment.pix_qr_code }}" 
-                        alt="QR Code PIX"
-                        class="img-fluid"
-                        style="max-width: 220px;"
-                    >
-                </div>
+                <img src="data:image/png;base64,{{ latest_payment.pix_qr_code }}" style="max-width:200px;">
             {% endif %}
 
-            {% if latest_payment.pix_copy_paste %}
-                <p class="mb-1"><strong>Código PIX (copia e cola):</strong></p>
-                <textarea class="form-control mb-2" rows="3" readonly>{{ latest_payment.pix_copy_paste }}</textarea>
-            {% endif %}
-
-            {% if latest_payment.pix_expires_at %}
-                <div class="form-text">
-                    Expira em {{ latest_payment.pix_expires_at.astimezone(sp_tz).strftime("%d/%m/%Y %H:%M") }}
-                </div>
-            {% endif %}
-
+            <textarea class="form-control">{{ latest_payment.pix_copy_paste }}</textarea>
         </div>
-
-    {% elif latest_payment.status in ["received", "confirmed", "paid"] %}
-
-        <div class="alert alert-success mt-3">
-            Pagamento confirmado. Sua assinatura já está ativa.
-        </div>
-
-    {% elif latest_payment.status in ["overdue"] %}
-
-        <div class="alert alert-danger mt-3">
-            Esta cobrança expirou. Gere uma nova para continuar.
-        </div>
-
     {% endif %}
-    
-    </div>
-{% endif %}
+
 </div>
+
 {% endblock %}

@@ -74,7 +74,7 @@ def demo_login(user_id):
     sync_internal_access(user)
     db_session.commit()
 
-    success = login_user(user)
+    success = login_user(user, force=True)
     print(f"Demo login {'successful' if success else 'failed'} for user: {user_id}")
 
     return redirect(url_for("dashboard.index"))
@@ -154,8 +154,8 @@ def google_complete():
         if teacher and not user.assigned_teacher_id:
             user.assigned_teacher_id = teacher.id
 
-        if pending_activation and is_new_user:
-            user.active = True
+    if pending_activation and is_new_user:
+        user.active = True
 
 
     sync_internal_access(user)
@@ -195,18 +195,9 @@ def join_teacher(user_name):
     return redirect(url_for("auth.login"))
 
 
-@bp.route("/join_ext/<user_name>")
-def join_teacher_ext(user_name):
-    teacher = (
-        db_session.query(User)
-        .filter_by(user_name=user_name, role="teacher")
-        .first()
-    )
-
-    if not teacher:
-        abort(404)
-
-    session["pending_teacher_id"] = teacher.id
+@bp.route("/join_trial")
+def join_trial():
+    session.pop("pending_teacher_id", None)
     session["pending_activation"] = True
     session["billing_mode"] = "internal"
 

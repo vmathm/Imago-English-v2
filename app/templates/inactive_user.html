@@ -1,26 +1,40 @@
 {% extends "layout.html" %}
 
-{% block title %}Inactive User – Imago English{% endblock %}
+{% block title %}Usuário Inativo – Imago English{% endblock %}
 
 {% block main %}
 <div class="container py-4">
 
+  {% if current_user.billing_mode == 'external' %}
+
   <h4 class="mb-3">
-    Your account is not active yet <br> 
-    <small>(Sua conta ainda não está ativa)</small>
+    Sua conta ainda não está ativa
   </h4>
 
   <p class="mb-4">
-    To access the study tools,
-    please book a free trial lesson using the button below. <br>
-    <small>(Para ter acesso às ferramentas de estudo,
-    agende uma aula teste gratuita clicando no botão abaixo.)</small>
+    Para acessar as ferramentas de estudo, agende uma aula teste gratuita clicando no botão abaixo.
   </p>
 
   <a href="/calendar/admin" class="btn btn-primary">
-    Book a free trial lesson
-    <small>(Agendar aula teste gratuita)</small>
+    Agendar aula teste gratuita
   </a>
 
 </div>
+
+{% elif current_user.billing_mode == 'internal' %}
+
+  <h4 class="mb-3">
+    Seu acesso expirou
+  </h4>
+
+  <p class="mb-4">
+    Para continuar usando as ferramentas de estudo, escolha um plano de assinatura.
+  </p>
+
+  <a href="{{ url_for('billing.student_subscription') }}" class="btn btn-primary">
+    Ir para assinatura
+  </a>
+
+{% endif %}
+
 {% endblock %}
