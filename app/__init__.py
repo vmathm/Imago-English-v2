@@ -55,12 +55,13 @@ def create_app():
 
 
 
-
+    
     from .auth.routes import bp as auth_bp, google_bp
     from .dashboard.routes import bp as dashboard_bp
     from .flashcard.routes import bp as flashcard_bp
     from .home.routes import bp as home_bp
     from .admin.routes import bp as admin_bp
+    from .billing import bp as billing_bp
     from .audiobook.routes import bp as audiobook_bp
     from .progress.routes import bp as progress_bp
     from .calendar.routes import bp as calendar_bp
@@ -78,5 +79,6 @@ def create_app():
     app.register_blueprint(calendar_bp)
     app.register_blueprint(google_bp, url_prefix="/auth")
     app.register_blueprint(staticpages_bp)
+    app.register_blueprint(billing_bp)
    
     return app  

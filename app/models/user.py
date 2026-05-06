@@ -26,6 +26,7 @@ class User(UserMixin, Base):
     user_stripe_id = Column(String(50), nullable=True)
     join_date = Column(Date, nullable=True)
     last_payment_date = Column(Date, nullable=True)
+    billing_mode = Column(String(20), nullable=False, default="external")
 
     active = Column(Boolean, nullable=False, default=False)  # replaces is_active
     study_streak = Column(Integer, nullable=True, default=0)
@@ -56,7 +57,35 @@ class User(UserMixin, Base):
     uselist=False,
     passive_deletes=True,
     )
-    
+
+    tenant = relationship(
+        "Tenant",
+        back_populates="owner",
+        uselist=False,
+        foreign_keys="Tenant.owner_user_id",
+    )
+
+    eligible_plans = relationship(
+        "Plan",
+        secondary="plan_students",
+        back_populates="eligible_students",
+    )
+
+    subscriptions = relationship(
+        "Subscription",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+    payments = relationship(
+        "Payment",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+    asaas_customer_id = Column(String(80), nullable=True, unique=True, index=True)
 
 
 

@@ -8,6 +8,7 @@
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.leaderboard') }}">Leaderboard</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('calendar.calendar_settings') }}">Calendar</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('billing.index') }}">Billing</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Sign out</a></li>
         </ul>
 
@@ -19,12 +20,24 @@
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.leaderboard') }}">Leaderboard</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('calendar.calendar_settings') }}">Calendar</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('billing.index') }}">Billing</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Sign out</a></li>
         </ul>
 
 
-    {% elif current_user.teacher %}
-        {# Student assigned to a teacher #}
+    {% elif current_user.billing_mode == 'internal' %}
+        {# student pays through Asaas #}
+        <ul class="navbar-nav ms-auto mt-2">
+            <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.audiobooks') }}">Audiobooks</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.leaderboard') }}">Leaderboard</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('billing.student_subscription') }}">Subscription</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Sign out</a></li>
+        </ul>
+
+    {% elif current_user.billing_mode == 'external' %}
+        {# student pays to teacher #}
         <ul class="navbar-nav ms-auto mt-2">
             <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.audiobooks') }}">Audiobooks</a></li>
@@ -32,6 +45,8 @@
             <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.leaderboard') }}">Leaderboard</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Sign out</a></li>
         </ul>
+
+
 
     {% else %}
         {# Unassigned student or fallback case #}
@@ -40,6 +55,7 @@
             <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.audiobooks') }}">Audiobooks</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.leaderboard') }}">Leaderboard</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('billing.student_subscription') }}">Subscription</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Sign Out</a></li>
         </ul>
     {% endif %}

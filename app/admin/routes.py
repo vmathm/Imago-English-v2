@@ -72,24 +72,46 @@ def unassign_student():
     return redirect(url_for('dashboard.index'))
 
 
+
+
 @bp.route('/change_role', methods=['POST'])
 @admin_required
 def change_role():
+    from app.models.billing import Tenant  # 👈 import here to avoid circular issues
+
     form = ChangeRoleForm()
     form.user_id.choices = [(u.id, u.name) for u in db_session.query(User).all()]
     form.role.choices = [('student', 'Student'), ('teacher', 'Teacher'), ('@dmin!', 'Admin')]
 
     if form.validate_on_submit():
         user = db_session.query(User).filter_by(id=form.user_id.data).first()
+
         if not user or user.id == current_user.id:
-            flash('User not found / demote user status before deleting.', 'danger')
+            flash('User not found / cannot change your own role.', 'danger')
             return redirect(url_for('dashboard.index'))
 
-        user.role = form.role.data
-        if user.role == 'student':  
+        new_role = form.role.data
+
+        # 🔥 CRITICAL FIX: block teacher → student if tenant exists
+        if user.role == 'teacher' and new_role == 'student':
+            tenant = db_session.query(Tenant).filter_by(owner_user_id=user.id).first()
+            if tenant:
+                flash(
+                    "This user owns a billing tenant. Delete or transfer the tenant before changing role.",
+                    'danger'
+                )
+                return redirect(url_for('dashboard.index'))
+
+        # ✅ apply role change
+        user.role = new_role
+
+        # Optional: your existing logic
+        if user.role == 'student':
             user.active = False
+
         db_session.commit()
-        flash(f"{user.name}'s role updated to {form.role.data}", 'success')
+        flash(f"{user.name}'s role updated to {new_role}", 'success')
+
     else:
         flash('Invalid form submission', 'danger')
 

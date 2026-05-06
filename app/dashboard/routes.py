@@ -9,6 +9,7 @@ from app.models.flashcard import Flashcard
 from sqlalchemy import func, or_
 from app.audiobook.forms import UserAudiobookForm, UsernameForm
 from app.utils.time import utcnow
+from app.services.access import subscription_days_left, trial_days_left
 
 
 
@@ -132,8 +133,20 @@ def index():
         "total_flashcards": total_flashcards,
         "due_flashcards": due_flashcards,
         "user_name_form": user_name_form,
-        "suggested_username": suggested_username
+        "suggested_username": suggested_username,
     }
+    trial_days_remaining = None
+    subscription_days_remaining = None
+
+    if current_user.is_authenticated and current_user.billing_mode == "internal":
+        subscription_days_remaining = subscription_days_left(current_user)
+
+    if subscription_days_remaining is None:
+        trial_days_remaining = trial_days_left(current_user)
+
+    context["trial_days_remaining"] = trial_days_remaining
+    context["subscription_days_remaining"] = subscription_days_remaining
+
 
     if current_user.is_teacher():
         context.update(get_teacher_data())

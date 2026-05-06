@@ -214,3 +214,5 @@ backup*.db
 
 docker-compose.prod-local.override.yml
 Makefile
+cloudflared-linux-amd64.deb
+localdocs.md
