@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Blueprint, redirect, abort, current_app, request, url_for, session, render_template
 from flask_login import login_user, logout_user
 from app.utils.time import SP_TZ
@@ -200,5 +200,26 @@ def join_trial():
     session.pop("pending_teacher_id", None)
     session["pending_activation"] = True
     session["billing_mode"] = "internal"
+
+    return redirect(url_for("auth.login"))
+
+
+@bp.route("/join_trial_expired")
+def join_trial_expired():
+
+    vitor = db_session.query(User).filter_by(user_name="Vitor").first()
+
+    if vitor:
+        session["pending_teacher_id"] = vitor.id
+
+    session["pending_activation"] = True
+    session["billing_mode"] = "internal"
+
+    # Expired 7-day trial using São Paulo date
+    expired_date = (
+        datetime.now(SP_TZ).date() - timedelta(days=8)
+    )
+
+    session["forced_join_date"] = expired_date.isoformat()
 
     return redirect(url_for("auth.login"))
