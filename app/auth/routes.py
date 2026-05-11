@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from flask import Blueprint, redirect, abort, current_app, request, url_for, session, render_template
 from flask_login import login_user, logout_user
 from app.utils.time import SP_TZ
@@ -113,6 +113,14 @@ def google_complete():
     user = db_session.query(User).filter_by(email=email).first()
     is_new_user = False
 
+    forced_join_date = session.pop("forced_join_date", None)
+
+    join_date = (
+        date.fromisoformat(forced_join_date)
+        if forced_join_date
+        else datetime.now(SP_TZ).date()
+    )
+
     if not user:
         user = User(
             id=google_id,
@@ -122,7 +130,7 @@ def google_complete():
             role="student",
             profilepic=info.get("picture", "none"),
             learning_language="en",
-            join_date=datetime.now(SP_TZ).date(),
+            join_date=join_date,
         )
         db_session.add(user)
         is_new_user = True
