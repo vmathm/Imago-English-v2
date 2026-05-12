@@ -143,7 +143,7 @@ def index():
 
     plan_form.eligible_student_ids.choices = [
     (
-        student.id,
+        student.id, 
         f"{student.name} ({student.email})" if student.email else student.name
     )
     for student in assigned_students
@@ -514,6 +514,9 @@ def create_student_subscription():
         .first()
     )
 
+    
+    latest_existing_payment = None
+
     if existing_subscription:
         latest_existing_payment = (
             db_session.query(Payment)
@@ -522,12 +525,20 @@ def create_student_subscription():
             .first()
         )
 
-        if latest_existing_payment and latest_existing_payment.status in [
-            "pending",
-            "awaiting_payment",
-            "received",
-            "confirmed",
-        ]:
+
+    now = datetime.now(timezone.utc)
+    if latest_existing_payment:
+        status = latest_existing_payment.status
+
+        payment_is_paid = status in ["received", "confirmed"]
+
+        payment_is_pending_and_valid = (
+            status in ["pending", "awaiting_payment"]
+            and latest_existing_payment.pix_expires_at
+            and latest_existing_payment.pix_expires_at > now
+        )
+
+        if payment_is_paid or payment_is_pending_and_valid:
             flash(
                 "Você já possui uma cobrança/assinatura em andamento. "
                 "Use o pagamento atual ou aguarde a atualização.",

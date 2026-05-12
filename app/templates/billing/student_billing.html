@@ -23,7 +23,7 @@
     {% set canceled_statuses = ["canceled", "cancelled", "failed"] %}
 
     {% set has_paid_access = latest_payment and latest_payment.status in paid_statuses %}
-    {% set has_open_payment = latest_payment and latest_payment.status in pending_statuses %}
+    {% set has_open_payment = latest_payment and latest_payment.status in pending_statuses and is_pix_valid %}
 
     {% set is_internal = current_user.billing_mode == 'internal' %}
     {% set trial_active = trial_days_remaining is not none and trial_days_remaining > 0 %}
@@ -76,8 +76,10 @@
                             {% if latest_payment %}
                                 {% if latest_payment.status in paid_statuses %}
                                     <span class="badge bg-success">Pagamento confirmado</span>
-                                {% elif latest_payment.status in pending_statuses %}
+                                {% elif latest_payment.status in pending_statuses and is_pix_valid %}
                                     <span class="badge bg-warning text-dark">Aguardando pagamento</span>
+                                {% elif latest_payment.status in pending_statuses and not is_pix_valid %}
+                                    <span class="badge bg-danger">PIX expirado</span>
                                 {% elif latest_payment.status in problem_statuses %}
                                     <span class="badge bg-danger">Pagamento em atraso</span>
                                 {% elif latest_payment.status in canceled_statuses %}
@@ -126,7 +128,7 @@
                             </p>
                         {% endif %}
 
-                    {% endif %}        
+                    {% endif %}
 
                 </div>
             </div>
@@ -151,25 +153,51 @@
                         <div class="alert alert-warning">
                             Você já possui uma cobrança pendente.
                         </div>
+                    {% elif latest_payment and latest_payment.status in pending_statuses and not is_pix_valid %}
+                        <div class="alert alert-danger">
+                            A cobrança PIX expirou. Gere uma nova cobrança para continuar.
+                        </div>
                     {% endif %}
 
                     {% if available_plans %}
                         {% for plan in available_plans %}
-                            <div class="mb-3">
-                                <h5>{{ plan.name }}</h5>
-                                <p>R$ {{ "%.2f"|format(plan.amount_cents / 100) }}</p>
+                            <div class="card mb-3 shadow-sm">
+                                <div class="card-body">
 
-                                <form method="post" action="{{ url_for('billing.create_student_subscription') }}">
-                                    <input type="hidden" name="csrf_token" value="{{ billing_form.csrf_token._value() }}">
-                                    <input type="hidden" name="plan_id" value="{{ plan.id }}">
+                                    <h5 class="card-title mb-2">{{ plan.name }}</h5>
 
-                                    {{ billing_form.cpf_cnpj(class="form-control mb-2") }}
+                                    <p class="card-text mb-3">
+                                        <strong>R$ {{ "%.2f"|format(plan.amount_cents / 100) }}</strong>
+                                        <span class="text-muted">
+                                            / {{ interval_labels.get(plan.interval, plan.interval)|lower }}
+                                        </span>
+                                    </p>
 
-                                    <button class="btn btn-primary"
-                                            {% if has_paid_access or has_open_payment %}disabled{% endif %}>
-                                        Assinar plano
-                                    </button>
-                                </form>
+                                    <form method="post" action="{{ url_for('billing.create_student_subscription') }}">
+                                        <input type="hidden" name="csrf_token" value="{{ billing_form.csrf_token._value() }}">
+                                        <input type="hidden" name="plan_id" value="{{ plan.id }}">
+
+                                        <label for="{{ billing_form.cpf_cnpj.id }}_{{ plan.id }}" class="form-label">
+                                            CPF ou CNPJ
+                                        </label>
+
+                                        {{ billing_form.cpf_cnpj(
+                                            id="cpf_cnpj_" ~ plan.id,
+                                            class="form-control mb-1",
+                                            placeholder="Digite seu CPF ou CNPJ, somente números"
+                                        ) }}
+
+                                        <div class="form-text mb-3">
+                                            Precisamos do CPF ou CNPJ para gerar a cobrança PIX.
+                                        </div>
+
+                                        <button class="btn btn-primary w-100"
+                                                {% if has_paid_access or has_open_payment %}disabled{% endif %}>
+                                            Assinar este plano
+                                        </button>
+                                    </form>
+
+                                </div>
                             </div>
                         {% endfor %}
                     {% endif %}
@@ -188,7 +216,7 @@
                 <img src="data:image/png;base64,{{ latest_payment.pix_qr_code }}" style="max-width:200px;">
             {% endif %}
 
-            <textarea class="form-control">{{ latest_payment.pix_copy_paste }}</textarea>
+            <textarea class="form-control" readonly>{{ latest_payment.pix_copy_paste }}</textarea>
         </div>
     {% endif %}
 

@@ -2,6 +2,7 @@ from datetime import timedelta
 from app.utils.time import now_sp, utcnow
 from app.database import db_session
 from app.models import Subscription
+from app.utils.time import SP_TZ
 
 
 TRIAL_DAYS = 7
