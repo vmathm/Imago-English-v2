@@ -205,7 +205,10 @@ def join_teacher(user_name):
 
 @bp.route("/join_trial")
 def join_trial():
-    session.pop("pending_teacher_id", None)
+
+    vitor = db_session.query(User).filter_by(user_name="Vitor").first()
+    if vitor:
+        session["pending_teacher_id"] = vitor.id
     session["pending_activation"] = True
     session["billing_mode"] = "internal"
 
@@ -219,7 +222,6 @@ def join_trial_expired():
 
     if vitor:
         session["pending_teacher_id"] = vitor.id
-
     session["pending_activation"] = True
     session["billing_mode"] = "internal"
 
