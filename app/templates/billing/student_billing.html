@@ -30,6 +30,8 @@
     {% set trial_expired = trial_days_remaining == 0 %}
     {% set subscription_active = subscription_days_remaining is not none and subscription_days_remaining > 0 %}
     {% set subscription_expired = subscription_days_remaining == 0 %}
+    {% set block_payment_during_trial = is_internal and trial_active %}
+
 
     <div class="accordion mt-3" id="studentBillingAccordion">
 
@@ -192,7 +194,7 @@
                                         </div>
 
                                         <button class="btn btn-primary w-100"
-                                                {% if has_paid_access or has_open_payment %}disabled{% endif %}>
+                                                {% if has_paid_access or has_open_payment or block_payment_during_trial %}disabled{% endif %}>
                                             Assinar este plano
                                         </button>
                                     </form>
