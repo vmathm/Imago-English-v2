@@ -1,6 +1,8 @@
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, SelectField, SubmitField, HiddenField, StringField
-from wtforms.validators import DataRequired, Optional, Regexp
+from flask_wtf.file import FileAllowed, FileField, FileRequired
+from wtforms import BooleanField, SelectField, SubmitField, HiddenField, StringField, TextAreaField, IntegerField
+from wtforms.validators import DataRequired, Length, Optional, Regexp, NumberRange
+
 
 class AssignStudentForm(FlaskForm):
     student_id = SelectField("Student", validators=[DataRequired()], coerce=str, choices=[])
@@ -52,3 +54,125 @@ class UpdateLearningLanguageForm(FlaskForm):
         validators=[DataRequired()],
     )
     submit = SubmitField("Update Language")
+
+
+
+
+class BookForm(FlaskForm):
+    title = StringField(
+        "Title",
+        validators=[
+            DataRequired(),
+            Length(max=255),
+        ],
+    )
+
+    slug = StringField(
+        "Slug",
+        validators=[
+            DataRequired(),
+            Length(max=255),
+        ],
+    )
+
+    author = StringField(
+        "Author",
+        validators=[
+            Optional(),
+            Length(max=255),
+        ],
+    )
+
+    description = TextAreaField(
+        "Description",
+        validators=[Optional()],
+    )
+
+    level = SelectField(
+        "Level",
+        choices=[
+            ("A1", "A1"),
+            ("A2", "A2"),
+            ("B1", "B1"),
+            ("B2", "B2"),
+            ("C1", "C1"),
+            ("C2", "C2"),
+        ],
+        validators=[DataRequired()],
+    )
+
+    cover_object_name = StringField(
+        "Cover object name",
+        validators=[
+            Optional(),
+            Length(max=500),
+        ],
+    )
+
+    submit = SubmitField("Create book")
+
+
+
+    
+
+
+class ChapterForm(FlaskForm):
+    book_id = SelectField(
+        "Book",
+        coerce=int,
+        choices=[],
+        validators=[DataRequired()],
+    )
+
+    title = StringField(
+        "Chapter title",
+        validators=[
+            DataRequired(),
+            Length(max=255),
+        ],
+    )
+
+    slug = StringField(
+        "Chapter slug",
+        validators=[
+            DataRequired(),
+            Length(max=255),
+        ],
+    )
+
+    position = IntegerField(
+        "Position",
+        validators=[
+            DataRequired(),
+            NumberRange(min=1),
+        ],
+    )
+
+    text_file = FileField(
+        "Text file",
+        validators=[
+            FileRequired(),
+            FileAllowed(
+                ["txt"],
+                "Only .txt files are accepted.",
+            ),
+        ],
+    )
+
+    audio_file = FileField(
+        "Audio file",
+        validators=[
+            FileRequired(),
+            FileAllowed(
+                ["mp3", "m4a", "wav", "ogg"],
+                "Unsupported audio format.",
+            ),
+        ],
+    )
+
+    is_free = BooleanField(
+        "Free chapter",
+        default=False,
+    )
+
+    submit = SubmitField("Upload chapter")

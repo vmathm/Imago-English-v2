@@ -1,17 +1,23 @@
 from functools import wraps
-from flask import render_template, request
-from flask_login import current_user, login_required
-from app.services.access import sync_internal_access
-from app.database import db_session
 
+from flask import render_template
+from flask_login import current_user
+
+from app.database import db_session
+from app.services.access import sync_internal_access
 
 
 def active_required(view_func=None, *, template_name="inactive_user.html"):
 
     def decorator(fn):
         @wraps(fn)
-        @login_required
         def wrapped(*args, **kwargs):
+            # Anonymous visitors are allowed through.
+            # The route itself decides whether to create/use guest data.
+            if not current_user.is_authenticated:
+                return fn(*args, **kwargs)
+
+            # From here onward, current_user is a real User.
             if current_user.billing_mode == "internal":
                 sync_internal_access(current_user)
                 db_session.commit()

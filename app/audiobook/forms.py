@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
-from wtforms.validators import DataRequired, Length, Regexp
-from flask_wtf.file import FileField, FileAllowed
+from wtforms import SelectField, StringField, SubmitField, IntegerField, BooleanField
+from wtforms.validators import DataRequired, Length, NumberRange, Regexp
+from flask_wtf.file import FileField, FileAllowed, FileRequired
 
 class UsernameForm(FlaskForm):
     user_name = StringField(
@@ -33,3 +33,4 @@ class UserAudiobookForm(FlaskForm):
         ]
     )
     submit = SubmitField("Upload audiobook")
+

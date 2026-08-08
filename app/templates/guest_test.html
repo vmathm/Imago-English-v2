@@ -1,0 +1,95 @@
+{% extends "layout.html" %}
+
+{% block title %}Guest test{% endblock %}
+
+{% block main %}
+<div class="container py-4">
+    <h1>Guest mode test</h1>
+
+    <p>
+        Authenticated:
+        <strong>{{ authenticated }}</strong>
+    </p>
+
+    <p>
+        Guest ID:
+        <strong>{{ guest_user.id if guest_user else "None" }}</strong>
+    </p>
+
+    <div id="flash-message-container"></div>
+
+    <form
+        id="guest-flashcard-form"
+        action="{{ url_for('flashcard.addcards') }}"
+        method="POST"
+    >
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+            {{ form.question.label(class="form-label") }}
+            {{ form.question(class="form-control") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.answer.label(class="form-label") }}
+            {{ form.answer(class="form-control") }}
+        </div>
+
+        {{ form.student_id() }}
+
+        <button type="submit" class="btn btn-primary">
+            Add guest flashcard
+        </button>
+    </form>
+</div>
+
+<script>
+document
+    .getElementById("guest-flashcard-form")
+    .addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const form = event.currentTarget;
+        const messageContainer = document.getElementById(
+            "flash-message-container"
+        );
+
+        try {
+            const response = await fetch(form.action, {
+                method: "POST",
+                body: new FormData(form),
+            });
+
+            const data = await response.json();
+
+            messageContainer.innerHTML = `
+                <div class="alert ${
+                    data.status === "success"
+                        ? "alert-success"
+                        : "alert-danger"
+                }">
+                    ${data.message}
+                </div>
+            `;
+
+            if (data.status === "success") {
+                console.log("Created card:", {
+                    cardId: data.card_id,
+                    guest: data.guest,
+                });
+
+                form.question.value = "";
+                form.answer.value = "";
+            }
+        } catch (error) {
+            console.error(error);
+
+            messageContainer.innerHTML = `
+                <div class="alert alert-danger">
+                    Could not add the flashcard.
+                </div>
+            `;
+        }
+    });
+</script>
+{% endblock %}  

@@ -1,6 +1,9 @@
-from flask import Blueprint, abort, redirect, url_for, current_app
+from flask import Blueprint, abort, redirect, url_for, current_app, jsonify, render_template
 from flask_login import current_user, logout_user
 from app.models import User
+from app.services.guest_session import ensure_guest_id
+from app.services.guest_session import get_or_create_guest_user
+from app.flashcard.form import FlashcardForm
 
 bp = Blueprint("home", __name__)
 
@@ -23,4 +26,14 @@ def index(user_id):
             abort(403)
         return redirect(url_for("auth.demo_login", user_id=user_id))
 
-        
+
+@bp.route("/guest-test")
+def guest_test():
+    guest_user = get_or_create_guest_user()
+
+    return render_template(
+        "guest_test.html",
+        form=FlashcardForm(),
+        guest_user=guest_user,
+        authenticated=current_user.is_authenticated,
+    )   

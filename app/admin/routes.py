@@ -1,8 +1,13 @@
-from flask import Blueprint, request, redirect, url_for, abort, flash
+from flask import Blueprint, current_app, render_template, request, redirect, url_for, abort, flash
 from flask_login import login_required, current_user
-from app.models import User, Flashcard
+from werkzeug.utils import secure_filename
+from app.models import User, Flashcard, Book, Chapter
 from app.database import db_session
 from functools import wraps
+from pathlib import Path
+from uuid import uuid4
+from google.cloud import storage
+from sqlalchemy.exc import IntegrityError
 from app.admin.forms import (
     AssignStudentForm, 
     UnassignStudentForm, 
@@ -10,7 +15,9 @@ from app.admin.forms import (
     DeleteUserForm, 
     ToggleActiveStatusForm, 
     ChangeStudentLevelForm,
-    UpdateLearningLanguageForm
+    UpdateLearningLanguageForm,
+    BookForm,
+    ChapterForm,
 )
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -220,3 +227,328 @@ def set_language(student_id):
                 flash(error, "danger")
 
     return redirect(url_for("dashboard.index"))
+
+
+@bp.route("/books/create", methods=["GET", "POST"])
+@admin_required
+def create_book():
+    form = BookForm()
+
+    if form.validate_on_submit():
+        title = form.title.data.strip()
+        slug = form.slug.data.strip().lower()
+        author = (
+            form.author.data.strip()
+            if form.author.data
+            else None
+        )
+        description = (
+            form.description.data.strip()
+            if form.description.data
+            else None
+        )
+        cover_object_name = (
+            form.cover_object_name.data.strip()
+            if form.cover_object_name.data
+            else None
+        )
+
+        existing_slug = (
+            db_session.query(Book)
+            .filter_by(slug=slug)
+            .first()
+        )
+
+        if existing_slug:
+            flash(
+                "A book with this slug already exists.",
+                "danger",
+            )
+            return render_template(
+                "admin/create_book.html",
+                form=form,
+            )
+
+        book = Book(
+            title=title,
+            slug=slug,
+            author=author,
+            description=description,
+            level=form.level.data,
+            cover_object_name=cover_object_name,
+        )
+
+        db_session.add(book)
+        db_session.commit()
+
+        flash(
+            f'Book "{book.title}" created successfully.',
+            "success",
+        )
+
+        return redirect(
+            url_for(
+                "admin.create_book",
+            )
+        )
+
+    return render_template(
+        "admin/create_book.html",
+        form=form,
+    )
+
+
+
+
+
+
+def upload_chapter_audio(audio_file, book_slug, chapter_slug):
+    bucket_name = current_app.config.get("GCS_AUDIOBOOK_BUCKET")
+
+    if not bucket_name:
+        raise RuntimeError("GCS_AUDIOBOOK_BUCKET is not configured.")
+
+    original_name = secure_filename(audio_file.filename)
+    extension = Path(original_name).suffix.lower()
+
+    object_name = (
+        f"books/{book_slug}/chapters/"
+        f"{chapter_slug}-{uuid4().hex}{extension}"
+    )
+
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(object_name)
+
+    audio_file.stream.seek(0)
+
+    blob.upload_from_file(
+        audio_file.stream,
+        content_type=audio_file.mimetype,
+        rewind=True,
+    )
+
+    return object_name
+
+@bp.route("/chapters/create", methods=["GET", "POST"])
+@admin_required
+def create_chapter():
+    form = ChapterForm()
+
+    books = (
+        db_session.query(Book)
+        .order_by(Book.title.asc())
+        .all()
+    )
+
+    if not books:
+        flash(
+            "Create a book before uploading a chapter.",
+            "warning",
+        )
+        return redirect(url_for("admin.create_book"))
+
+    form.book_id.choices = [
+        (book.id, f"{book.title} ({book.level})")
+        for book in books
+    ]
+
+    selected_book_id = request.args.get(
+        "book_id",
+        type=int,
+    )
+
+    if request.method == "GET" and selected_book_id:
+        valid_book_ids = {book.id for book in books}
+
+        if selected_book_id in valid_book_ids:
+            form.book_id.data = selected_book_id
+
+    if form.validate_on_submit():
+        book = db_session.get(Book, form.book_id.data)
+
+        if not book:
+            abort(404)
+
+        title = form.title.data.strip()
+        slug = form.slug.data.strip().lower()
+        position = form.position.data
+        text_file = form.text_file.data
+        audio_file = form.audio_file.data
+
+        try:
+            text_bytes = text_file.read()
+            text_content = text_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            flash(
+                "The text file must use UTF-8 encoding.",
+                "danger",
+            )
+            return render_template(
+                "admin/create_chapter.html",
+                form=form,
+            )
+
+        text_content = text_content.strip()
+
+        if not text_content:
+            flash("The text file is empty.", "danger")
+            return render_template(
+                "admin/create_chapter.html",
+                form=form,
+            )
+
+        existing_slug = (
+            db_session.query(Chapter)
+            .filter_by(
+                book_id=book.id,
+                slug=slug,
+            )
+            .first()
+        )
+
+        if existing_slug:
+            flash(
+                "This book already has a chapter with that slug.",
+                "danger",
+            )
+            return render_template(
+                "admin/create_chapter.html",
+                form=form,
+            )
+
+        existing_position = (
+            db_session.query(Chapter)
+            .filter_by(
+                book_id=book.id,
+                position=position,
+            )
+            .first()
+        )
+
+        if existing_position:
+            flash(
+                "This book already has a chapter in that position.",
+                "danger",
+            )
+            return render_template(
+                "admin/create_chapter.html",
+                form=form,
+            )
+
+        audio_object_name = None
+
+        try:
+            audio_object_name = upload_chapter_audio(
+                audio_file=audio_file,
+                book_slug=book.slug,
+                chapter_slug=slug,
+            )
+
+            chapter = Chapter(
+                book_id=book.id,
+                title=title,
+                slug=slug,
+                position=position,
+                text_content=text_content,
+                audio_object_name=audio_object_name,
+                is_free=form.is_free.data,
+            )
+
+            db_session.add(chapter)
+            db_session.commit()
+
+        except IntegrityError:
+            db_session.rollback()
+
+            flash(
+                "A chapter with this slug or position already exists.",
+                "danger",
+            )
+
+            return render_template(
+                "admin/create_chapter.html",
+                form=form,
+            )
+
+        except Exception:
+            db_session.rollback()
+
+            if audio_object_name:
+                try:
+                    client = storage.Client()
+                    bucket = client.bucket(
+                        current_app.config["GCS_AUDIOBOOK_BUCKET"]
+                    )
+                    bucket.blob(audio_object_name).delete()
+                except Exception:
+                    current_app.logger.exception(
+                        "Could not delete orphaned chapter audio."
+                    )
+
+            current_app.logger.exception(
+                "Chapter upload failed."
+            )
+
+            flash(
+                "The chapter could not be uploaded.",
+                "danger",
+            )
+
+            return render_template(
+                "admin/create_chapter.html",
+                form=form,
+            )
+
+        flash(
+            f'Chapter "{chapter.title}" added to "{book.title}".',
+            "success",
+        )
+
+        return redirect(
+            url_for(
+                "admin.book_details",
+                book_id=book.id,
+            )
+        )
+
+    return render_template(
+        "admin/create_chapter.html",
+        form=form,
+    )
+
+@bp.route("/books")
+@admin_required
+def books():
+    books = (
+        db_session.query(Book)
+        .order_by(Book.title.asc())
+        .all()
+    )
+
+    return render_template(
+        "admin/books.html",
+        books=books,
+    )
+
+
+@bp.route("/books/<int:book_id>")
+@admin_required
+def book_details(book_id):
+    book = db_session.get(Book, book_id)
+
+    if not book:
+        abort(404)
+
+    chapters = (
+        db_session.query(Chapter)
+        .filter_by(book_id=book.id)
+        .order_by(Chapter.position.asc())
+        .all()
+    )
+
+    return render_template(
+        "admin/book_details.html",
+        book=book,
+        chapters=chapters,
+    )

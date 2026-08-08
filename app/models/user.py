@@ -88,6 +88,12 @@ class User(UserMixin, Base):
     asaas_customer_id = Column(String(80), nullable=True, unique=True, index=True)
 
 
+    chapter_progress = relationship(
+        "UserChapterProgress",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
 
     def is_student(self):
         return self.role in ('teacher', '@dmin!', 'student')

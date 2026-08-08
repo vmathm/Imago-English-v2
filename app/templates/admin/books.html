@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+
+{% block main %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Books</h1>
+
+        <a
+            href="{{ url_for('admin.create_book') }}"
+            class="btn btn-primary"
+        >
+            Create book
+        </a>
+    </div>
+
+    {% if books %}
+        <div class="list-group">
+            {% for book in books %}
+                <a
+                    href="{{ url_for('admin.book_details', book_id=book.id) }}"
+                    class="list-group-item list-group-item-action"
+                >
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="h5 mb-1">
+                                {{ book.title }}
+                            </h2>
+
+                            <p class="mb-0 text-muted">
+                                {{ book.author or "Unknown author" }}
+                                · {{ book.level }}
+                            </p>
+                        </div>
+
+                        <span class="badge text-bg-secondary">
+                            {{ book.chapters|length }}
+                            chapter{% if book.chapters|length != 1 %}s{% endif %}
+                        </span>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            No books have been created yet.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

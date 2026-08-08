@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+
+{% block title %}Create book{% endblock %}
+
+{% block main %}
+<div class="container py-4">
+    <h1>Create book</h1>
+
+    <form method="POST">
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+            {{ form.title.label(class="form-label") }}
+            {{ form.title(class="form-control") }}
+
+            {% for error in form.title.errors %}
+                <div class="text-danger">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="mb-3">
+            {{ form.slug.label(class="form-label") }}
+            {{ form.slug(class="form-control") }}
+
+            <div class="form-text">
+                Example: bartleby-the-scrivener
+            </div>
+
+            {% for error in form.slug.errors %}
+                <div class="text-danger">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="mb-3">
+            {{ form.author.label(class="form-label") }}
+            {{ form.author(class="form-control") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.description.label(class="form-label") }}
+            {{ form.description(
+                class="form-control",
+                rows="4"
+            ) }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.level.label(class="form-label") }}
+            {{ form.level(class="form-select") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.cover_object_name.label(
+                class="form-label"
+            ) }}
+
+            {{ form.cover_object_name(
+                class="form-control"
+            ) }}
+
+            <div class="form-text">
+                Example: books/bartleby/cover.jpg
+            </div>
+        </div>
+
+        {{ form.submit(class="btn btn-primary") }}
+    </form>
+</div>
+{% endblock %}

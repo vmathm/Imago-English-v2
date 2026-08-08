@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import timedelta
 import os
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -26,6 +27,13 @@ class Config:
     GOOGLE_OAUTH_CLIENT_ID = os.getenv("GOOGLE_OAUTH_CLIENT_ID")
     GOOGLE_OAUTH_CLIENT_SECRET = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
     GCS_AUDIOBOOK_BUCKET = os.getenv("GCS_AUDIOBOOK_BUCKET")
+
+    # Anonymous guest sessions remain recognizable for 7 days.
+    # This only applies when code explicitly sets session.permanent = True.
+    PERMANENT_SESSION_LIFETIME = timedelta(days=7)
+
+    # Refresh the cookie expiration whenever the guest uses the app.
+    SESSION_REFRESH_EACH_REQUEST = True
 
 class DevConfig(Config):
     # Looser cookies for local dev (http://127.0.0.1)

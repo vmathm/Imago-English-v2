@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="mb-4">
+        <a
+            href="{{ url_for('admin.books') }}"
+            class="btn btn-outline-secondary btn-sm"
+        >
+            Back to books
+        </a>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1>{{ book.title }}</h1>
+
+            <p class="text-muted mb-1">
+                {{ book.author or "Unknown author" }}
+            </p>
+
+            <p class="mb-0">
+                Level: <strong>{{ book.level }}</strong>
+            </p>
+        </div>
+
+        <a
+            href="{{ url_for('admin.create_chapter', book_id=book.id) }}"
+            class="btn btn-primary"
+        >
+            Add chapter
+        </a>
+    </div>
+
+    {% if book.description %}
+        <div class="mb-4">
+            <p>{{ book.description }}</p>
+        </div>
+    {% endif %}
+
+    <h2 class="h4 mb-3">Chapters</h2>
+
+    {% if chapters %}
+        <div class="list-group">
+            {% for chapter in chapters %}
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h3 class="h5 mb-1">
+                                {{ chapter.position }}. {{ chapter.title }}
+                            </h3>
+
+                            <p class="mb-0 text-muted">
+                                {{ chapter.slug }}
+                                {% if chapter.is_free %}
+                                    · Free
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <a
+                                href="#"
+                                class="btn btn-outline-secondary btn-sm"
+                            >
+                                Replace text
+                            </a>
+
+                            <a
+                                href="#"
+                                class="btn btn-outline-secondary btn-sm"
+                            >
+                                Replace audio
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            This book has no chapters yet.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

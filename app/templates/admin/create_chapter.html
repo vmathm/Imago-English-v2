@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+
+{% block main %}
+<div class="container py-4">
+    <h1>Upload chapter</h1>
+
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+            {{ form.book_id.label(class="form-label") }}
+            {{ form.book_id(class="form-select") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.title.label(class="form-label") }}
+            {{ form.title(class="form-control") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.slug.label(class="form-label") }}
+            {{ form.slug(class="form-control") }}
+
+            <div class="form-text">
+                Example: part-1
+            </div>
+        </div>
+
+        <div class="mb-3">
+            {{ form.position.label(class="form-label") }}
+            {{ form.position(class="form-control") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.text_file.label(class="form-label") }}
+            {{ form.text_file(
+                class="form-control",
+                accept=".txt"
+            ) }}
+
+            {% for error in form.text_file.errors %}
+                <div class="text-danger">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="mb-3">
+            {{ form.audio_file.label(class="form-label") }}
+            {{ form.audio_file(
+                class="form-control",
+                accept=".mp3,.m4a,.wav,.ogg"
+            ) }}
+
+            {% for error in form.audio_file.errors %}
+                <div class="text-danger">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="form-check mb-3">
+            {{ form.is_free(class="form-check-input") }}
+            {{ form.is_free.label(class="form-check-label") }}
+        </div>
+
+        {{ form.submit(class="btn btn-primary") }}
+    </form>
+</div>
+{% endblock %}

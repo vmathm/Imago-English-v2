@@ -10,7 +10,8 @@ from app.extensions import csrf
 from decimal import Decimal, ROUND_HALF_UP
 from app.utils.time import utcnow, now_sp, sp_midnight_as_utc, sp_midnight_utc_days_from_now
 from datetime import timedelta
-
+from app.services.guest_session import get_or_create_guest_user
+from app.models import GuestFlashcard
 
 bp = Blueprint("flashcard", __name__, url_prefix="/flashcard")
 
@@ -64,59 +65,169 @@ def flashcards():
 @active_required
 def addcards():
     form = FlashcardForm()
-    if not form.validate_on_submit():
-        return jsonify({"status": "error", "message": "Something went wrong. Please check your input."})
 
-    question = form.question.data
-    answer = form.answer.data
+    if not form.validate_on_submit():
+        return jsonify({
+            "status": "error",
+            "message": "Something went wrong. Please check your input.",
+        }), 400
+
+    question = form.question.data.strip()
+    answer = form.answer.data.strip()
     student_id = form.student_id.data
 
-    # Decide card owner
+    # --------------------------------------------------
+    # Guest user
+    # --------------------------------------------------
+    if not current_user.is_authenticated:
+        # A guest must never be able to assign a card to
+        # an arbitrary registered student.
+        if student_id:
+            return jsonify({
+                "status": "error",
+                "message": "Guest users cannot add cards for students.",
+            }), 403
+
+        guest_user = get_or_create_guest_user()
+
+        if guest_user is None:
+            return jsonify({
+                "status": "error",
+                "message": "Could not create guest session.",
+            }), 500
+
+        existing = (
+            db_session.query(GuestFlashcard)
+            .filter_by(
+                guest_user_id=guest_user.id,
+                question=question,
+            )
+            .first()
+        )
+
+        if existing:
+            return jsonify({
+                "status": "error",
+                "message": "Flashcard already exists!",
+            }), 409
+
+        new_flashcard = GuestFlashcard(
+            guest_user_id=guest_user.id,
+            question=question,
+            answer=answer,
+            level=0,
+            ease=Decimal("1.30"),
+            interval=1,
+            last_review=None,
+            next_review=None,
+            show_answer=False,
+            reviewed_by_tc=False,
+            add_by_tc=False,
+            add_by_user=True,
+            created_at=utcnow(),
+        )
+
+        db_session.add(new_flashcard)
+        db_session.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": "Flashcard added successfully!",
+            "card_id": new_flashcard.id,
+            "guest": True,
+        }), 201
+
+    # --------------------------------------------------
+    # Authenticated user: decide card owner
+    # --------------------------------------------------
     if student_id:
-        if not (current_user.is_teacher() or current_user.is_admin()):
-            return jsonify({"status": "error", "message": "Unauthorized."}), 403
+        if not (
+            current_user.is_teacher()
+            or current_user.is_admin()
+        ):
+            return jsonify({
+                "status": "error",
+                "message": "Unauthorized.",
+            }), 403
 
-        student = db_session.query(User).filter_by(id=student_id).first()
+        student = (
+            db_session.query(User)
+            .filter_by(id=student_id)
+            .first()
+        )
+
         if not student:
-            return jsonify({"status": "error", "message": "Student not found."}), 404
+            return jsonify({
+                "status": "error",
+                "message": "Student not found.",
+            }), 404
 
-        if current_user.is_teacher() and student.assigned_teacher_id != current_user.id:
-            return jsonify({"status": "error", "message": "You cannot add cards for this student."}), 403
+        if (
+            current_user.is_teacher()
+            and student.assigned_teacher_id != current_user.id
+        ):
+            return jsonify({
+                "status": "error",
+                "message": "You cannot add cards for this student.",
+            }), 403
 
         flashcard_owner_id = student.id
+
     else:
         flashcard_owner_id = current_user.id
 
-    # Prevent duplicates (same question per user)
+    # Prevent duplicates for registered user
     existing = (
         db_session.query(Flashcard)
-        .filter_by(question=question, user_id=flashcard_owner_id)
+        .filter_by(
+            question=question,
+            user_id=flashcard_owner_id,
+        )
         .first()
     )
-    if existing:
-        return jsonify({"status": "error", "message": "Flashcard already exists!"})
 
-    # Unreviewed limit
+    if existing:
+        return jsonify({
+            "status": "error",
+            "message": "Flashcard already exists!",
+        }), 409
+
+    # Teacher-review limit only applies to registered users.
     unreviewed_count = (
         db_session.query(Flashcard)
-        .filter_by(user_id=flashcard_owner_id, reviewed_by_tc=False)
+        .filter_by(
+            user_id=flashcard_owner_id,
+            reviewed_by_tc=False,
+        )
         .count()
     )
+
     if unreviewed_count >= 5:
-        return jsonify({"status": "error", "message": "Você não pode ter mais de 5 cartões não revisados."})
+        return jsonify({
+            "status": "error",
+            "message": (
+                "Você não pode ter mais de "
+                "5 cartões não revisados."
+            ),
+        }), 409
 
     new_flashcard = Flashcard(
         question=question,
         answer=answer,
         user_id=flashcard_owner_id,
-        reviewed_by_tc=True if current_user.is_teacher() else False,
+        reviewed_by_tc=current_user.is_teacher(),
         created_at=utcnow(),
     )
 
     db_session.add(new_flashcard)
     db_session.commit()
 
-    return jsonify({"status": "success", "message": "Flashcard added successfully!"})
+    return jsonify({
+        "status": "success",
+        "message": "Flashcard added successfully!",
+        "card_id": new_flashcard.id,
+        "guest": False,
+    }), 201
 
 
 @bp.route("/edit_cards", methods=["GET"])
@@ -220,23 +331,92 @@ def edit_card(card_id):
 def study():
     """Show flashcards due for review."""
     student_id = request.args.get("student_id")
+
+    # --------------------------------------------------
+    # Guest user
+    # --------------------------------------------------
+    if not current_user.is_authenticated:
+        if student_id:
+            abort(403)
+
+        guest_user = get_or_create_guest_user()
+
+        due_cards = (
+            db_session.query(
+                GuestFlashcard.id,
+                GuestFlashcard.question,
+                GuestFlashcard.answer,
+                GuestFlashcard.level,
+            )
+            .filter(
+                GuestFlashcard.guest_user_id == guest_user.id,
+                or_(
+                    GuestFlashcard.next_review.is_(None),
+                    GuestFlashcard.next_review <= utcnow(),
+                ),
+            )
+            .all()
+        )
+
+        cards_data = [
+            {
+                "id": card.id,
+                "question": card.question,
+                "answer": card.answer,
+                "level": card.level,
+            }
+            for card in due_cards
+        ]
+
+        if not cards_data:
+            flash(
+                "Você não tem flashcards para estudar.",
+                "info",
+            )
+
+        return render_template(
+            "flashcards/study.html",
+            cards=cards_data,
+            student_id=None,
+            guest_mode=True,
+        )
+
+    # --------------------------------------------------
+    # Authenticated user
+    # --------------------------------------------------
     target_user_id = current_user.id
 
     if student_id:
-        if not (current_user.is_teacher() or current_user.is_admin()):
+        if not (
+            current_user.is_teacher()
+            or current_user.is_admin()
+        ):
             abort(403)
 
-        student = db_session.query(User).filter_by(id=student_id).first()
+        student = (
+            db_session.query(User)
+            .filter_by(id=student_id)
+            .first()
+        )
+
         if not student:
             abort(403)
 
-        if current_user.is_teacher() and student.assigned_teacher_id != current_user.id:
+        if (
+            current_user.is_teacher()
+            and student.assigned_teacher_id != current_user.id
+        ):
             abort(403)
 
         target_user_id = student.id
 
     due_cards = (
-        db_session.query(Flashcard.id, Flashcard.question, Flashcard.answer, Flashcard.level)
+        db_session.query(
+            Flashcard.id,
+            Flashcard.question,
+            Flashcard.answer,
+            Flashcard.level,
+        )
         .filter(
             Flashcard.user_id == target_user_id,
             or_(
@@ -247,118 +427,262 @@ def study():
         .all()
     )
 
-    cards_data = [{"id": c.id, "question": c.question, "answer": c.answer, "level": c.level} for c in due_cards]
+    cards_data = [
+        {
+            "id": card.id,
+            "question": card.question,
+            "answer": card.answer,
+            "level": card.level,
+        }
+        for card in due_cards
+    ]
 
     if not cards_data:
-        flash("Você não tem flashcards para estudar.", "info")
+        flash(
+            "Você não tem flashcards para estudar.",
+            "info",
+        )
 
-    return render_template("flashcards/study.html", cards=cards_data, student_id=student_id)
+    return render_template(
+        "flashcards/study.html",
+        cards=cards_data,
+        student_id=student_id,
+        guest_mode=False,
+    )
 
 
 @bp.route("/review_flashcard", methods=["POST"])
 @active_required
 def review_flashcard():
     """
-    Update flashcard scheduling when a rating (1, 2, or 3) is submitted from study.js.
-    Also update study streak if this was the last due flashcard of the day.
+    Update flashcard scheduling after a rating of 1, 2, or 3.
+
+    Supports:
+    - anonymous guests reviewing GuestFlashcard records;
+    - authenticated users reviewing their own Flashcard records;
+    - teachers/admins reviewing student Flashcard records.
+
+    Updates the owner's study streak when no due cards remain.
     """
     data = request.get_json(silent=True) or {}
     card_id = data.get("card_id")
     rating_raw = data.get("rating")
 
     if not card_id or rating_raw is None:
-        return jsonify({"status": "error", "message": "Missing card_id or rating."}), 400
+        return jsonify({
+            "status": "error",
+            "message": "Missing card_id or rating.",
+        }), 400
 
     try:
+        card_id = int(card_id)
         rating = int(rating_raw)
     except (TypeError, ValueError):
-        return jsonify({"status": "error", "message": "Invalid rating."}), 400
+        return jsonify({
+            "status": "error",
+            "message": "Invalid card_id or rating.",
+        }), 400
 
     if rating not in (1, 2, 3):
-        return jsonify({"status": "error", "message": "Rating must be 1, 2, or 3."}), 400
-
-    flashcard = db_session.get(Flashcard, int(card_id))
-    if not flashcard:
-        return jsonify({"status": "error", "message": "Flashcard not found."}), 404
+        return jsonify({
+            "status": "error",
+            "message": "Rating must be 1, 2, or 3.",
+        }), 400
 
     MIN_INTERVAL, MAX_INTERVAL = 1, 365
     now = utcnow()
 
-    def award_points(user, pts: int):
-        user.points = (user.points or 0) + int(pts)
+    # --------------------------------------------------
+    # Resolve card and review recipient
+    # --------------------------------------------------
+    if not current_user.is_authenticated:
+        guest_user = get_or_create_guest_user()
 
-    def get_recipient():
-        # Teacher reviewing their own cards -> teacher gets points
-        if current_user.role == "teacher" and flashcard.user_id == current_user.id:
-            return current_user
+        if guest_user is None:
+            return jsonify({
+                "status": "error",
+                "message": "Guest session not found.",
+            }), 404
 
-        # Teacher/Admin reviewing a student's cards -> student gets points
-        if current_user.role in ("teacher", "@dmin!") and flashcard.user_id != current_user.id:
-            return db_session.query(User).filter(User.id == flashcard.user_id).first()
+        flashcard = (
+            db_session.query(GuestFlashcard)
+            .filter(
+                GuestFlashcard.id == card_id,
+                GuestFlashcard.guest_user_id == guest_user.id,
+            )
+            .first()
+        )
 
-        # Student studying
-        return current_user
+        if not flashcard:
+            return jsonify({
+                "status": "error",
+                "message": "Flashcard not found.",
+            }), 404
 
-    recipient = get_recipient()
-    if not recipient:
-        return jsonify({"status": "error", "message": "Recipient user not found."}), 500
+        recipient = guest_user
+        card_model = GuestFlashcard
+        owner_column = GuestFlashcard.guest_user_id
+        owner_id = guest_user.id
+        is_guest = True
 
-    # Always count studied cards
-    recipient.flashcards_studied = (recipient.flashcards_studied or 0) + 1
+    else:
+        flashcard = db_session.get(Flashcard, card_id)
 
+        if not flashcard:
+            return jsonify({
+                "status": "error",
+                "message": "Flashcard not found.",
+            }), 404
+
+        is_owner = flashcard.user_id == current_user.id
+
+        is_teacher_of_student = (
+            current_user.is_teacher()
+            and flashcard.user is not None
+            and flashcard.user.assigned_teacher_id == current_user.id
+        )
+
+        if not (
+            is_owner
+            or is_teacher_of_student
+            or current_user.is_admin()
+        ):
+            return jsonify({
+                "status": "error",
+                "message": "Not authorized.",
+            }), 403
+
+        # Teacher reviewing their own cards.
+        if (
+            current_user.role == "teacher"
+            and flashcard.user_id == current_user.id
+        ):
+            recipient = current_user
+
+        # Teacher/admin reviewing another user's cards.
+        elif (
+            current_user.role in ("teacher", "@dmin!")
+            and flashcard.user_id != current_user.id
+        ):
+            recipient = (
+                db_session.query(User)
+                .filter(User.id == flashcard.user_id)
+                .first()
+            )
+
+        # Student or another normal user reviewing their own cards.
+        else:
+            recipient = current_user
+
+        if not recipient:
+            return jsonify({
+                "status": "error",
+                "message": "Recipient user not found.",
+            }), 500
+
+        card_model = Flashcard
+        owner_column = Flashcard.user_id
+        owner_id = flashcard.user_id
+        is_guest = False
+
+    # --------------------------------------------------
+    # Shared statistics helpers
+    # --------------------------------------------------
+    def award_points(user, points: int):
+        user.points = (user.points or 0) + int(points)
+
+    recipient.flashcards_studied = (
+        recipient.flashcards_studied or 0
+    ) + 1
+
+    # --------------------------------------------------
+    # Shared scheduling algorithm
+    # --------------------------------------------------
     if rating == 1:
-        flashcard.level += 1
-        flashcard.ease = normalize_ease(1.3)
+        flashcard.level = (flashcard.level or 0) + 1
+        flashcard.ease = normalize_ease(Decimal("1.3"))
         flashcard.interval = MIN_INTERVAL
         flashcard.last_review = now
 
-        # keep it "in-session" quickly, still stored as UTC
-        flashcard.next_review = now 
+        # Keep the card available during the current session.
+        flashcard.next_review = now
 
     elif rating == 2:
         award_points(recipient, 2)
 
-        flashcard.level += 1
-        flashcard.ease = normalize_ease(1.3)
+        flashcard.level = (flashcard.level or 0) + 1
+        flashcard.ease = normalize_ease(Decimal("1.3"))
         flashcard.interval = MIN_INTERVAL
         flashcard.last_review = now
 
-        # Tomorrow at São Paulo midnight, stored in UTC
+        # Tomorrow at São Paulo midnight, stored as UTC.
         flashcard.next_review = sp_midnight_utc_days_from_now(1)
 
     else:  # rating == 3
-        recipient.rate_three_count = (recipient.rate_three_count or 0) + 1
+        recipient.rate_three_count = (
+            recipient.rate_three_count or 0
+        ) + 1
 
-        flashcard.level += 1
+        flashcard.level = (flashcard.level or 0) + 1
+
+        current_ease = Decimal(str(flashcard.ease or "1.30"))
 
         new_ease = (
-            flashcard.ease
+            current_ease
             + Decimal("0.5")
-            - Decimal(5 - rating) * (Decimal("0.08") + Decimal(5 - rating) * Decimal("0.02"))
+            - Decimal(5 - rating)
+            * (
+                Decimal("0.08")
+                + Decimal(5 - rating) * Decimal("0.02")
+            )
         ) / Decimal("2")
-        flashcard.ease = normalize_ease(max(new_ease, Decimal("1.3")))
 
-        new_interval = int(math.ceil(float(flashcard.interval) * float(flashcard.ease)))
-        flashcard.interval = min(MAX_INTERVAL, max(MIN_INTERVAL, new_interval))
+        flashcard.ease = normalize_ease(
+            max(new_ease, Decimal("1.3"))
+        )
 
-        award_points(recipient, max(int(flashcard.interval / 2), 1))
+        current_interval = flashcard.interval or MIN_INTERVAL
+
+        new_interval = int(
+            math.ceil(
+                float(current_interval)
+                * float(flashcard.ease)
+            )
+        )
+
+        flashcard.interval = min(
+            MAX_INTERVAL,
+            max(MIN_INTERVAL, new_interval),
+        )
+
+        award_points(
+            recipient,
+            max(int(flashcard.interval / 2), 1),
+        )
 
         flashcard.last_review = now
 
-        # Interval days later at São Paulo midnight, stored in UTC
-        target_date = now_sp().date() + timedelta(days=flashcard.interval)
-        flashcard.next_review = sp_midnight_as_utc(target_date)
+        target_date = (
+            now_sp().date()
+            + timedelta(days=flashcard.interval)
+        )
+
+        flashcard.next_review = sp_midnight_as_utc(
+            target_date
+        )
 
     db_session.commit()
 
-    # Re-check due using REAL UTC now (not the São Paulo hack)
+    # --------------------------------------------------
+    # Check whether this owner has any due cards left
+    # --------------------------------------------------
     due_left = (
-        db_session.query(Flashcard)
+        db_session.query(card_model)
         .filter(
-            Flashcard.user_id == flashcard.user_id,
+            owner_column == owner_id,
             or_(
-                Flashcard.next_review.is_(None),
-                Flashcard.next_review <= utcnow(),
+                card_model.next_review.is_(None),
+                card_model.next_review <= utcnow(),
             ),
         )
         .count()
@@ -368,7 +692,13 @@ def review_flashcard():
         update_study_streak(recipient)
         db_session.commit()
 
-    return jsonify({"status": "success"})
+    return jsonify({
+        "status": "success",
+        "guest": is_guest,
+    })
+
+
+
 
 
 def update_study_streak(user: User):
