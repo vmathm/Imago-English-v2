@@ -338,7 +338,7 @@ a {
   flex-wrap: wrap; /* Allows items to wrap in smaller screens */
 }
 
-.flex-column {
+.imago-flex-column {
   display: flex;
   flex-direction: column;
   align-items: center; /* Center aligns the child elements */

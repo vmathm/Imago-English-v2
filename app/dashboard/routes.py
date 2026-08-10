@@ -1,6 +1,7 @@
 import hashlib
-from flask import Blueprint, current_app, flash, render_template, redirect, request, url_for
+from flask import Blueprint, current_app, flash, render_template, redirect, request, url_for, g
 from flask_login import current_user, login_required
+from app.decorators import user_or_guest_required
 from app.flashcard.form import FlashcardForm
 from app.models import User            
 from app.database import db_session
@@ -8,6 +9,7 @@ from app.admin.forms import AssignStudentForm, UnassignStudentForm, ChangeRoleFo
 from app.models.flashcard import Flashcard 
 from sqlalchemy import func, or_
 from app.audiobook.forms import UserAudiobookForm, UsernameForm
+from app.models.guest_flashcard import GuestFlashcard
 from app.utils.time import utcnow
 from app.services.access import subscription_days_left, trial_days_left
 
@@ -93,30 +95,71 @@ def get_admin_data():
 
 @bp.route('/')
 def index():
-    if not current_user.is_authenticated:
-        print("User not authenticated, rendering dashboard without user data.")
-        return render_template('dashboard.html')
-    
-    user_name_form = UsernameForm()
 
+    # Guest dashboard
+    if not current_user.is_authenticated:
+        if g.guest_user:
+            total_flashcards = (
+                db_session.query(func.count(GuestFlashcard.id))
+                .filter_by(guest_user_id=g.guest_user.id)
+                .scalar()
+            )
+
+            due_flashcards = (
+                db_session.query(func.count(GuestFlashcard.id))
+                .filter(
+                    GuestFlashcard.guest_user_id == g.guest_user.id,
+                    or_(
+                        GuestFlashcard.next_review == None,
+                        GuestFlashcard.next_review <= utcnow()
+                    )
+                )
+                .scalar()
+            )
+
+            context = {
+                "form": FlashcardForm(),
+                "total_flashcards": total_flashcards,
+                "due_flashcards": due_flashcards,
+                "trial_days_remaining": None,
+                "subscription_days_remaining": None,
+                "user_name_form": None,
+                "suggested_username": None,
+            }
+
+            return render_template("dashboard.html", **context)
+
+        # Plain anonymous visitor
+        print("User not authenticated, rendering dashboard without user data.")
+        return render_template("dashboard.html")
+
+    # Registered user
     if current_user.user_name:
         suggested_username = current_user.user_name
-    else:   
+    else:
         suggested_username = current_user.email.split("@")[0]
 
-    user_name_form = UsernameForm(data={"user_name": suggested_username})
-    
-    
+    user_name_form = UsernameForm(
+        data={"user_name": suggested_username}
+    )
 
-    total_flashcards = db_session.query(func.count(Flashcard.id)).filter_by(user_id=current_user.id).scalar()
+    total_flashcards = (
+        db_session.query(func.count(Flashcard.id))
+        .filter_by(user_id=current_user.id)
+        .scalar()
+    )
 
-    due_flashcards = db_session.query(func.count(Flashcard.id)).filter(
+    due_flashcards = (
+        db_session.query(func.count(Flashcard.id))
+        .filter(
             Flashcard.user_id == current_user.id,
             or_(
                 Flashcard.next_review == None,
                 Flashcard.next_review <= utcnow()
             )
-        ).scalar()
+        )
+        .scalar()
+    )
 
     context = {
         "form": FlashcardForm(),
@@ -135,10 +178,11 @@ def index():
         "user_name_form": user_name_form,
         "suggested_username": suggested_username,
     }
+
     trial_days_remaining = None
     subscription_days_remaining = None
 
-    if current_user.is_authenticated and current_user.billing_mode == "internal":
+    if current_user.billing_mode == "internal":
         subscription_days_remaining = subscription_days_left(current_user)
 
     if subscription_days_remaining is None:
@@ -147,18 +191,17 @@ def index():
     context["trial_days_remaining"] = trial_days_remaining
     context["subscription_days_remaining"] = subscription_days_remaining
 
-
     if current_user.is_teacher():
         context.update(get_teacher_data())
 
     if current_user.is_admin():
         context.update(get_admin_data())
 
-    return render_template('dashboard.html', **context)
+    return render_template("dashboard.html", **context)
 
 
 @bp.route("/set_username", methods=["POST"])
-@login_required
+@user_or_guest_required
 def set_username():
     user_name_form = UsernameForm()
 

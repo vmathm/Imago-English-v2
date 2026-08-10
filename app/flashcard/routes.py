@@ -1,7 +1,7 @@
-from flask import Blueprint, request, redirect, url_for, flash, render_template, jsonify, abort
+from flask import Blueprint, request, redirect, url_for, flash, render_template, jsonify, abort, g
 from flask_login import current_user, login_required
 from app.database import db_session
-from app.decorators import active_required
+from app.decorators import active_required, user_or_guest_required
 from app.flashcard.form import FlashcardForm
 from app.models import Flashcard, User
 from sqlalchemy import func, or_, asc
@@ -29,29 +29,55 @@ def normalize_ease(value):
 # Routes
 # ----------------------------
 @bp.route("/flashcards", methods=["GET"])
-@login_required
+@user_or_guest_required
 def flashcards():
-    total_flashcards = (
-        db_session.query(func.count(Flashcard.id))
-        .filter(Flashcard.user_id == current_user.id)
-        .scalar()
-        or 0
-    )
 
-    due_count = (
-        db_session.query(func.count(Flashcard.id))
-        .filter(
-            Flashcard.user_id == current_user.id,
-            or_(
-                Flashcard.next_review.is_(None),
-                Flashcard.next_review <= utcnow(),
-            ),
+    if current_user.is_authenticated:
+        total_flashcards = (
+            db_session.query(func.count(Flashcard.id))
+            .filter(Flashcard.user_id == current_user.id)
+            .scalar()
+            or 0
         )
-        .scalar()
-        or 0
-    )
+
+        due_count = (
+            db_session.query(func.count(Flashcard.id))
+            .filter(
+                Flashcard.user_id == current_user.id,
+                or_(
+                    Flashcard.next_review.is_(None),
+                    Flashcard.next_review <= utcnow(),
+                ),
+            )
+            .scalar()
+            or 0
+        )
+
+    else:
+        guest_user = g.guest_user
+
+        total_flashcards = (
+            db_session.query(func.count(GuestFlashcard.id))
+            .filter(GuestFlashcard.guest_user_id == guest_user.id)
+            .scalar()
+            or 0
+        )
+
+        due_count = (
+            db_session.query(func.count(GuestFlashcard.id))
+            .filter(
+                GuestFlashcard.guest_user_id == guest_user.id,
+                or_(
+                    GuestFlashcard.next_review.is_(None),
+                    GuestFlashcard.next_review <= utcnow(),
+                ),
+            )
+            .scalar()
+            or 0
+        )
 
     has_cards = due_count > 0
+
     return render_template(
         "flashcards/index_cards.html",
         form=FlashcardForm(),
@@ -233,28 +259,99 @@ def addcards():
 @bp.route("/edit_cards", methods=["GET"])
 @active_required
 def edit_cards():
-    if current_user.is_student():
-        flashcards = db_session.query(Flashcard).filter_by(user_id=current_user.id).all()
-        forms = {card.id: FlashcardForm(obj=card) for card in flashcards}
-        return render_template("flashcards/edit_cards.html", flashcards=flashcards, forms=forms)
 
-    if current_user.is_teacher() or current_user.is_admin():
-        student_id = request.args.get("student_id")
-        if not student_id:
-            flash("Please select a student to view their flashcards.", "warning")
+    # Guest user
+    if not current_user.is_authenticated:
+        guest_user = g.guest_user
+
+        if not guest_user:
+            flash("Access denied.", "danger")
             return redirect(url_for("dashboard.index"))
 
-        student = db_session.query(User).filter_by(id=student_id).first()
+        flashcards = (
+            db_session.query(GuestFlashcard)
+            .filter_by(guest_user_id=guest_user.id)
+            .all()
+        )
+
+        forms = {
+            card.id: FlashcardForm(obj=card)
+            for card in flashcards
+        }
+
+        return render_template(
+            "flashcards/edit_cards.html",
+            flashcards=flashcards,
+            forms=forms,
+        )
+
+    # Registered student
+    if current_user.is_student():
+        flashcards = (
+            db_session.query(Flashcard)
+            .filter_by(user_id=current_user.id)
+            .all()
+        )
+
+        forms = {
+            card.id: FlashcardForm(obj=card)
+            for card in flashcards
+        }
+
+        return render_template(
+            "flashcards/edit_cards.html",
+            flashcards=flashcards,
+            forms=forms,
+        )
+
+    # Teacher / admin managing a student
+    if current_user.is_teacher() or current_user.is_admin():
+
+        student_id = request.args.get("student_id")
+
+        if not student_id:
+            flash(
+                "Please select a student to view their flashcards.",
+                "warning"
+            )
+            return redirect(url_for("dashboard.index"))
+
+        student = (
+            db_session.query(User)
+            .filter_by(id=student_id)
+            .first()
+        )
+
         if not student:
             flash("Student not found.", "danger")
             return redirect(url_for("dashboard.index"))
 
-        if current_user.is_teacher() and student.assigned_teacher_id != current_user.id:
-            flash("You are not authorized to view this student's flashcards.", "danger")
+        if (
+            current_user.is_teacher()
+            and student.assigned_teacher_id != current_user.id
+        ):
+            flash(
+                "You are not authorized to view this student's flashcards.",
+                "danger"
+            )
             return redirect(url_for("dashboard.index"))
 
-        flashcards = db_session.query(Flashcard).filter_by(user_id=student_id).all()
-        return render_template("edit.html", flashcards=flashcards)
+        flashcards = (
+            db_session.query(Flashcard)
+            .filter_by(user_id=student_id)
+            .all()
+        )
+
+        forms = {
+            card.id: FlashcardForm(obj=card)
+            for card in flashcards
+        }
+
+        return render_template(
+            "flashcards/edit_cards.html",
+            flashcards=flashcards,
+            forms=forms,
+        )
 
     flash("Access denied.", "danger")
     return redirect(url_for("dashboard.index"))
@@ -263,28 +360,112 @@ def edit_cards():
 @bp.route("/edit_card/<int:card_id>", methods=["POST"])
 @active_required
 def edit_card(card_id):
-    flashcard = db_session.get(Flashcard, card_id)
-    if not flashcard:
-        return jsonify({"status": "error", "message": "Flashcard not found."}), 404
-
-    is_owner = flashcard.user_id == current_user.id
-    is_teacher_of_student = (
-        current_user.is_teacher()
-        and getattr(flashcard.user, "assigned_teacher_id", None) == current_user.id
-    )
-
-    if not (is_owner or is_teacher_of_student or current_user.is_admin()):
-        return jsonify({"status": "error", "message": "Not authorized."}), 403
 
     form = FlashcardForm()
     action = request.form.get("action")
 
+    # Guest user
+    if not current_user.is_authenticated:
+        guest_user = g.guest_user
+
+        if not guest_user:
+            return jsonify(
+                {"status": "error", "message": "Not authorized."}
+            ), 403
+
+        flashcard = db_session.get(GuestFlashcard, card_id)
+
+        if not flashcard:
+            return jsonify(
+                {"status": "error", "message": "Flashcard not found."}
+            ), 404
+
+        if flashcard.guest_user_id != guest_user.id:
+            return jsonify(
+                {"status": "error", "message": "Not authorized."}
+            ), 403
+
+        if not form.validate_on_submit():
+            return jsonify(
+                {"status": "error", "message": "Form validation failed."}
+            ), 400
+
+        if action == "edit":
+            flashcard.question = form.question.data
+            flashcard.answer = form.answer.data
+
+            # Make it due again immediately
+            flashcard.next_review = utcnow()
+            flashcard.ease = normalize_ease(1.3)
+            flashcard.interval = 1
+
+            db_session.commit()
+
+            return jsonify(
+                {
+                    "status": "success",
+                    "message": "Flashcard updated!",
+                    "card_id": flashcard.id,
+                }
+            )
+
+        if action == "delete":
+            db_session.delete(flashcard)
+            db_session.commit()
+
+            return jsonify(
+                {
+                    "status": "success",
+                    "message": "Flashcard deleted!",
+                }
+            )
+
+        return jsonify(
+            {"status": "error", "message": "Unknown action."}
+        ), 400
+
+
+    # Registered user
+    flashcard = db_session.get(Flashcard, card_id)
+
+    if not flashcard:
+        return jsonify(
+            {"status": "error", "message": "Flashcard not found."}
+        ), 404
+
+    is_owner = flashcard.user_id == current_user.id
+
+    is_teacher_of_student = (
+        current_user.is_teacher()
+        and getattr(
+            flashcard.user,
+            "assigned_teacher_id",
+            None
+        ) == current_user.id
+    )
+
+    if not (
+        is_owner
+        or is_teacher_of_student
+        or current_user.is_admin()
+    ):
+        return jsonify(
+            {"status": "error", "message": "Not authorized."}
+        ), 403
+
+
     if action == "mark_reviewed_tc":
-        if not (is_teacher_of_student or current_user.is_admin()):
-            return jsonify({"status": "error", "message": "Not authorized."}), 403
+        if not (
+            is_teacher_of_student
+            or current_user.is_admin()
+        ):
+            return jsonify(
+                {"status": "error", "message": "Not authorized."}
+            ), 403
 
         flashcard.reviewed_by_tc = True
         db_session.commit()
+
         return jsonify(
             {
                 "status": "success",
@@ -294,21 +475,33 @@ def edit_card(card_id):
             }
         )
 
+
     if not form.validate_on_submit():
-        return jsonify({"status": "error", "message": "Form validation failed."}), 400
+        return jsonify(
+            {"status": "error", "message": "Form validation failed."}
+        ), 400
+
 
     if action == "edit":
         flashcard.question = form.question.data
         flashcard.answer = form.answer.data
 
-        # Make it due again immediately (UTC now)
+        # Make it due again immediately
         flashcard.next_review = utcnow()
         flashcard.ease = normalize_ease(1.3)
         flashcard.interval = 1
 
-        flashcard.reviewed_by_tc = True if (is_teacher_of_student or current_user.is_teacher()) else False
+        flashcard.reviewed_by_tc = (
+            True
+            if (
+                is_teacher_of_student
+                or current_user.is_teacher()
+            )
+            else False
+        )
 
         db_session.commit()
+
         return jsonify(
             {
                 "status": "success",
@@ -318,12 +511,21 @@ def edit_card(card_id):
             }
         )
 
+
     if action == "delete":
         db_session.delete(flashcard)
         db_session.commit()
-        return jsonify({"status": "success", "message": "Flashcard deleted!"})
 
-    return jsonify({"status": "error", "message": "Unknown action."}), 400
+        return jsonify(
+            {
+                "status": "success",
+                "message": "Flashcard deleted!",
+            }
+        )
+
+    return jsonify(
+        {"status": "error", "message": "Unknown action."}
+    ), 400
 
 
 @bp.route("/study")
@@ -332,7 +534,7 @@ def study():
     """Show flashcards due for review."""
     student_id = request.args.get("student_id")
 
-    # --------------------------------------------------
+    # -------------------------------------------------fla-
     # Guest user
     # --------------------------------------------------
     if not current_user.is_authenticated:

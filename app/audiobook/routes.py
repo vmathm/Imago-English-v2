@@ -1,7 +1,7 @@
 import os
 from flask import Blueprint, flash, redirect, render_template, jsonify, request, url_for, abort
 from flask_login import current_user, login_required
-from app.decorators import active_required
+from app.decorators import active_required, user_or_guest_required
 from app.flashcard.form import FlashcardForm
 from app.models.book import Book
 from app.models.chapter import Chapter
@@ -14,42 +14,39 @@ import requests
 from flask import current_app
 from app.audiobook.forms import UserAudiobookForm   
 from app.gcs_utils import delete_file_from_gcs_by_url, upload_file_to_gcs
-from app.models.user_audiobook import UserAudiobook
 from werkzeug.exceptions import Forbidden   
-from app.models import User   
+from app.models import User, UserAudiobook 
 from app.utils.time import utcnow
 
 bp = Blueprint('audiobook', __name__, url_prefix='/audiobook')
-
 @bp.route('/audiobooks')
 @login_required
 def audiobooks():
-    from app.models import User, UserAudiobook  # adjust import path if needed
 
-    # Default: current user
+    if current_user.role == "student" and not current_user.assigned_teacher_id:
+        abort(403)
+
     target_user = current_user
     student = None
 
-    
     student_id = request.args.get("user_id", type=str)
 
     if student_id and student_id != str(current_user.id):
-        
+
         if not (current_user.is_teacher() or current_user.is_admin()):
             abort(403)
 
-        student = db_session.query(User).get(student_id)
+        student = db_session.get(User, student_id)
+
         if not student or student.role != "student":
             abort(404)
 
-        # If it's a teacher (not admin), enforce assignment
         if current_user.is_teacher() and not current_user.is_admin():
-            if getattr(student, "assigned_teacher_id", None) != current_user.id:
+            if student.assigned_teacher_id != current_user.id:
                 abort(403)
 
         target_user = student
 
-    # Fetch audiobook for the resolved target user
     audiobook = (
         db_session.query(UserAudiobook)
         .filter_by(user_id=target_user.id)
@@ -57,26 +54,28 @@ def audiobooks():
     )
 
     text_content = None
+
     if audiobook and audiobook.text_url:
         try:
             resp = requests.get(audiobook.text_url, timeout=5)
             resp.raise_for_status()
             text_content = resp.text
         except Exception:
-            current_app.logger.exception("Failed to fetch audiobook text from GCS")
+            current_app.logger.exception(
+                "Failed to fetch audiobook text from GCS"
+            )
 
     return render_template(
         "audiobooks.html",
         audiobook=audiobook,
         text_content=text_content,
-        student=student,          # None if it's the current_user
-        target_user=target_user,  # whoever we're showing
+        student=student,
+        target_user=target_user,
     )
 
 
-
 @bp.route("/translate", methods=["POST"])
-@login_required
+@user_or_guest_required
 def translate_route():
     data = request.get_json()
     if not data or "text" not in data:
@@ -89,7 +88,7 @@ def translate_route():
 
 
 @bp.route("/assign_audiobook/<string:user_id>", methods=["POST"])
-@login_required
+@user_or_guest_required
 def assign_audiobook(user_id):
     if not (current_user.is_teacher() or current_user.is_admin()):
         raise Forbidden("You are not allowed to assign audiobooks.")
@@ -368,4 +367,20 @@ def mark_chapter_read(book_slug, chapter_slug):
             book_slug=book.slug,
             chapter_slug=chapter.slug,
         )
+    )
+
+
+
+@bp.route('/library')
+@user_or_guest_required
+def library():
+    books = (
+        db_session.query(Book)
+        .order_by(Book.title)
+        .all()
+    )
+
+    return render_template(
+        "library.html",
+        books=books,
     )

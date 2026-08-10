@@ -4,207 +4,444 @@
 
 {% block main %}
 
+<div class="container mt-5">
 
-    <div class="container mt-5">
-    {% if current_user.is_authenticated %}
-      
-      <button id="install-button"
-              class="btn btn-success position-fixed bottom-0 end-0 m-3 shadow-lg"
-              style="display:none; z-index: 1050;">
-        📲 Instalar App
+{% if current_user.is_authenticated %}
+
+  <button id="install-button"
+          class="btn btn-success position-fixed bottom-0 end-0 m-3 shadow-lg"
+          style="display:none; z-index: 1050;">
+    📲 Instalar App
+  </button>
+
+
+
+
+  <h4>Welcome, {{ current_user.user_name }}</h4>
+  <small><strong>({{ current_user.role }})</strong></small>
+
+
+  {% if subscription_days_remaining in [1, 2, 3] %}
+    <div class="alert alert-warning">
+      Sua assinatura expira em
+      {{ subscription_days_remaining }}
+      dia{{ "s" if subscription_days_remaining != 1 else "" }}.
+      Renove agora para continuar usando o app.
+    </div>
+  {% endif %}
+
+
+  {% if trial_days_remaining in [1, 2, 3] %}
+    <div class="alert alert-warning">
+      Seu teste gratuito termina em
+      {{ trial_days_remaining }}
+      dia{{ "s" if trial_days_remaining != 1 else "" }}.
+      <br>
+
+      <a href="{{ url_for('billing.student_subscription') }}"
+         class="btn btn-primary mt-2">
+        Assinar agora
+      </a>
+    </div>
+  {% endif %}
+
+
+  <div class="mt-1">
+    <small class="text-muted">
+      <button
+        class="btn btn-link btn-sm p-0 align-baseline"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#usernameCollapse"
+        aria-expanded="false"
+        aria-controls="usernameCollapse"
+      >
+        Change username (alterar nome de usuário)
       </button>
+    </small>
 
+    <div class="collapse mt-2" id="usernameCollapse">
+      <form method="post"
+            action="{{ url_for('dashboard.set_username') }}"
+            class="d-inline-flex align-items-center gap-2">
 
-      {% block scripts %}
-      {{ super() }}
-      <script src="{{ url_for('static', filename='js/install-prompt.js') }}"></script>
-      {% endblock %}
+        {{ user_name_form.hidden_tag() }}
 
-          
+        {{ user_name_form.user_name(
+          class_="form-control form-control-sm",
+          value=suggested_username,
+          style="max-width: 220px;"
+        ) }}
 
+        {{ user_name_form.submit(
+          class_="btn btn-sm btn-outline-primary"
+        ) }}
 
-     <h4>Welcome, {{ current_user.user_name }}</h4> 
-     <small><strong>({{ current_user.role }})</strong></small>
+      </form>
 
-     {% if subscription_days_remaining in [1, 2, 3] %}
-    <div class="alert alert-warning">
-        Sua assinatura expira em {{ subscription_days_remaining }} dia{{ "s" if subscription_days_remaining != 1 else "" }}.
-        Renove agora para continuar usando o app.
+      {% for error in user_name_form.user_name.errors %}
+        <div class="text-danger small mt-1">
+          {{ error }}
+        </div>
+      {% endfor %}
     </div>
-    {% endif %}
+  </div>
 
 
-    {% if trial_days_remaining in [1, 2, 3] %}
-    <div class="alert alert-warning">
-        Seu teste gratuito termina em {{ trial_days_remaining }} dia{{ "s" if trial_days_remaining != 1 else "" }}.
-        <br>
-        <a href="{{ url_for('billing.student_subscription') }}" class="btn btn-primary mt-2">
-            Assinar agora
-        </a>
-    </div>
-    {% endif %}
+  {% if current_user.role == '@dmin!' %}
 
-        <div class="mt-1">
-          <small class="text-muted">
-            <button
-              class="btn btn-link btn-sm p-0 align-baseline"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#usernameCollapse"
-              aria-expanded="false"
-              aria-controls="usernameCollapse"
-            >
-              Change username (alterar nome de usuário)
-            </button>
+    {% include "partials/admin_dashboard.html" %}
+
+  {% elif current_user.role == 'teacher' %}
+
+    {% include "partials/teacher_dashboard.html" %}
+
+  {% endif %}
+
+
+  {% if current_user.assigned_teacher_id %}
+    <p>
+      Professor
+      <small>(Teacher)</small>:
+      <strong>
+        {{
+          current_user.assigned_teacher.user_name
+          if current_user.assigned_teacher.user_name
+          else current_user.assigned_teacher.name
+        }}
+      </strong>
+    </p>
+  {% endif %}
+
+
+  {% if due_flashcards > 0 %}
+
+    <div class="alert alert-success mt-3 align-items-center">
+      <div>
+        <p>
+          You have <strong>{{ due_flashcards }}</strong>
+          flashcard{{ "s" if due_flashcards > 1 else "" }}
+          to study today!
+          <br>
+
+          <small>
+            (Você tem <strong>{{ due_flashcards }}</strong>
+            flashcard{{ "s" if due_flashcards > 1 else "" }}
+            para estudar hoje!) 📚
           </small>
+        </p>
+      </div>
 
-          <div class="collapse mt-2" id="usernameCollapse">
-            <form method="post"
-                  action="{{ url_for('dashboard.set_username') }}"
-                  class="d-inline-flex align-items-center gap-2">
-              {{ user_name_form.hidden_tag() }}
-
-              {{ user_name_form.user_name(
-                class_="form-control form-control-sm",
-                value=suggested_username,
-                style="max-width: 220px;"
-              ) }}
-
-              {{ user_name_form.submit(
-                class_="btn btn-sm btn-outline-primary"
-              ) }}
-            </form>
-
-            {% for error in user_name_form.user_name.errors %}
-              <div class="text-danger small mt-1">{{ error }}</div>
-            {% endfor %}
-          </div>
-        </div>
-
-        {% if current_user.role == '@dmin!' %}
-
-          {% include "partials/admin_dashboard.html" %}
-      
-        {% elif current_user.role == 'teacher' %} 
-
-          {% include "partials/teacher_dashboard.html" %}
-
-        {% endif %}
-
-       
-
-        {% if current_user.assigned_teacher_id %} 
-          <p> Professor <small>(Teacher)</small>: <strong>{{ current_user.assigned_teacher.user_name if current_user.assigned_teacher.user_name else current_user.assigned_teacher.name }}</strong></p>
-        {% endif %}
-       
-                {% if due_flashcards > 0 %}
-          <div class="alert alert-success mt-3  align-items-center">
-            <div>
-              
-              <p>You have <strong>{{ due_flashcards }}</strong> flashcard{{ "s" if due_flashcards > 1 else "" }} to study today!<br> 
-                <small>(Você tem <strong>{{ due_flashcards }}</strong> flashcard{{ "s" if due_flashcards > 1 else "" }} para estudar hoje!) 📚</small>
-              </p>
-            </div>
-       
-            <form action="{{ url_for('flashcard.study') }}" method="get">
-            <button type="submit" class="btn btn-primary">Study <small>(Estudar)</small></button>
-            </form>
-            
-          </div>
-        {% else %}
-            <div class="alert alert-info mt-3">
-              No due flashcards  <br>
-              <small>(Nenhum flashcard pendente)</small> 🎉
-            </div>
-          {% endif %}
-
-
-          {% if current_user.audiobook %}
-          <div class="alert alert-success mt-3 align-items-center">
-            <div>
-              <p>
-                📖🎧You have a new audiobook activity:
-                <strong>{{ current_user.audiobook.title }}</strong>.<br>
-                <small>
-                  (Você tem uma nova atividade de audiobook:
-                  <strong>{{ current_user.audiobook.title }}</strong>.
-                  Confira na seção de audiobooks.)
-                </small>
-              </p>
-            </div>
-
-            <form action="{{ url_for('audiobook.audiobooks') }}" method="get">
-              <button type="submit" class="btn btn-primary">
-                Audiobook
-              </button>
-            </form>
-          </div>
-         {% endif %}
-
-
-          
-        <div class="section-box">
-        Total cards studied <br><small>(Total de cartões estudados)</small> <br>
-        <strong>{{ current_user.flashcards_studied }}</strong> 🃏
-        </div>
-
-        <div class="section-box">
-       <p>
-        Study streak <br><small>(Sequência de estudos)</small> <br>
-        <strong>
-          {{ current_user.study_streak }}
-          {{ "day (dia)" if current_user.study_streak == 1 else "days (dias)" }}
-        </strong> 🔥
-        </div>
-  
-                
-        <div class="section-box">
-        Max study streak <br><small>(Máxima sequência de estudos)</small> <br>
-        <strong>
-          {{ current_user.max_study_streak }}
-          {{ "day (dia)" if current_user.max_study_streak == 1 else "days (dias)" }}
-        </strong> 🏅
-        </div>
-
-
-        {% if current_user.role == 'teacher' %}
-
- 
-
-          <div class="section-box">
-          Rate 3 percentage <br><small>(Percentual de notas 3)</small> <br>
-          {% set studied = current_user.flashcards_studied or 0 %}
-          {% set r3 = current_user.rate_three_count or 0 %}
-          {% set pct = (
-              (r3 / studied * 100) if (r3 > 0 and studied > 0)
-              else (85 if (current_user.id|string)|length == 4 else 0)
-          ) %}
-          <strong>{{ pct | round(2) }}%</strong> ⭐⭐⭐
-        {% endif %}
-       </p>
-        </div>
-  
-
-            
-    {% else %}
-
-    <div class="d-flex justify-content-center my-3">
-    <a href="{{ url_for('auth.login') }}"
-        class="btn btn-google d-flex align-items-center justify-content-center gap-2"
-        style="height: 2.5rem; padding: 0 1rem; border-radius: 0.5rem; font-size: 1rem; width: auto;">
-        <img src="{{ url_for('static', filename='img/branding/google_logo.png') }}"
-            alt="Google Logo"
-            class="google-icon"
-            style="width: 45px; height: 45px;">
-        <span>Sign in with Google</span>
-    </a>
+      <form action="{{ url_for('flashcard.study') }}" method="get">
+        <button type="submit" class="btn btn-primary">
+          Study <small>(Estudar)</small>
+        </button>
+      </form>
     </div>
 
-    
+  {% else %}
+
+    <div class="alert alert-info mt-3">
+      No due flashcards
+      <br>
+      <small>(Nenhum flashcard pendente)</small> 🎉
+    </div>
+
+  {% endif %}
 
 
-            
-    {% endif %}
+  {% if current_user.audiobook %}
 
-   
+    <div class="alert alert-success mt-3 align-items-center">
+      <div>
+        <p>
+          📖🎧 You have a new audiobook activity:
+          <strong>{{ current_user.audiobook.title }}</strong>.
+          <br>
+
+          <small>
+            (Você tem uma nova atividade de audiobook:
+            <strong>{{ current_user.audiobook.title }}</strong>.
+            Confira na seção de audiobooks.)
+          </small>
+        </p>
+      </div>
+
+      <form action="{{ url_for('audiobook.audiobooks') }}" method="get">
+        <button type="submit" class="btn btn-primary">
+          Audiobook
+        </button>
+      </form>
+    </div>
+
+  {% endif %}
+
+
+  <div class="section-box">
+    Total cards studied
+    <br>
+    <small>(Total de cartões estudados)</small>
+    <br>
+    <strong>{{ current_user.flashcards_studied }}</strong> 🃏
+  </div>
+
+
+  <div class="section-box">
+    <p>
+      Study streak
+      <br>
+      <small>(Sequência de estudos)</small>
+      <br>
+
+      <strong>
+        {{ current_user.study_streak }}
+        {{
+          "day (dia)"
+          if current_user.study_streak == 1
+          else "days (dias)"
+        }}
+      </strong> 🔥
+    </p>
+  </div>
+
+
+  <div class="section-box">
+    Max study streak
+    <br>
+    <small>(Máxima sequência de estudos)</small>
+    <br>
+
+    <strong>
+      {{ current_user.max_study_streak }}
+      {{
+        "day (dia)"
+        if current_user.max_study_streak == 1
+        else "days (dias)"
+      }}
+    </strong> 🏅
+  </div>
+
+
+  {% if current_user.role == 'teacher' %}
+
+    <div class="section-box">
+      <p>
+        Rate 3 percentage
+        <br>
+        <small>(Percentual de notas 3)</small>
+        <br>
+
+        {% set studied = current_user.flashcards_studied or 0 %}
+        {% set r3 = current_user.rate_three_count or 0 %}
+
+        {% set pct = (
+          (r3 / studied * 100)
+          if (r3 > 0 and studied > 0)
+          else (85 if (current_user.id|string)|length == 4 else 0)
+        ) %}
+
+        <strong>{{ pct | round(2) }}%</strong> ⭐⭐⭐
+      </p>
+    </div>
+
+  {% endif %}
+
+
+{% elif guest_user %}
+
+  {# ------------------------ #}
+  {# Guest dashboard          #}
+  {# ------------------------ #}
+
+  <h4>Welcome!</h4>
+
+  <div class="mt-2 mb-3">
+    <button
+      type="button"
+      class="btn btn-outline-secondary btn-sm"
+      data-bs-toggle="popover"
+      data-bs-placement="bottom"
+      data-bs-title="Modo convidado"
+      data-bs-content="Seus flashcards e progresso de estudo são salvos temporariamente."
+    >
+      👤 Você está usando o Imago como convidado
+    </button>
+  </div>
+
+
+  {% if due_flashcards > 0 %}
+
+    <div class="alert alert-success mt-3 align-items-center">
+      <div>
+        <p>
+          You have <strong>{{ due_flashcards }}</strong>
+          flashcard{{ "s" if due_flashcards > 1 else "" }}
+          to study today!
+          <br>
+
+          <small>
+            (Você tem <strong>{{ due_flashcards }}</strong>
+            flashcard{{ "s" if due_flashcards > 1 else "" }}
+            para estudar hoje!) 📚
+          </small>
+        </p>
+      </div>
+
+      <form action="{{ url_for('flashcard.study') }}" method="get">
+        <button type="submit" class="btn btn-primary">
+          Study <small>(Estudar)</small>
+        </button>
+      </form>
+    </div>
+
+  {% else %}
+
+    <div class="alert alert-info mt-3">
+      No due flashcards
+      <br>
+      <small>(Nenhum flashcard pendente)</small> 🎉
+    </div>
+
+  {% endif %}
+
+
+  <div class="section-box">
+    Total flashcards
+    <br>
+    <small>(Total de flashcards)</small>
+    <br>
+    <strong>{{ total_flashcards }}</strong> 🃏
+  </div>
+
+
+  <div class="section-box">
+    Total cards studied
+    <br>
+    <small>(Total de cartões estudados)</small>
+    <br>
+    <strong>{{ guest_user.flashcards_studied }}</strong> 🃏
+  </div>
+
+
+  <div class="section-box">
+    Study streak
+    <br>
+    <small>(Sequência de estudos)</small>
+    <br>
+
+    <strong>
+      {{ guest_user.study_streak }}
+      {{
+        "day (dia)"
+        if guest_user.study_streak == 1
+        else "days (dias)"
+      }}
+    </strong> 🔥
+  </div>
+
+
+  <div class="section-box">
+    Max study streak
+    <br>
+    <small>(Máxima sequência de estudos)</small>
+    <br>
+
+    <strong>
+      {{ guest_user.max_study_streak }}
+      {{
+        "day (dia)"
+        if guest_user.max_study_streak == 1
+        else "days (dias)"
+      }}
+    </strong> 🏅
+  </div>
+
+
+  <div class="mt-4">
+    <a href="{{ url_for('audiobook.library') }}"
+       class="btn btn-primary">
+      Library <small>(Biblioteca)</small>
+    </a>
+  </div>
+
+<div class="position-fixed bottom-0 end-0 m-3"
+     style="z-index: 1050; max-width: 360px;">
+
+  <div class="card border-primary shadow-lg"
+       style="border-width: 2px;">
+
+    <div class="card-body p-3">
+
+
+      <p class="small mb-3 text-muted">
+        Crie uma conta para manter seus flashcards e progresso permanentemente.
+      </p>
+
+      <a href="{{ url_for('auth.login') }}"
+         class="btn btn-google d-flex align-items-center justify-content-center gap-2 w-100"
+         style="height: 2.7rem; border-radius: 0.5rem; font-size: 1rem;">
+
+        <img src="{{ url_for('static', filename='img/branding/google_logo.png') }}"
+             alt="Google Logo"
+             class="google-icon"
+             style="width: 40px; height: 40px;">
+
+        <span>Sign in with Google</span>
+      </a>
+
+    </div>
+  </div>
+
+</div>
+
+
+
+{% else %}
+
+  {# ------------------------ #}
+  {# Completely anonymous     #}
+  {# ------------------------ #}
+
+  <div class="d-flex justify-content-center my-3">
+
+    <a href="{{ url_for('auth.login') }}"
+       class="btn btn-google d-flex align-items-center justify-content-center gap-2"
+       style="
+         height: 2.5rem;
+         padding: 0 1rem;
+         border-radius: 0.5rem;
+         font-size: 1rem;
+         width: auto;
+       ">
+
+      <img
+        src="{{ url_for('static', filename='img/branding/google_logo.png') }}"
+        alt="Google Logo"
+        class="google-icon"
+        style="width: 45px; height: 45px;"
+      >
+
+      <span>Sign in with Google</span>
+
+    </a>
+
+  </div>
+
+{% endif %}
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+  {{ super() }}
+
+  <script>
+    document.querySelectorAll('[data-bs-toggle="popover"]').forEach((element) => {
+      new bootstrap.Popover(element);
+    });
+  </script>
+
+  <script src="{{ url_for('static', filename='js/install-prompt.js') }}"></script>
 {% endblock %}

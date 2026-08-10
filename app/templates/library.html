@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+
+{% block title %}Library{% endblock %}
+
+{% block main %}
+
+<h1 class="mt-5">Library</h1>
+
+{% if guest_user %}
+    <small>
+        Você está navegando como convidado.
+    </small>
+{% endif %}
+
+{% if books %}
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mt-2 justify-content-center">
+
+        {% for book in books %}
+
+            <div class="col">
+
+                <div class="card h-100">
+                    <div class="card-body">
+
+                        <h5 class="card-title">
+                            {{ book.title }}
+                        </h5>
+
+                        {% if book.author %}
+                            <p class="card-text">
+                                {{ book.author }}
+                            </p>
+                        {% endif %}
+
+                        {% if book.level %}
+                            <p class="card-text">
+                                <small>Level: {{ book.level }}</small>
+                            </p>
+                        {% endif %}
+
+                        {% if book.description %}
+                            <p class="card-text mt-2">
+                                {{ book.description }}
+                            </p>
+                        {% endif %}
+
+                        <a href="#"
+                           class="btn btn-primary">
+                            Open
+                        </a>
+
+                    </div>
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+{% else %}
+
+    <p class="mt-4">
+        No books available yet.
+    </p>
+
+{% endif %}
+
+{% endblock %}

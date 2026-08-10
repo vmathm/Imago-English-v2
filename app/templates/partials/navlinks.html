@@ -5,6 +5,7 @@
         <ul class="navbar-nav ms-auto mt-2">
             <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.audiobooks') }}">Audiobooks</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.library') }}">Library</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.leaderboard') }}">Leaderboard</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('calendar.calendar_settings') }}">Calendar</a></li>
@@ -17,6 +18,7 @@
         <ul class="navbar-nav ms-auto mt-2">
             <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.audiobooks') }}">Audiobooks</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.library') }}">Library</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.leaderboard') }}">Leaderboard</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('calendar.calendar_settings') }}">Calendar</a></li>
@@ -29,7 +31,14 @@
         {# student pays through Asaas #}
         <ul class="navbar-nav ms-auto mt-2">
             <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.audiobooks') }}">Audiobooks</a></li>
+            {% if current_user.assigned_teacher_id %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('audiobook.audiobooks') }}">
+                        Audiobooks
+                    </a>
+                </li>
+            {% endif %}
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.library') }}">Library</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.leaderboard') }}">Leaderboard</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('billing.student_subscription') }}">Subscription</a></li>
@@ -41,6 +50,7 @@
         <ul class="navbar-nav ms-auto mt-2">
             <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.audiobooks') }}">Audiobooks</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.library') }}">Library</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.leaderboard') }}">Leaderboard</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Sign out</a></li>
@@ -60,56 +70,20 @@
         </ul>
     {% endif %}
 
-{% elif session.get('guest_user_id') %}
+{% elif guest_user %}
 
-    {# guest navbar #}
+    {# Guest view #}
     <ul class="navbar-nav ms-auto mt-2">
-        <li class="nav-item">
-            <a class="nav-link" href="/">Home</a>
-        </li>
-
-        <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('audiobook.audiobooks') }}">
-                Audiobooks
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">
-                Flashcards
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('flashcard.study') }}">
-                Study
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('auth.login') }}">
-                Entrar
-            </a>
-        </li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('dashboard.index') }}">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.library') }}">Library</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.study') }}">Study</a></li>
     </ul>
 
 {% else %}
 
-    {# completely anonymous visitor #}
+    {# Completely anonymous visitor #}
 
 {% endif %}
     
 
-
-
-
-<!--
-{# Dark mode switch (always shown) #}
-<ul class="navbar-nav ms-auto mt-2">
-    <li class="nav-item d-flex align-items-center justify-content-end">
-        <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="dark-mode-toggle">
-        </div>
-    </li>
-</ul>
--->

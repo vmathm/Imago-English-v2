@@ -55,13 +55,17 @@ def get_or_create_guest_user() -> GuestUser | None:
             created_at=now,
             last_activity_at=now,
             expires_at=now + timedelta(days=GUEST_LIFETIME_DAYS),
+            role="student"
         )
+        
         db_session.add(guest_user)
     else:
         guest_user.last_activity_at = now
         guest_user.expires_at = now + timedelta(
             days=GUEST_LIFETIME_DAYS
         )
+        
+
 
     db_session.commit()
 

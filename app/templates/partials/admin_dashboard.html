@@ -147,7 +147,39 @@
       </div>
     </div>
 
-    
+    <!-- Create Book -->
+<div class="accordion-item mb-2 border-0">
+  <h2 class="accordion-header" id="headingCreateBook">
+    <button class="accordion-button collapsed w-100 py-3 fw-semibold"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#collapseCreateBook"
+            aria-expanded="false"
+            aria-controls="collapseCreateBook">
+      Create Library Book
+    </button>
+  </h2>
+
+  <div id="collapseCreateBook"
+       class="accordion-collapse collapse"
+       aria-labelledby="headingCreateBook"
+       data-bs-parent="#adminAccordion">
+
+    <div class="accordion-body">
+
+      <p class="mb-3">
+        Create a new book for the shared audiobook library.
+      </p>
+
+      <a href="{{ url_for('admin.create_book') }}"
+         class="btn btn-primary w-100">
+        Create Book
+      </a>
+
+    </div>
+  </div>
+</div>
+
   </div>
 </div>
 <br><br>
