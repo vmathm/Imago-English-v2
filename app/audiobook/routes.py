@@ -270,12 +270,28 @@ def mark_chapter_read(book_slug, chapter_slug):
 
 
 
-@bp.route('/library')
+@bp.route("/library")
 @user_or_guest_required
 def library():
-    books = (
+
+    query = (
         db_session.query(Book)
-        .order_by(Book.title)
+        .filter(Book.chapters.any())
+    )
+
+    if not current_user.is_authenticated:
+        guest_user = g.guest_user
+
+        if not guest_user or not guest_user.level:
+            abort(403)
+
+        query = query.filter(
+            Book.level == guest_user.level
+        )
+
+    books = (
+        query
+        .order_by(Book.title.asc())
         .all()
     )
 

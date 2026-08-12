@@ -4,6 +4,7 @@ from app.models import User
 from app.services.guest_session import ensure_guest_id
 from app.services.guest_session import get_or_create_guest_user
 from app.flashcard.form import FlashcardForm
+from app.database import db_session
 
 bp = Blueprint("home", __name__)
 
@@ -31,9 +32,7 @@ def index(user_id):
 def guest_test():
     guest_user = get_or_create_guest_user()
 
-    return render_template(
-        "guest_test.html",
-        form=FlashcardForm(),
-        guest_user=guest_user,
-        authenticated=current_user.is_authenticated,
-    )   
+    guest_user.level = "A1"
+    db_session.commit()
+
+    return redirect(url_for("dashboard.index"))

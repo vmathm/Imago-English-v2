@@ -38,7 +38,10 @@
                     </a>
                 </li>
             {% endif %}
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.library') }}">Library</a></li>
+
+            {% if library_available %}
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.library') }}">Library</a></li>
+            {% endif %}
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.leaderboard') }}">Leaderboard</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('billing.student_subscription') }}">Subscription</a></li>
@@ -50,7 +53,9 @@
         <ul class="navbar-nav ms-auto mt-2">
             <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.audiobooks') }}">Audiobooks</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.library') }}">Library</a></li>
+            {% if library_available %}
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('audiobook.library') }}">Library</a></li>
+            {% endif %}
             <li class="nav-item"><a class="nav-link" href="{{ url_for('flashcard.flashcards') }}">Flashcards</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('progress.leaderboard') }}">Leaderboard</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Sign out</a></li>

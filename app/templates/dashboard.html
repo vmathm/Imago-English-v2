@@ -304,6 +304,12 @@
 
   {% endif %}
 
+    <div class="mt-4">
+    <a href="{{ url_for('audiobook.library') }}"
+       class="btn btn-primary">
+      Library <small>(Biblioteca)</small>
+    </a>
+  </div>
 
   <div class="section-box">
     Total flashcards
@@ -357,12 +363,7 @@
   </div>
 
 
-  <div class="mt-4">
-    <a href="{{ url_for('audiobook.library') }}"
-       class="btn btn-primary">
-      Library <small>(Biblioteca)</small>
-    </a>
-  </div>
+
 
 <div class="position-fixed bottom-0 end-0 m-3"
      style="z-index: 1050; max-width: 360px;">
