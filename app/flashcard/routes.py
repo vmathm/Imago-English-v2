@@ -91,7 +91,6 @@ def flashcards():
         total_flashcards=total_flashcards,
     )
 
-
 @bp.route("/addcards", methods=["POST"])
 @active_required
 def addcards():
@@ -106,6 +105,9 @@ def addcards():
     question = form.question.data.strip()
     answer = form.answer.data.strip()
     student_id = form.student_id.data
+
+    MAX_NEVER_STUDIED = 10
+    MAX_ONE_DAY_INTERVAL = 15
 
     # --------------------------------------------------
     # Guest user
@@ -140,6 +142,46 @@ def addcards():
             return jsonify({
                 "status": "error",
                 "message": "Flashcard already exists!",
+            }), 409
+
+        # ----------------------------------------------
+        # Learning-load limits
+        # ----------------------------------------------
+        never_studied_count = (
+            db_session.query(GuestFlashcard)
+            .filter(
+                GuestFlashcard.guest_user_id == guest_user.id,
+                GuestFlashcard.level == 0,
+            )
+            .count()
+        )
+
+        if never_studied_count >= MAX_NEVER_STUDIED:
+            return jsonify({
+                "status": "error",
+                "message": (
+                    "Você já tem 10 flashcards que ainda não foram estudados. "
+                    "Estude alguns deles antes de adicionar novos."
+                ),
+            }), 409
+
+        one_day_interval_count = (
+            db_session.query(GuestFlashcard)
+            .filter(
+                GuestFlashcard.guest_user_id == guest_user.id,
+                GuestFlashcard.level != 0,
+                GuestFlashcard.interval == 1,
+            )
+            .count()
+        )
+
+        if one_day_interval_count >= MAX_ONE_DAY_INTERVAL:
+            return jsonify({
+                "status": "error",
+                "message": (
+                    "Você já tem 15 flashcards em revisão diária. "
+                    "Continue estudando-os antes de adicionar novos."
+                ),
             }), 409
 
         new_flashcard = GuestFlashcard(
@@ -207,7 +249,9 @@ def addcards():
     else:
         flashcard_owner_id = current_user.id
 
-    # Prevent duplicates for registered user
+    # --------------------------------------------------
+    # Prevent duplicates
+    # --------------------------------------------------
     existing = (
         db_session.query(Flashcard)
         .filter_by(
@@ -223,25 +267,49 @@ def addcards():
             "message": "Flashcard already exists!",
         }), 409
 
-    # Teacher-review limit only applies to registered users.
-    unreviewed_count = (
+    # --------------------------------------------------
+    # Learning-load limits
+    # --------------------------------------------------
+    never_studied_count = (
         db_session.query(Flashcard)
-        .filter_by(
-            user_id=flashcard_owner_id,
-            reviewed_by_tc=False,
+        .filter(
+            Flashcard.user_id == flashcard_owner_id,
+            Flashcard.level == 0,
         )
         .count()
     )
 
-    if unreviewed_count >= 5:
+    if never_studied_count >= MAX_NEVER_STUDIED:
         return jsonify({
             "status": "error",
             "message": (
-                "Você não pode ter mais de "
-                "5 cartões não revisados."
+                "Você já tem 10 flashcards que ainda não foram estudados. "
+                "Estude alguns deles antes de adicionar novos."
             ),
         }), 409
 
+    one_day_interval_count = (
+        db_session.query(Flashcard)
+        .filter(
+            Flashcard.user_id == flashcard_owner_id,
+            Flashcard.level != 0,
+            Flashcard.interval == 1,
+        )
+        .count()
+    )
+
+    if one_day_interval_count >= MAX_ONE_DAY_INTERVAL:
+        return jsonify({
+            "status": "error",
+            "message": (
+                "Você já tem 15 flashcards em revisão diária. "
+                "Continue estudando-os antes de adicionar novos."
+            ),
+        }), 409
+
+    # --------------------------------------------------
+    # Create flashcard
+    # --------------------------------------------------
     new_flashcard = Flashcard(
         question=question,
         answer=answer,
