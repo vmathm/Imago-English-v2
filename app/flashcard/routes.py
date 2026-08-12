@@ -8,7 +8,7 @@ from sqlalchemy import func, or_, asc
 import math
 from app.extensions import csrf
 from decimal import Decimal, ROUND_HALF_UP
-from app.utils.time import utcnow, now_sp, sp_midnight_as_utc, sp_midnight_utc_days_from_now
+from app.utils.time import utc_to_sp, utcnow, now_sp, sp_midnight_as_utc, sp_midnight_utc_days_from_now
 from datetime import timedelta
 from app.services.guest_session import get_or_create_guest_user
 from app.models import GuestFlashcard
@@ -17,7 +17,12 @@ bp = Blueprint("flashcard", __name__, url_prefix="/flashcard")
 
 
 
+@bp.app_template_filter("sp_time")
+def sp_time(value):
+    if value is None:
+        return None
 
+    return utc_to_sp(value)
 # ----------------------------
 # Decimal helper
 # ----------------------------

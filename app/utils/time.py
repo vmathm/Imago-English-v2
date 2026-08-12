@@ -21,3 +21,10 @@ def sp_midnight_as_utc(d: date) -> datetime:
 
 def sp_midnight_utc_days_from_now(days: int) -> datetime:
     return sp_midnight_as_utc(now_sp().date() + timedelta(days=days))
+
+
+def utc_to_sp(dt: datetime) -> datetime:
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+
+    return dt.astimezone(SP_TZ)
