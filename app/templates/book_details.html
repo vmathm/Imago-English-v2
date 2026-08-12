@@ -1,0 +1,207 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ book.title }}{% endblock %}
+
+{% block main %}
+
+<div class="container mt-5">
+
+  {% if current_user.is_authenticated and current_user.is_admin() %}
+  <div class="mb-3">
+    <a
+      href="{{ url_for(
+        'admin.edit_book',
+        book_id=book.id
+      ) }}"
+      class="btn btn-outline-secondary btn-sm"
+    >
+      Edit Book
+    </a>
+
+
+
+     <form
+      method="POST"
+      action="{{ url_for(
+        'admin.delete_book',
+        book_id=book.id
+      ) }}"
+      onsubmit="return confirm(
+        'Delete this book and all of its chapters permanently?'
+      );"
+    >
+      <input
+        type="hidden"
+        name="csrf_token"
+        value="{{ csrf_token() }}"
+      >
+
+      <button
+        type="submit"
+        class="btn btn-outline-danger btn-sm"
+      >
+        Delete Book
+      </button>
+    </form>
+  </div>
+{% endif %}
+
+  <h1>{{ book.title }}</h1>
+
+  {% if book.author %}
+    <p class="mb-1">
+      <strong>{{ book.author }}</strong>
+    </p>
+  {% endif %}
+
+  {% if book.level %}
+    <p class="mb-3">
+      <small>Level: {{ book.level }}</small>
+    </p>
+  {% endif %}
+
+  {% if book.description %}
+    <p class="mb-4">
+      {{ book.description }}
+    </p>
+  {% endif %}
+
+    <div class="mt-4 mb-3">
+    <strong>
+      {{ read_count }} / {{ total_chapters }} chapters read
+    </strong>
+    </div>
+
+    {% if next_chapter %}
+    <div class="mb-4">
+        <a
+        href="{{ url_for(
+            'audiobook.read_chapter',
+            book_slug=book.slug,
+            chapter_slug=next_chapter.slug
+        ) }}"
+        class="btn btn-success"
+        >
+        Continue Reading
+        <small>({{ next_chapter.title }})</small>
+        </a>
+    </div>
+    {% elif chapters %}
+    <div class="alert alert-success">
+        ✅ You have finished this book!
+    </div>
+    {% endif %}
+
+  <h4 class="mt-4 mb-3">
+    Chapters
+  </h4>
+
+
+  {% if chapters %}
+
+
+
+    <div class="list-group">
+
+      {% for chapter in chapters %}
+
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+
+            <div class="text-start">
+
+            <strong>
+                {{ chapter.position }}. {{ chapter.title }}
+            </strong>
+
+            <div>
+                {% if chapter.id in read_chapter_ids %}
+                <small>✅ Read</small>
+                {% else %}
+                <small class="text-muted">Not read yet</small>
+                {% endif %}
+            </div>
+
+            </div>
+            
+            <a
+            href="{{ url_for(
+                'audiobook.read_chapter',
+                book_slug=book.slug,
+                chapter_slug=chapter.slug
+            ) }}"
+            class="btn btn-primary btn-sm"
+            >
+            Open
+            </a>
+
+                        
+            {% if current_user.is_authenticated and current_user.is_admin() %}
+                <a
+                href="{{ url_for(
+                    'admin.edit_chapter',
+                    chapter_id=chapter.id
+                ) }}"
+                class="btn btn-outline-secondary btn-sm"
+                >
+                Edit
+                </a>
+            {% endif %}
+
+
+
+
+            <form
+              method="POST"
+              action="{{ url_for(
+                'admin.delete_chapter',
+                chapter_id=chapter.id
+              ) }}"
+              class="d-inline"
+              onsubmit="return confirm('Delete this chapter permanently?');"
+            >
+              <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+              >
+
+              <button
+                type="submit"
+                class="btn btn-outline-danger btn-sm"
+              >
+                Delete
+              </button>
+            </form>
+        </div>
+
+
+
+        
+          
+      {% endfor %}
+
+    </div>
+
+
+
+    
+
+  {% else %}
+
+    <p>
+      No chapters available yet.
+    </p>
+
+  {% endif %}
+
+
+  <div class="mt-4">
+    <a href="{{ url_for('audiobook.library') }}"
+       class="btn btn-outline-secondary">
+      Back to Library
+    </a>
+  </div>
+
+</div>
+
+{% endblock %}

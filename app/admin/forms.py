@@ -176,3 +176,35 @@ class ChapterForm(FlaskForm):
     )
 
     submit = SubmitField("Upload chapter")
+
+
+class EditBookForm(FlaskForm):
+    title = StringField(
+        "Title",
+        validators=[DataRequired()]
+    )
+
+    slug = StringField(
+        "Slug",
+        validators=[DataRequired()]
+    )
+
+    author = StringField("Author")
+
+    description = TextAreaField("Description")
+
+    level = SelectField(
+        "Level",
+        choices=[
+            ("A1", "A1"),
+            ("A2", "A2"),
+            ("B1", "B1"),
+            ("B2", "B2"),
+            ("C1", "C1"),
+            ("C2", "C2"),
+        ],
+        validators=[DataRequired()],
+    )
+
+    submit = SubmitField("Update Book")
+    

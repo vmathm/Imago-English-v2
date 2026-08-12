@@ -48,13 +48,16 @@ class Chapter(Base):
     slug = Column(String(255), nullable=False)
     position = Column(Integer, nullable=False)
 
-    text_content = Column(Text, nullable=False)
-
-    audio_object_name = Column(
+    text_path = Column(
         String(500),
         nullable=False,
     )
 
+    audio_path = Column(
+        String(500),
+        nullable=False,
+    )
+    
     is_free = Column(
         Boolean,
         nullable=False,

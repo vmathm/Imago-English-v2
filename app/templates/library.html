@@ -45,8 +45,10 @@
                             </p>
                         {% endif %}
 
-                        <a href="#"
-                           class="btn btn-primary">
+                        <a
+                            href="{{ url_for('audiobook.book_details', book_slug=book.slug) }}"
+                            class="btn btn-primary"
+                        >
                             Open
                         </a>
 

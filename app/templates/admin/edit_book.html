@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit Book{% endblock %}
+
+{% block main %}
+
+<div class="container mt-5">
+
+  <h1>Edit Book</h1>
+
+  <form method="POST" class="mt-4">
+
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3 text-start">
+      {{ form.title.label(class="form-label") }}
+      {{ form.title(class="form-control") }}
+    </div>
+
+    <div class="mb-3 text-start">
+      {{ form.slug.label(class="form-label") }}
+      {{ form.slug(class="form-control") }}
+    </div>
+
+    <div class="mb-3 text-start">
+      {{ form.author.label(class="form-label") }}
+      {{ form.author(class="form-control") }}
+    </div>
+
+    <div class="mb-3 text-start">
+      {{ form.description.label(class="form-label") }}
+      {{ form.description(class="form-control", rows="4") }}
+    </div>
+
+    <div class="mb-3 text-start">
+      {{ form.level.label(class="form-label") }}
+      {{ form.level(class="form-select") }}
+    </div>
+
+    <div class="d-flex gap-2 justify-content-center">
+      {{ form.submit(class="btn btn-primary") }}
+
+      <a
+        href="{{ url_for(
+          'audiobook.book_details',
+          book_slug=book.slug
+        ) }}"
+        class="btn btn-outline-secondary"
+      >
+        Cancel
+      </a>
+    </div>
+
+  </form>
+
+</div>
+
+{% endblock %}

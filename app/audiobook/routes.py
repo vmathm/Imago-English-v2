@@ -1,6 +1,8 @@
 import os
-from flask import Blueprint, flash, redirect, render_template, jsonify, request, url_for, abort
+from flask import Blueprint, flash, redirect, render_template, jsonify, request, url_for, abort, g
 from flask_login import current_user, login_required
+from sqlalchemy.exc import IntegrityError
+from app.admin.routes import admin_required
 from app.decorators import active_required, user_or_guest_required
 from app.flashcard.form import FlashcardForm
 from app.models.book import Book
@@ -12,7 +14,7 @@ from app.database import db_session
 from app.models.user_audiobook import UserAudiobook
 import requests
 from flask import current_app
-from app.audiobook.forms import UserAudiobookForm   
+from app.audiobook.forms import EditChapterForm, UserAudiobookForm   
 from app.gcs_utils import delete_file_from_gcs_by_url, upload_file_to_gcs
 from werkzeug.exceptions import Forbidden   
 from app.models import User, UserAudiobook 
@@ -180,109 +182,6 @@ def assign_audiobook(user_id):
     return redirect(url_for("dashboard.index"))
 
 
-@bp.route("/read/<string:book_slug>/<string:chapter_slug>")
-def read_chapter(book_slug, chapter_slug):
-    book = (
-        db_session.query(Book)
-        .filter_by(slug=book_slug)
-        .first()
-    )
-
-    if not book:
-        abort(404)
-
-    chapter = (
-        db_session.query(Chapter)
-        .filter_by(
-            book_id=book.id,
-            slug=chapter_slug,
-        )
-        .first()
-    )
-
-    if not chapter:
-        abort(404)
-
-    # Ensure anonymous visitors have a GuestUser workspace.
-    if not current_user.is_authenticated:
-        get_or_create_guest_user()
-
-    bucket_name = current_app.config.get(
-        "GCS_AUDIOBOOK_BUCKET"
-    )
-
-    if not bucket_name:
-        current_app.logger.error(
-            "GCS_AUDIOBOOK_BUCKET is not configured."
-        )
-        abort(500)
-
-    audio_url = (
-        f"https://storage.googleapis.com/"
-        f"{bucket_name}/"
-        f"{chapter.audio_object_name}"
-    )
-
-    previous_chapter = (
-        db_session.query(Chapter)
-        .filter(
-            Chapter.book_id == book.id,
-            Chapter.position < chapter.position,
-        )
-        .order_by(Chapter.position.desc())
-        .first()
-    )
-
-    next_chapter = (
-        db_session.query(Chapter)
-        .filter(
-            Chapter.book_id == book.id,
-            Chapter.position > chapter.position,
-        )
-        .order_by(Chapter.position.asc())
-        .first()
-    )
-
-    if current_user.is_authenticated:
-        progress = (
-            db_session.query(UserChapterProgress)
-            .filter_by(
-                user_id=current_user.id,
-                chapter_id=chapter.id,
-            )
-            .first()
-        )
-    else:
-        guest_user = get_or_create_guest_user()
-
-        progress = (
-            db_session.query(GuestChapterProgress)
-            .filter_by(
-                guest_user_id=guest_user.id,
-                chapter_id=chapter.id,
-            )
-            .first()
-        )
-
-
-
-
-    return render_template(
-        "audiobooks.html",
-        audiobook={
-            "title": f"{book.title} — {chapter.title}",
-            "audio_url": audio_url,
-        },
-        text_content=chapter.text_content,
-        book=book,
-        chapter=chapter,
-        progress=progress,
-        previous_chapter=previous_chapter,
-        next_chapter=next_chapter,
-        library_mode=True,
-        guest_mode=not current_user.is_authenticated,
-    )
-
 
 
 @bp.route(
@@ -384,3 +283,183 @@ def library():
         "library.html",
         books=books,
     )
+
+@bp.route("/library/<string:book_slug>")
+@user_or_guest_required
+def book_details(book_slug):
+    book = (
+        db_session.query(Book)
+        .filter_by(slug=book_slug)
+        .first()
+    )
+
+    if not book:
+        abort(404)
+
+    chapters = (
+        db_session.query(Chapter)
+        .filter_by(book_id=book.id)
+        .order_by(Chapter.position.asc())
+        .all()
+    )
+
+    chapter_ids = [chapter.id for chapter in chapters]
+
+    read_chapter_ids = set()
+
+    if chapter_ids:
+
+        # Registered user
+        if current_user.is_authenticated:
+            progress_rows = (
+                db_session.query(UserChapterProgress)
+                .filter(
+                    UserChapterProgress.user_id == current_user.id,
+                    UserChapterProgress.chapter_id.in_(chapter_ids),
+                    UserChapterProgress.is_read.is_(True),
+                )
+                .all()
+            )
+
+        # Guest user
+        else:
+            guest_user = g.guest_user
+
+            progress_rows = (
+                db_session.query(GuestChapterProgress)
+                .filter(
+                    GuestChapterProgress.guest_user_id == guest_user.id,
+                    GuestChapterProgress.chapter_id.in_(chapter_ids),
+                    GuestChapterProgress.is_read.is_(True),
+                )
+                .all()
+            )
+
+        read_chapter_ids = {
+            progress.chapter_id
+            for progress in progress_rows
+        }
+
+        next_chapter = next(
+            (
+                chapter
+                for chapter in chapters
+                if chapter.id not in read_chapter_ids
+            ),
+            None,
+        )
+
+
+    return render_template(
+        "book_details.html",
+        book=book,
+        chapters=chapters,
+        read_chapter_ids=read_chapter_ids,
+        read_count=len(read_chapter_ids),
+        total_chapters=len(chapters),
+        next_chapter=next_chapter
+    )
+
+@bp.route("/library/<string:book_slug>/<string:chapter_slug>")
+@user_or_guest_required
+def read_chapter(book_slug, chapter_slug):
+    book = (
+        db_session.query(Book)
+        .filter_by(slug=book_slug)
+        .first()
+    )
+
+    if not book:
+        abort(404)
+
+    chapters = (
+        db_session.query(Chapter)
+        .filter_by(book_id=book.id)
+        .order_by(Chapter.position.asc())
+        .all()
+    )
+
+    chapter = next(
+        (c for c in chapters if c.slug == chapter_slug),
+        None,
+    )
+
+    if not chapter:
+        abort(404)
+
+    # Fetch chapter text from GCS
+    text_content = None
+
+    try:
+        response = requests.get(
+            chapter.text_path,
+            timeout=10,
+        )
+        response.raise_for_status()
+        text_content = response.text
+
+    except requests.RequestException:
+        current_app.logger.exception(
+            "Failed to fetch library chapter text from GCS."
+        )
+
+        flash(
+            "The chapter text could not be loaded.",
+            "danger",
+        )
+
+    # Previous / next chapter
+    chapter_index = chapters.index(chapter)
+
+    previous_chapter = (
+        chapters[chapter_index - 1]
+        if chapter_index > 0
+        else None
+    )
+
+    next_chapter = (
+        chapters[chapter_index + 1]
+        if chapter_index < len(chapters) - 1
+        else None
+    )
+
+    # Current reading progress
+    if current_user.is_authenticated:
+        progress = (
+            db_session.query(UserChapterProgress)
+            .filter_by(
+                user_id=current_user.id,
+                chapter_id=chapter.id,
+            )
+            .first()
+        )
+
+        guest_mode = False
+
+    else:
+        progress = (
+            db_session.query(GuestChapterProgress)
+            .filter_by(
+                guest_user_id=g.guest_user.id,
+                chapter_id=chapter.id,
+            )
+            .first()
+        )
+
+        guest_mode = True
+
+    return render_template(
+        "audiobooks.html",
+        library_mode=True,
+        guest_mode=guest_mode,
+        book=book,
+        chapter=chapter,
+        text_content=text_content,
+        progress=progress,
+        previous_chapter=previous_chapter,
+        next_chapter=next_chapter,
+
+        # This route is not displaying a private UserAudiobook.
+        audiobook=None,
+    )
+

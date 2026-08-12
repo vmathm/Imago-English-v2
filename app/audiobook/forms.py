@@ -34,3 +34,51 @@ class UserAudiobookForm(FlaskForm):
     )
     submit = SubmitField("Upload audiobook")
 
+
+
+
+class ChapterForm(FlaskForm):
+    book_id = SelectField(
+        "Book",
+        coerce=int,
+        validators=[DataRequired()],
+        choices=[]
+    )
+
+    title = StringField(
+        "Chapter title",
+        validators=[DataRequired()]
+    )
+
+    slug = StringField(
+        "Slug",
+        validators=[DataRequired()]
+    )
+
+    position = IntegerField(
+        "Position",
+        validators=[
+            DataRequired(),
+            NumberRange(min=1)
+        ]
+    )
+
+    text_file = FileField(
+        "Text file",
+        validators=[
+            FileAllowed(["txt"], "Only .txt files are allowed.")
+        ]
+    )
+
+    audio_file = FileField(
+        "Audio file",
+        validators=[
+            FileAllowed(["mp3"], "Only .mp3 files are allowed.")
+        ]
+    )
+
+    submit = SubmitField("Create Chapter")
+
+
+class EditChapterForm(ChapterForm):
+    submit = SubmitField("Update Chapter")

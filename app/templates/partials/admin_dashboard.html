@@ -180,6 +180,46 @@
   </div>
 </div>
 
+<!-- Create Chapter -->
+<div class="accordion-item mb-2 border-0">
+  <h2 class="accordion-header" id="headingCreateChapter">
+    <button
+      class="accordion-button collapsed w-100 py-3 fw-semibold"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#collapseCreateChapter"
+      aria-expanded="false"
+      aria-controls="collapseCreateChapter"
+    >
+      Add Chapter to Library Book
+    </button>
+  </h2>
+
+  <div
+    id="collapseCreateChapter"
+    class="accordion-collapse collapse"
+    aria-labelledby="headingCreateChapter"
+    data-bs-parent="#adminAccordion"
+  >
+    <div class="accordion-body">
+
+      <p class="mb-3">
+        Add text and audio chapters to an existing library book.
+      </p>
+
+      <a
+        href="{{ url_for('admin.create_chapter') }}"
+        class="btn btn-primary w-100"
+      >
+        Create Chapter
+      </a>
+
+    </div>
+  </div>
+</div>
+
+
+
   </div>
 </div>
 <br><br>

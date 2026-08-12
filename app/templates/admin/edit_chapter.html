@@ -1,20 +1,22 @@
 {% extends "layout.html" %}
 
-{% block title %}Create Chapter{% endblock %}
+{% block title %}Edit Chapter{% endblock %}
 
 {% block main %}
 
 <div class="container mt-5">
 
-  <h1>Create Chapter</h1>
+  <h1>Edit Chapter</h1>
 
-  <form method="POST"
-        enctype="multipart/form-data"
-        class="mt-4">
+  <p class="text-muted">
+    {{ chapter.book.title }} — {{ chapter.title }}
+  </p>
+
+  <form method="POST" enctype="multipart/form-data">
 
     {{ form.hidden_tag() }}
 
-    <div class="mb-3">
+    <div class="mb-3 text-start">
       {{ form.book_id.label(class="form-label") }}
       {{ form.book_id(class="form-select") }}
 
@@ -26,7 +28,7 @@
     </div>
 
 
-    <div class="mb-3">
+    <div class="mb-3 text-start">
       {{ form.title.label(class="form-label") }}
       {{ form.title(class="form-control") }}
 
@@ -38,7 +40,7 @@
     </div>
 
 
-    <div class="mb-3">
+    <div class="mb-3 text-start">
       {{ form.slug.label(class="form-label") }}
       {{ form.slug(class="form-control") }}
 
@@ -50,7 +52,7 @@
     </div>
 
 
-    <div class="mb-3">
+    <div class="mb-3 text-start">
       {{ form.position.label(class="form-label") }}
       {{ form.position(class="form-control") }}
 
@@ -62,8 +64,17 @@
     </div>
 
 
-    <div class="mb-3">
+    <hr class="my-4">
+
+
+    <div class="mb-3 text-start">
+
       {{ form.text_file.label(class="form-label") }}
+
+      <div class="small text-muted mb-2">
+        Leave empty to keep the current text file.
+      </div>
+
       {{ form.text_file(class="form-control") }}
 
       {% for error in form.text_file.errors %}
@@ -71,11 +82,18 @@
           {{ error }}
         </div>
       {% endfor %}
+
     </div>
 
 
-    <div class="mb-3">
+    <div class="mb-4 text-start">
+
       {{ form.audio_file.label(class="form-label") }}
+
+      <div class="small text-muted mb-2">
+        Leave empty to keep the current audio file.
+      </div>
+
       {{ form.audio_file(class="form-control") }}
 
       {% for error in form.audio_file.errors %}
@@ -83,11 +101,24 @@
           {{ error }}
         </div>
       {% endfor %}
+
     </div>
 
 
-    <div class="mb-3">
+    <div class="d-flex gap-2 justify-content-center">
+
       {{ form.submit(class="btn btn-primary") }}
+
+      <a
+        href="{{ url_for(
+          'admin.book_details',
+          book_id=chapter.book_id
+        ) }}"
+        class="btn btn-outline-secondary"
+      >
+        Cancel
+      </a>
+
     </div>
 
   </form>
