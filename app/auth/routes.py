@@ -8,6 +8,8 @@ from flask_dance.contrib.google import make_google_blueprint, google
 from app.services.google_auth import get_google_user_info
 from app.services.access import sync_internal_access
 from urllib.parse import urlparse, urljoin
+from app.services.guest_claim import claim_guest_workspace
+from app.services.guest_session import GUEST_SESSION_KEY
 import os
 
 
@@ -104,6 +106,8 @@ def google_complete():
     if not google.authorized:
         return redirect(url_for("auth.login"))
 
+
+    guest_id = session.get(GUEST_SESSION_KEY)
     info = get_google_user_info()
 
     email = info["email"]
@@ -142,7 +146,7 @@ def google_complete():
 
     pending_teacher_id = session.pop("pending_teacher_id", None)
     pending_activation = session.pop("pending_activation", False)
-    billing_mode = session.pop("billing_mode", "external")
+    billing_mode = session.pop("billing_mode", "internal")
 
     # Persist billing mode for brand-new users.
     # For existing users, only set it if the field is empty / missing.
@@ -167,9 +171,25 @@ def google_complete():
 
 
     sync_internal_access(user)
+
+    claim_result = claim_guest_workspace(
+        user,
+        guest_id,
+    )
+
     db_session.commit()
 
-    login_user(user, remember=True)
+    if claim_result["claimed"]:
+        session.pop(
+            GUEST_SESSION_KEY,
+            None,
+        )
+
+    login_user(
+        user,
+        remember=True,
+    )
+
     session.modified = True
 
     target = session.pop("post_login_redirect", None)

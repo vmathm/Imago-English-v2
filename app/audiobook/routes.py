@@ -268,7 +268,6 @@ def mark_chapter_read(book_slug, chapter_slug):
         )
     )
 
-
 @bp.route("/library")
 @user_or_guest_required
 def library():
@@ -278,9 +277,10 @@ def library():
         .filter(Book.chapters.any())
     )
 
-    # Registered student
     if current_user.is_authenticated:
-        if current_user.is_student():
+
+        # Only students are level-restricted.
+        if current_user.role == "student":
             if not current_user.level:
                 abort(403)
 
@@ -288,8 +288,8 @@ def library():
                 Book.level == current_user.level
             )
 
-    # Guest
     else:
+        # Guests are also level-restricted.
         guest_user = g.guest_user
 
         if not guest_user or not guest_user.level:
@@ -309,7 +309,6 @@ def library():
         "library.html",
         books=books,
     )
-
 @bp.route("/library/<string:book_slug>")
 @user_or_guest_required
 def book_details(book_slug):

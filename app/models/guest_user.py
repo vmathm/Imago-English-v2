@@ -37,7 +37,7 @@ class GuestUser(Base):
     # Filled only after the guest logs in and claims the workspace.
     claimed_by_user_id = Column(
         String,
-        ForeignKey("users.id"),
+        ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
     )

@@ -53,6 +53,7 @@ def assign_student():
 
         student.assigned_teacher_id = teacher.id
         student.active = True 
+        student.billing_mode='external'
         db_session.commit()
         flash(f'{student.name} assigned to {teacher.name}', 'success')
     else:

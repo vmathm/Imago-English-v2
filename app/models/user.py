@@ -26,7 +26,7 @@ class User(UserMixin, Base):
     user_stripe_id = Column(String(50), nullable=True)
     join_date = Column(Date, nullable=True)
     last_payment_date = Column(Date, nullable=True)
-    billing_mode = Column(String(20), nullable=False, default="external")
+    billing_mode = Column(String(20), nullable=False, default="internal")
 
     active = Column(Boolean, nullable=False, default=False)  # replaces is_active
     study_streak = Column(Integer, nullable=True, default=0)
