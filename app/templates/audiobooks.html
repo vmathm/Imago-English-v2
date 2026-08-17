@@ -163,21 +163,24 @@
 
         {% if current_user.is_authenticated and current_user.is_admin() %}
           {% if not chapter.activity_enabled %}
-              <form
-                  method="POST"
-                  {{ url_for(
-                  'audiobook.join_chapter_activity',
-                  chapter_id=chapter.id,
-                  _external=True
-                  ) }}
-                  class="mb-3"
+          <form
+              method="POST"
+              action="{{ url_for(
+                  'admin.enable_activity',
+                  chapter_id=chapter.id
+              ) }}"
+              class="mb-3"
+          >
+              <input
+                  type="hidden"
+                  name="csrf_token"
+                  value="{{ csrf_token() }}"
               >
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-                  <button type="submit" class="btn btn-primary">
-                      Create Reading Activity
-                  </button>
-              </form>
+              <button type="submit" class="btn btn-primary">
+                  Create Reading Activity
+              </button>
+          </form>
         
             {% else %}
                 <div class="alert alert-success mb-3">
@@ -250,7 +253,7 @@
 
                   <form id="suggested-flashcards-form">
                       {% for card in chapter.suggested_flashcards %}
-                          <div class="form-check mb-2">
+                          <div class="form-check mb-2 text-start">
                               <input
                                   class="form-check-input suggested-flashcard-checkbox"
                                   type="checkbox"
@@ -260,11 +263,11 @@
                               >
 
                               <label
-                                  class="form-check-label"
+                                  class="form-check-label text-start text-wrap"
                                   for="suggested-card-{{ card.id }}"
                               >
                                   <strong>{{ card.question }}</strong>
-                                  —
+                                  →
                                   {{ card.answer }}
                               </label>
                           </div>
@@ -290,9 +293,10 @@
 
 
 
-              {% if current_user.is_authenticated
-            and current_user.is_admin()
-            and chapter.activity_enabled %}
+          {% if library_mode
+                and current_user.is_authenticated
+                and current_user.is_admin()
+                and chapter.activity_enabled %}
 
           <div class="mt-4">
               <h5>Suggested Flashcards</h5>
@@ -454,7 +458,17 @@
   </div>
 </div>
 
-
+{% if activity_mode and chapter.suggested_flashcards %}
+<script id="suggested-flashcards-data" type="application/json">
+[
+    {% for card in chapter.suggested_flashcards %}
+        {
+            "question": {{ card.question|tojson }}
+        }{% if not loop.last %},{% endif %}
+    {% endfor %}
+]
+</script>
+{% endif %}
 <script src="{{ url_for('static', filename='js/audiobook.js') }}"></script>
 
 {% endblock %}

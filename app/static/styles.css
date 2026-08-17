@@ -807,3 +807,12 @@ html[data-bs-theme="light"] #studentsAccordion .accordion-button.bg-warning-subt
   #leaderboard { display: block !important; }
   #rotate-to-landscape { display: none !important; }
 }
+
+
+
+.suggested-highlight {
+    background: rgba(255, 193, 7, 0.22);
+    color: inherit;
+    padding: 0 0.08em;
+    border-radius: 0.15em;
+}
