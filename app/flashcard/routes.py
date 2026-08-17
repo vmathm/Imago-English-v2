@@ -11,7 +11,13 @@ from decimal import Decimal, ROUND_HALF_UP
 from app.utils.time import utc_to_sp, utcnow, now_sp, sp_midnight_as_utc, sp_midnight_utc_days_from_now
 from datetime import timedelta
 from app.services.guest_session import get_or_create_guest_user
-from app.models import GuestFlashcard
+from app.models import (
+    Flashcard,
+    User,
+    GuestFlashcard,
+    SuggestedFlashcard,
+    Chapter,
+)
 
 bp = Blueprint("flashcard", __name__, url_prefix="/flashcard")
 
@@ -1120,3 +1126,263 @@ def flag_card():
             "reason": reason_key,
         }
     )
+
+
+
+
+
+
+
+
+@bp.route(
+    "/add-suggested/<int:chapter_id>",
+    methods=["POST"],
+)
+@active_required
+def add_suggested_flashcards(chapter_id):
+    data = request.get_json(silent=True) or {}
+    card_ids = data.get("card_ids") or []
+
+    if not isinstance(card_ids, list) or not card_ids:
+        return jsonify({
+            "status": "error",
+            "message": "Select at least one flashcard.",
+        }), 400
+
+    try:
+        card_ids = list({int(card_id) for card_id in card_ids})
+    except (TypeError, ValueError):
+        return jsonify({
+            "status": "error",
+            "message": "Invalid flashcard selection.",
+        }), 400
+
+    chapter = db_session.get(Chapter, chapter_id)
+
+    if not chapter:
+        return jsonify({
+            "status": "error",
+            "message": "Chapter not found.",
+        }), 404
+
+    if not chapter.activity_enabled:
+        return jsonify({
+            "status": "error",
+            "message": "This reading activity is not available.",
+        }), 404
+
+    suggestions = (
+        db_session.query(SuggestedFlashcard)
+        .filter(
+            SuggestedFlashcard.chapter_id == chapter.id,
+            SuggestedFlashcard.id.in_(card_ids),
+        )
+        .order_by(SuggestedFlashcard.position)
+        .all()
+    )
+
+    if len(suggestions) != len(card_ids):
+        return jsonify({
+            "status": "error",
+            "message": "One or more selected flashcards are invalid.",
+        }), 400
+
+    MAX_NEVER_STUDIED = 10
+    MAX_ONE_DAY_INTERVAL = 15
+
+    # --------------------------------------------------
+    # Guest
+    # --------------------------------------------------
+    if not current_user.is_authenticated:
+        guest_user = get_or_create_guest_user()
+
+        if guest_user is None:
+            return jsonify({
+                "status": "error",
+                "message": "Could not create guest session.",
+            }), 500
+
+        existing_questions = {
+            row[0]
+            for row in (
+                db_session.query(GuestFlashcard.question)
+                .filter(
+                    GuestFlashcard.guest_user_id == guest_user.id,
+                    GuestFlashcard.question.in_(
+                        [card.question for card in suggestions]
+                    ),
+                )
+                .all()
+            )
+        }
+
+        cards_to_add = [
+            card
+            for card in suggestions
+            if card.question not in existing_questions
+        ]
+
+        never_studied_count = (
+            db_session.query(GuestFlashcard)
+            .filter(
+                GuestFlashcard.guest_user_id == guest_user.id,
+                GuestFlashcard.level == 0,
+            )
+            .count()
+        )
+
+        one_day_interval_count = (
+            db_session.query(GuestFlashcard)
+            .filter(
+                GuestFlashcard.guest_user_id == guest_user.id,
+                GuestFlashcard.level != 0,
+                GuestFlashcard.interval == 1,
+            )
+            .count()
+        )
+
+        if one_day_interval_count >= MAX_ONE_DAY_INTERVAL:
+            return jsonify({
+                "status": "error",
+                "message": (
+                    "Você já tem 15 flashcards em revisão diária. "
+                    "Continue estudando-os antes de adicionar novos."
+                ),
+            }), 409
+
+        if never_studied_count + len(cards_to_add) > MAX_NEVER_STUDIED:
+            available = max(
+                0,
+                MAX_NEVER_STUDIED - never_studied_count,
+            )
+
+            return jsonify({
+                "status": "error",
+                "message": (
+                    f"Você pode adicionar no máximo mais "
+                    f"{available} flashcard(s) agora. "
+                    "Desmarque alguns e tente novamente."
+                ),
+            }), 409
+
+        for suggestion in cards_to_add:
+            db_session.add(
+                GuestFlashcard(
+                    guest_user_id=guest_user.id,
+                    question=suggestion.question,
+                    answer=suggestion.answer,
+                    level=0,
+                    ease=Decimal("1.30"),
+                    interval=1,
+                    last_review=None,
+                    next_review=None,
+                    show_answer=False,
+                    reviewed_by_tc=False,
+                    add_by_tc=False,
+                    add_by_user=True,
+                    created_at=utcnow(),
+                )
+            )
+
+        db_session.commit()
+
+        return jsonify({
+            "status": "success",
+            "message": (
+                f"{len(cards_to_add)} flashcard(s) added."
+            ),
+            "added": len(cards_to_add),
+            "skipped": len(existing_questions),
+            "guest": True,
+        }), 201
+
+    # --------------------------------------------------
+    # Registered user
+    # --------------------------------------------------
+    existing_questions = {
+        row[0]
+        for row in (
+            db_session.query(Flashcard.question)
+            .filter(
+                Flashcard.user_id == current_user.id,
+                Flashcard.question.in_(
+                    [card.question for card in suggestions]
+                ),
+            )
+            .all()
+        )
+    }
+
+    cards_to_add = [
+        card
+        for card in suggestions
+        if card.question not in existing_questions
+    ]
+
+    never_studied_count = (
+        db_session.query(Flashcard)
+        .filter(
+            Flashcard.user_id == current_user.id,
+            Flashcard.level == 0,
+        )
+        .count()
+    )
+
+    one_day_interval_count = (
+        db_session.query(Flashcard)
+        .filter(
+            Flashcard.user_id == current_user.id,
+            Flashcard.level != 0,
+            Flashcard.interval == 1,
+        )
+        .count()
+    )
+
+    if one_day_interval_count >= MAX_ONE_DAY_INTERVAL:
+        return jsonify({
+            "status": "error",
+            "message": (
+                "Você já tem 15 flashcards em revisão diária. "
+                "Continue estudando-os antes de adicionar novos."
+            ),
+        }), 409
+
+    if never_studied_count + len(cards_to_add) > MAX_NEVER_STUDIED:
+        available = max(
+            0,
+            MAX_NEVER_STUDIED - never_studied_count,
+        )
+
+        return jsonify({
+            "status": "error",
+            "message": (
+                f"Você pode adicionar no máximo mais "
+                f"{available} flashcard(s) agora. "
+                "Desmarque alguns e tente novamente."
+            ),
+        }), 409
+
+    for suggestion in cards_to_add:
+        db_session.add(
+            Flashcard(
+                question=suggestion.question,
+                answer=suggestion.answer,
+                user_id=current_user.id,
+                reviewed_by_tc=False,
+                add_by_tc=False,
+                add_by_user=True,
+                created_at=utcnow(),
+            )
+        )
+
+    db_session.commit()
+
+    return jsonify({
+        "status": "success",
+        "message": (
+            f"{len(cards_to_add)} flashcard(s) added."
+        ),
+        "added": len(cards_to_add),
+        "skipped": len(existing_questions),
+        "guest": False,
+    }), 201

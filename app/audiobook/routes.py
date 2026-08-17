@@ -385,6 +385,8 @@ def read_chapter(book_slug, chapter_slug):
         .first()
     )
 
+    
+
     if not book:
         abort(404)
 
@@ -439,6 +441,11 @@ def read_chapter(book_slug, chapter_slug):
         else None
     )
 
+
+    activity_mode = chapter.activity_enabled
+
+    
+
     # Current reading progress
     if current_user.is_authenticated:
         progress = (
@@ -477,5 +484,36 @@ def read_chapter(book_slug, chapter_slug):
 
         # This route is not displaying a private UserAudiobook.
         audiobook=None,
+        activity_mode=activity_mode,
     )
 
+
+
+@bp.route("/join/chapter/<int:chapter_id>")
+def join_chapter_activity(chapter_id):
+    chapter = db_session.get(Chapter, chapter_id)
+
+    if not chapter:
+        abort(404)
+
+    if not chapter.activity_enabled:
+        abort(404)
+
+    book = db_session.get(Book, chapter.book_id)
+
+    if not book:
+        abort(404)
+
+    if not current_user.is_authenticated:
+        guest_user = get_or_create_guest_user()
+
+        guest_user.level = book.level
+        db_session.commit()
+
+    return redirect(
+        url_for(
+            "audiobook.read_chapter",
+            book_slug=book.slug,
+            chapter_slug=chapter.slug,
+        )
+    )

@@ -1,15 +1,16 @@
-from flask import Blueprint, current_app, render_template, request, redirect, url_for, abort, flash
+from flask import Blueprint, current_app, render_template, request, redirect, url_for, abort, flash, jsonify
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app.audiobook.forms import EditChapterForm
 from app.gcs_utils import delete_file_from_gcs_by_url, upload_file_to_gcs
-from app.models import User, Flashcard, Book, Chapter
+from app.models import User, Flashcard, Book, Chapter, SuggestedFlashcard
 from app.database import db_session
 from functools import wraps
 from pathlib import Path
 from uuid import uuid4
 from google.cloud import storage
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 from app.admin.forms import (
     AssignStudentForm, 
     UnassignStudentForm, 
@@ -893,3 +894,134 @@ def delete_book(book_id):
     return redirect(
         url_for("audiobook.library")
     )
+
+
+
+
+@bp.route(
+    "/chapter/<int:chapter_id>/enable-activity",
+    methods=["POST"],
+)
+@admin_required
+def enable_activity(chapter_id):
+    chapter = db_session.get(Chapter, chapter_id)
+
+    if not chapter:
+        abort(404)
+
+    chapter.activity_enabled = True
+    db_session.commit()
+
+    flash("Reading activity created.", "success")
+
+    return redirect(request.referrer or url_for("dashboard.index"))
+
+
+
+
+@bp.route(
+    "/chapter/<int:chapter_id>/suggested-flashcards",
+    methods=["POST"],
+)
+@admin_required
+def add_suggested_flashcard(chapter_id):
+    chapter = db_session.get(Chapter, chapter_id)
+
+    if not chapter:
+        abort(404)
+
+    if not chapter.activity_enabled:
+        return jsonify({
+            "status": "error",
+            "message": "Enable the reading activity first.",
+        }), 400
+
+    data = request.get_json() or {}
+
+    question = (data.get("question") or "").strip()
+    answer = (data.get("answer") or "").strip()
+
+    if not question or not answer:
+        return jsonify({
+            "status": "error",
+            "message": "Question and answer are required.",
+        }), 400
+
+    existing = (
+        db_session.query(SuggestedFlashcard)
+        .filter_by(
+            chapter_id=chapter.id,
+            question=question,
+        )
+        .first()
+    )
+
+    if existing:
+        return jsonify({
+            "status": "error",
+            "message": "This suggested flashcard already exists.",
+        }), 409
+
+    max_position = (
+        db_session.query(func.max(SuggestedFlashcard.position))
+        .filter_by(chapter_id=chapter.id)
+        .scalar()
+    )
+
+    new_suggestion = SuggestedFlashcard(
+        chapter_id=chapter.id,
+        question=question,
+        answer=answer,
+        position=(max_position or 0) + 1,
+    )
+
+    db_session.add(new_suggestion)
+    db_session.commit()
+
+    return jsonify({
+        "status": "success",
+        "message": "Suggested flashcard added.",
+        "suggested_flashcard": {
+            "id": new_suggestion.id,
+            "question": new_suggestion.question,
+            "answer": new_suggestion.answer,
+            "position": new_suggestion.position,
+        },
+    })
+
+
+
+@bp.route(
+    "/suggested-flashcards/<int:card_id>/delete",
+    methods=["POST"],
+)
+@admin_required
+def delete_suggested_flashcard(card_id):
+    card = db_session.get(SuggestedFlashcard, card_id)
+
+    if not card:
+        abort(404)
+
+    chapter_id = card.chapter_id
+    deleted_position = card.position
+
+    db_session.delete(card)
+    db_session.flush()
+
+    remaining = (
+        db_session.query(SuggestedFlashcard)
+        .filter_by(chapter_id=chapter_id)
+        .order_by(SuggestedFlashcard.position)
+        .all()
+    )
+
+    for index, suggestion in enumerate(remaining, start=1):
+        suggestion.position = index
+
+    db_session.commit()
+
+    return jsonify({
+        "status": "success",
+        "message": "Suggested flashcard deleted.",
+        "card_id": card_id,
+    })

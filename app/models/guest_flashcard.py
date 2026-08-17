@@ -37,7 +37,7 @@ class GuestFlashcard(Base):
     reviewed_by_tc = Column(Boolean, nullable=False, default=False)
     add_by_tc = Column(Boolean, nullable=False, default=False)
     add_by_user = Column(Boolean, nullable=False, default=False)
-    created_at = Column(DateTime(timezone=True), nullable=False, default=utcnow)
+   
 
     created_at = Column(
         DateTime(timezone=True),

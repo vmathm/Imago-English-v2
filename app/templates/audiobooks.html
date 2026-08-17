@@ -30,6 +30,24 @@
         Add
       </button>
 
+      {% if current_user.is_authenticated
+      and current_user.is_admin()
+      and chapter.activity_enabled %}
+
+      <button
+          type="button"
+          id="add-suggested-flashcard"
+          class="btn btn-outline-primary"
+          data-url="{{ url_for(
+              'admin.add_suggested_flashcard',
+              chapter_id=chapter.id
+          ) }}"
+      >
+          Add as Suggested Flashcard
+      </button>
+
+  {% endif %}
+
       <button class="modal-btn btn btn-secondary" id="noBtn" type="button">
         Cancel
       </button>
@@ -143,6 +161,41 @@
           {{ book.title }}
         </small>
 
+        {% if current_user.is_authenticated and current_user.is_admin() %}
+          {% if not chapter.activity_enabled %}
+              <form
+                  method="POST"
+                  {{ url_for(
+                  'audiobook.join_chapter_activity',
+                  chapter_id=chapter.id,
+                  _external=True
+                  ) }}
+                  class="mb-3"
+              >
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                  <button type="submit" class="btn btn-primary">
+                      Create Reading Activity
+                  </button>
+              </form>
+        
+            {% else %}
+                <div class="alert alert-success mb-3">
+                    <strong>Reading activity enabled.</strong>
+
+                    <div class="mt-2">
+                        Activity link:
+                        <code>
+                            {{ url_for('audiobook.join_chapter_activity',
+                                      chapter_id=chapter.id,
+                                      _external=True) }}
+                        </code>
+                    </div>
+                </div>
+            {% endif %}
+        
+      {% endif %}
+
 
         <pre id="text-content" class="mt-3">{{ text_content }}</pre>
 
@@ -178,9 +231,107 @@
             </form>
 
           {% endif %}
-
         </div>
 
+
+
+              {% if activity_mode
+                    and chapter.suggested_flashcards
+                    and not (
+                        current_user.is_authenticated
+                        and current_user.is_admin()
+              ) %}
+              <section class=" mt-5 mb-4">
+                  <h4>Suggested Flashcards</h4>
+
+                  <p class="text-muted">
+                      Select the flashcards you want to add.
+                  </p>
+
+                  <form id="suggested-flashcards-form">
+                      {% for card in chapter.suggested_flashcards %}
+                          <div class="form-check mb-2">
+                              <input
+                                  class="form-check-input suggested-flashcard-checkbox"
+                                  type="checkbox"
+                                  value="{{ card.id }}"
+                                  id="suggested-card-{{ card.id }}"
+                                  checked
+                              >
+
+                              <label
+                                  class="form-check-label"
+                                  for="suggested-card-{{ card.id }}"
+                              >
+                                  <strong>{{ card.question }}</strong>
+                                  —
+                                  {{ card.answer }}
+                              </label>
+                          </div>
+                      {% endfor %}
+
+                  <button
+                      type="button"
+                      id="add-selected-suggested-flashcards"
+                      class="btn btn-primary mt-3"
+                      data-url="{{ url_for(
+                          'flashcard.add_suggested_flashcards',
+                          chapter_id=chapter.id
+                      ) }}"
+                  >
+                      Add Selected Flashcards
+                  </button>
+                  </form>
+              </section>
+          {% endif %}
+
+
+
+
+
+
+              {% if current_user.is_authenticated
+            and current_user.is_admin()
+            and chapter.activity_enabled %}
+
+          <div class="mt-4">
+              <h5>Suggested Flashcards</h5>
+
+              {% if chapter.suggested_flashcards %}
+                  <div id="suggested-flashcards-list">
+                      {% for card in chapter.suggested_flashcards %}
+                          <div
+                              class="card mb-2 suggested-flashcard-item"
+                              data-card-id="{{ card.id }}"
+                          >
+                              <div class="card-body">
+                                  <strong>{{ card.position }}.</strong>
+                                  {{ card.question }}
+                                  →
+                                  {{ card.answer }}
+
+                                  <button
+                                      type="button"
+                                      class="btn btn-sm btn-outline-danger ms-2 delete-suggested-flashcard"
+                                      data-url="{{ url_for(
+                                          'admin.delete_suggested_flashcard',
+                                          card_id=card.id
+                                      ) }}"
+                                  >
+                                      Delete
+                                  </button>
+                              </div>
+                          </div>
+                      {% endfor %}
+                  </div>
+              {% else %}
+                  <p class="text-muted">
+                      No suggested flashcards yet.
+                  </p>
+              {% endif %}
+          </div>
+
+      {% endif %}
 
         {# Previous / next navigation #}
         <nav class="d-flex justify-content-between mt-4">

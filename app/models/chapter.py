@@ -64,6 +64,14 @@ class Chapter(Base):
         default=False,
     )
 
+    activity_enabled = Column(
+    Boolean,
+    nullable=False,
+    default=False,
+    )
+
+
+
     created_at = Column(
         DateTime(timezone=True),
         nullable=False,
@@ -93,3 +101,11 @@ class Chapter(Base):
         back_populates="chapter",
         cascade="all, delete-orphan",
     )
+
+
+    suggested_flashcards = relationship(
+    "SuggestedFlashcard",
+    back_populates="chapter",
+    cascade="all, delete-orphan",
+    order_by="SuggestedFlashcard.position",
+)
