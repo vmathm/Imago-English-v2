@@ -81,16 +81,40 @@
           </div>
 
           {% if guest_mode %}
-            <div class="alert alert-info">
-              You are reading as a guest. Your flashcards and reading progress
-              are saved temporarily.
-              <br>
+              <div class="alert alert-info p-3">
 
-              <small class="text-muted fst-italic">
-                Você está lendo como visitante. Seus flashcards e seu progresso
-                são salvos temporariamente.
-              </small>
-            </div>
+          <p class="mb-1 fw-semibold">
+            You are reading as a guest.
+          </p>
+
+          <p class="mb-2">
+            Your flashcards and reading progress are saved temporarily.
+          </p>
+
+          <p class="small text-muted fst-italic mb-3">
+            Você está lendo como visitante. Seus flashcards e seu progresso
+            são salvos temporariamente.
+          </p>
+
+          <hr>
+
+          <p class="small mb-3">
+            Crie uma conta para manter seus flashcards e progresso permanentemente.
+          </p>
+
+          <a href="{{ url_for('auth.login') }}"
+            class="btn btn-google d-inline-flex align-items-center justify-content-center gap-2"
+            style="height: 2.7rem; border-radius: 0.5rem; font-size: 1rem;">
+
+            <img src="{{ url_for('static', filename='img/branding/google_logo.png') }}"
+                alt="Google Logo"
+                class="google-icon"
+                style="width: 32px; height: 32px;">
+
+            <span>Entrar com Google</span>
+          </a>
+
+        </div>
           {% endif %}
 
 

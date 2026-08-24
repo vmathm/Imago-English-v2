@@ -98,7 +98,7 @@ def flashcards():
     )
 
 @bp.route("/addcards", methods=["POST"])
-@active_required
+@user_or_guest_required
 def addcards():
     form = FlashcardForm()
 
@@ -336,7 +336,7 @@ def addcards():
 
 
 @bp.route("/edit_cards", methods=["GET"])
-@active_required
+@user_or_guest_required
 def edit_cards():
 
     # Guest user
@@ -437,7 +437,7 @@ def edit_cards():
 
 
 @bp.route("/edit_card/<int:card_id>", methods=["POST"])
-@active_required
+@user_or_guest_required
 def edit_card(card_id):
 
     form = FlashcardForm()
@@ -608,7 +608,7 @@ def edit_card(card_id):
 
 
 @bp.route("/study")
-@active_required
+@user_or_guest_required
 def study():
     """Show flashcards due for review."""
     student_id = request.args.get("student_id")
@@ -733,7 +733,7 @@ def study():
 
 
 @bp.route("/review_flashcard", methods=["POST"])
-@active_required
+@user_or_guest_required
 def review_flashcard():
     """
     Update flashcard scheduling after a rating of 1, 2, or 3.
@@ -1012,7 +1012,7 @@ def update_study_streak(user: User):
 
 
 @bp.route("/manage/<student_id>", methods=["GET"])
-@active_required
+@user_or_guest_required
 def manage_student(student_id):
     if not (current_user.is_teacher() or current_user.is_admin()):
         abort(403)
@@ -1062,42 +1062,69 @@ def manage_student(student_id):
         due_flashcards=due_flashcards,
     )
 
-
 @bp.route("/flag_card", methods=["POST"])
 @csrf.exempt
 @login_required
 def flag_card():
     """
-    Let the user mark a flashcard as problematic during study mode.
+    Let a student with an assigned teacher mark a flashcard
+    as problematic during study mode.
     """
+    if not current_user.assigned_teacher_id:
+        return jsonify({
+            "status": "error",
+            "message": "Teacher review is only available to students connected to a teacher.",
+        }), 403
+
     data = request.get_json(silent=True) or {}
     card_id = data.get("card_id")
     reason_key = data.get("reason")
 
     if not card_id or not reason_key:
-        return jsonify({"status": "error", "message": "Missing card_id or reason."}), 400
+        return jsonify({
+            "status": "error",
+            "message": "Missing card_id or reason.",
+        }), 400
 
     flashcard = db_session.get(Flashcard, int(card_id))
     if not flashcard:
-        return jsonify({"status": "error", "message": "Flashcard not found."}), 404
+        return jsonify({
+            "status": "error",
+            "message": "Flashcard not found.",
+        }), 404
 
     if flashcard.user_id != current_user.id:
-        return jsonify({"status": "error", "message": "Not authorized."}), 403
+        return jsonify({
+            "status": "error",
+            "message": "Not authorized.",
+        }), 403
 
     REASON_LABELS = {
         "dont_understand": "I don't understand this flashcard",
         "talk_next_class": "I want to talk about this flashcard in my next class",
         "has_mistake": "I think this flashcard has a mistake",
     }
-    reason_text = REASON_LABELS.get(reason_key, "Flagged for review")
+
+    reason_text = REASON_LABELS.get(
+        reason_key,
+        "Flagged for review",
+    )
 
     note = f"[NOTE] {reason_text}"
+
     if note not in (flashcard.question or ""):
         base = (flashcard.question or "").strip()
-        flashcard.question = f"{base} ({note})" if base else note
+        flashcard.question = (
+            f"{base} ({note})"
+            if base
+            else note
+        )
 
-    # 7 days later, São Paulo midnight -> UTC
+    # Review again in 7 days.
+    # Stored as São Paulo midnight converted to UTC.
     flashcard.next_review = sp_midnight_utc_days_from_now(7)
+
+    # Makes the card visible as needing teacher review.
     flashcard.reviewed_by_tc = False
 
     db_session.commit()
@@ -1116,20 +1143,14 @@ def flag_card():
 
     if due_left == 0:
         update_study_streak(current_user)
-    db_session.commit() 
+        db_session.commit()
 
-    return jsonify(
-        {
-            "status": "success",
-            "message": "Seu professor foi notificado.",
-            "card_id": flashcard.id,
-            "reason": reason_key,
-        }
-    )
-
-
-
-
+    return jsonify({
+        "status": "success",
+        "message": "Seu professor foi notificado.",
+        "card_id": flashcard.id,
+        "reason": reason_key,
+    })
 
 
 
@@ -1138,7 +1159,7 @@ def flag_card():
     "/add-suggested/<int:chapter_id>",
     methods=["POST"],
 )
-@active_required
+@user_or_guest_required
 def add_suggested_flashcards(chapter_id):
     data = request.get_json(silent=True) or {}
     card_ids = data.get("card_ids") or []
