@@ -188,7 +188,7 @@ def assign_audiobook(user_id):
     "/read/<string:book_slug>/<string:chapter_slug>/mark-read",
     methods=["POST"],
 )
-@active_required
+@user_or_guest_required
 def mark_chapter_read(book_slug, chapter_slug):
     book = (
         db_session.query(Book)
