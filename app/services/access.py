@@ -43,14 +43,13 @@ def has_active_subscription(user) -> bool:
 
 def sync_internal_access(user) -> None:
     """
-    For internal users, active is automatic:
-    active=True if trial or subscription is valid.
-    active=False otherwise.
+    For internal users, paid-content access depends
+    only on having an active subscription.
     """
     if user.billing_mode != "internal":
         return
 
-    user.active = is_trial_active(user) or has_active_subscription(user)
+    user.active = has_active_subscription(user)
 
 
 

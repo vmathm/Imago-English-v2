@@ -310,6 +310,7 @@ def library():
         "library.html",
         books=books,
     )
+
 @bp.route("/library/<string:book_slug>")
 @user_or_guest_required
 def book_details(book_slug):
@@ -332,6 +333,8 @@ def book_details(book_slug):
     chapter_ids = [chapter.id for chapter in chapters]
 
     read_chapter_ids = set()
+    next_chapter = None
+
 
     if chapter_ids:
 
@@ -418,31 +421,35 @@ def read_chapter(book_slug, chapter_slug):
     # --------------------------------------------------
     if not chapter.is_free:
 
-        # Guest cannot read paid chapters.
+        # Guests need to create/claim an account first.
         if not current_user.is_authenticated:
-            return render_template(
-                "subscription_required.html",
-                chapter=chapter,
-                book=book,
-                guest_mode=True,
-            ), 200
+            flash(
+                "Crie uma conta para acessar este capítulo.",
+                "info",
+            )
+            return redirect(
+                url_for(
+                    "auth.login",
+                    next=request.path,
+                )
+            )
 
-        # Teachers/admins bypass subscription lock.
+        # Teachers and admins can access all chapters.
         if not (current_user.is_teacher() or current_user.is_admin()):
 
-            # Students paying externally through a teacher keep access.
+            # External students keep access through their teacher.
             if current_user.billing_mode == "internal":
                 sync_internal_access(current_user)
                 db_session.commit()
 
                 if not current_user.active:
-                    return render_template(
-                        "subscription_required.html",
-                        chapter=chapter,
-                        book=book,
-                        guest_mode=False,
-                    ), 200
-
+                    flash(
+                        "Este capítulo está disponível para assinantes.",
+                        "info",
+                    )
+                    return redirect(
+                        url_for("billing.student_subscription")
+                    )
     # --------------------------------------------------
     # Fetch chapter text from GCS
     # --------------------------------------------------

@@ -7,8 +7,583 @@
     <h1>Billing</h1>
 
     {% if view_type == "admin" %}
-        <div class="alert alert-info mt-3">
-            Admin billing settings page is not built yet.
+
+        <p class="text-muted">
+            Manage Imago billing settings, platform subscription plans,
+            and direct student subscriptions.
+        </p>
+
+        <div class="accordion" id="adminBillingAccordion">
+
+            <!-- ==========================================
+                ASAAS SETTINGS
+                ========================================== -->
+            <div class="accordion-item">
+
+                <h2 class="accordion-header" id="headingAdminAsaas">
+                    <button
+                        class="accordion-button"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseAdminAsaas"
+                        aria-expanded="true"
+                        aria-controls="collapseAdminAsaas"
+                    >
+                        Asaas Settings
+                    </button>
+                </h2>
+
+                <div
+                    id="collapseAdminAsaas"
+                    class="accordion-collapse collapse show"
+                    aria-labelledby="headingAdminAsaas"
+                    data-bs-parent="#adminBillingAccordion"
+                >
+                    <div class="accordion-body">
+
+                        <form method="POST">
+                            {{ settings_form.hidden_tag() }}
+
+                            <div class="mb-3">
+
+                                {{ settings_form.api_key.label(
+                                    class="form-label"
+                                ) }}
+
+                                {% if billing_account %}
+
+                                    {{
+                                        settings_form.api_key(
+                                            class="form-control",
+                                            placeholder="•••••••••• (leave blank to keep current key)"
+                                        )
+                                    }}
+
+                                    <div class="form-text">
+                                        API key already saved.
+                                        Leave blank to keep it unchanged.
+                                    </div>
+
+                                {% else %}
+
+                                    {{
+                                        settings_form.api_key(
+                                            class="form-control"
+                                        )
+                                    }}
+
+                                {% endif %}
+
+                                {% for error in settings_form.api_key.errors %}
+                                    <div class="text-danger small">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+
+                            </div>
+
+
+                            <div class="mb-3">
+
+                                {{
+                                    settings_form.webhook_auth_token.label(
+                                        class="form-label"
+                                    )
+                                }}
+
+                                {% if billing_account %}
+
+                                    {{
+                                        settings_form.webhook_auth_token(
+                                            class="form-control",
+                                            placeholder="•••••••••• (leave blank to keep current token)"
+                                        )
+                                    }}
+
+                                    <div class="form-text">
+                                        Webhook token already saved.
+                                        Leave blank to keep it unchanged.
+                                    </div>
+
+                                {% else %}
+
+                                    {{
+                                        settings_form.webhook_auth_token(
+                                            class="form-control"
+                                        )
+                                    }}
+
+                                {% endif %}
+
+                                {% for error in settings_form.webhook_auth_token.errors %}
+                                    <div class="text-danger small">
+                                        {{ error }}
+                                    </div>
+                                {% endfor %}
+
+                            </div>
+
+
+                            <div class="form-check mb-2">
+
+                                {{
+                                    settings_form.is_sandbox(
+                                        class="form-check-input"
+                                    )
+                                }}
+
+                                {{
+                                    settings_form.is_sandbox.label(
+                                        class="form-check-label"
+                                    )
+                                }}
+
+                            </div>
+
+
+                            <div class="form-check mb-3">
+
+                                {{
+                                    settings_form.active(
+                                        class="form-check-input"
+                                    )
+                                }}
+
+                                {{
+                                    settings_form.active.label(
+                                        class="form-check-label"
+                                    )
+                                }}
+
+                            </div>
+
+
+                            {{
+                                settings_form.submit(
+                                    class="btn btn-primary"
+                                )
+                            }}
+
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- ==========================================
+                PLATFORM PLANS
+                ========================================== -->
+            <div class="accordion-item mt-3">
+
+                <h2 class="accordion-header" id="headingAdminPlans">
+                    <button
+                        class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseAdminPlans"
+                        aria-expanded="false"
+                        aria-controls="collapseAdminPlans"
+                    >
+                        Platform Plans
+                    </button>
+                </h2>
+
+                <div
+                    id="collapseAdminPlans"
+                    class="accordion-collapse collapse"
+                    aria-labelledby="headingAdminPlans"
+                    data-bs-parent="#adminBillingAccordion"
+                >
+                    <div class="accordion-body">
+
+                        <div class="mb-4">
+
+                            <h5>Create Platform Plan</h5>
+
+                            <p class="text-muted">
+                                Active platform plans are available to
+                                internal students who are not assigned
+                                to a teacher.
+                            </p>
+
+
+                            <form
+                                method="POST"
+                                action="{{ url_for('billing.create_plan') }}"
+                            >
+
+                                {{ plan_form.hidden_tag() }}
+
+
+                                <div class="mb-3">
+
+                                    {{
+                                        plan_form.name.label(
+                                            class="form-label"
+                                        )
+                                    }}
+
+                                    {{
+                                        plan_form.name(
+                                            class="form-control"
+                                        )
+                                    }}
+
+                                    {% for error in plan_form.name.errors %}
+                                        <div class="text-danger small">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+
+                                </div>
+
+
+                                <div class="mb-3">
+
+                                    {{
+                                        plan_form.amount_reais.label(
+                                            class="form-label"
+                                        )
+                                    }}
+
+                                    {{
+                                        plan_form.amount_reais(
+                                            class="form-control"
+                                        )
+                                    }}
+
+                                    {% for error in plan_form.amount_reais.errors %}
+                                        <div class="text-danger small">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+
+                                </div>
+
+
+                                <div class="mb-3">
+
+                                    {{
+                                        plan_form.currency.label(
+                                            class="form-label"
+                                        )
+                                    }}
+
+                                    {{
+                                        plan_form.currency(
+                                            class="form-select"
+                                        )
+                                    }}
+
+                                </div>
+
+
+                                <div class="mb-3">
+
+                                    {{
+                                        plan_form.interval.label(
+                                            class="form-label"
+                                        )
+                                    }}
+
+                                    {{
+                                        plan_form.interval(
+                                            class="form-select"
+                                        )
+                                    }}
+
+                                </div>
+
+
+                                <div class="form-check mb-3">
+
+                                    {{
+                                        plan_form.active(
+                                            class="form-check-input"
+                                        )
+                                    }}
+
+                                    {{
+                                        plan_form.active.label(
+                                            class="form-check-label"
+                                        )
+                                    }}
+
+                                </div>
+
+
+                                {{
+                                    plan_form.submit(
+                                        class="btn btn-primary"
+                                    )
+                                }}
+
+                            </form>
+
+                        </div>
+
+
+                        <hr>
+
+
+                        <div>
+
+                            <h5>Existing Platform Plans</h5>
+
+                            {% if plans %}
+
+                                <div class="table-responsive">
+
+                                    <table class="table table-striped align-middle">
+
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Amount</th>
+                                                <th>Currency</th>
+                                                <th>Interval</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+
+                                            {% for plan in plans %}
+
+                                                <tr>
+
+                                                    <td>
+                                                        {{ plan.name }}
+                                                    </td>
+
+                                                    <td>
+                                                        R$
+                                                        {{
+                                                            "%.2f"|format(
+                                                                plan.amount_cents / 100
+                                                            )
+                                                        }}
+                                                    </td>
+
+                                                    <td>
+                                                        {{ plan.currency }}
+                                                    </td>
+
+                                                    <td>
+                                                        {{ plan.interval|capitalize }}
+                                                    </td>
+
+                                                    <td>
+
+                                                        {% if plan.active %}
+
+                                                            <span class="badge bg-success">
+                                                                Active
+                                                            </span>
+
+                                                        {% else %}
+
+                                                            <span class="badge bg-secondary">
+                                                                Inactive
+                                                            </span>
+
+                                                        {% endif %}
+
+                                                    </td>
+
+                                                    <td>
+
+                                                        <form
+                                                            method="POST"
+                                                            action="{{
+                                                                url_for(
+                                                                    'billing.toggle_plan',
+                                                                    plan_id=plan.id
+                                                                )
+                                                            }}"
+                                                        >
+
+                                                            {{ plan_form.hidden_tag() }}
+
+                                                            <button
+                                                                type="submit"
+                                                                class="btn btn-sm btn-outline-secondary"
+                                                            >
+                                                                {% if plan.active %}
+                                                                    Deactivate
+                                                                {% else %}
+                                                                    Activate
+                                                                {% endif %}
+                                                            </button>
+
+                                                        </form>
+
+                                                    </td>
+
+                                                </tr>
+
+                                            {% endfor %}
+
+                                        </tbody>
+                                    </table>
+
+                                </div>
+
+                            {% else %}
+
+                                <p class="text-muted mb-0">
+                                    No platform plans yet.
+                                </p>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- ==========================================
+                DIRECT SUBSCRIPTIONS
+                ========================================== -->
+            <div class="accordion-item mt-3">
+
+                <h2
+                    class="accordion-header"
+                    id="headingAdminSubscriptions"
+                >
+                    <button
+                        class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#collapseAdminSubscriptions"
+                        aria-expanded="false"
+                        aria-controls="collapseAdminSubscriptions"
+                    >
+                        Direct Student Subscriptions
+                    </button>
+                </h2>
+
+                <div
+                    id="collapseAdminSubscriptions"
+                    class="accordion-collapse collapse"
+                    aria-labelledby="headingAdminSubscriptions"
+                    data-bs-parent="#adminBillingAccordion"
+                >
+                    <div class="accordion-body">
+
+                        {% if subscriptions %}
+
+                            <div class="table-responsive">
+
+                                <table class="table table-striped align-middle">
+
+                                    <thead>
+                                        <tr>
+                                            <th>Student</th>
+                                            <th>Plan</th>
+                                            <th>Status</th>
+                                            <th>Provider</th>
+                                            <th>Created</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+
+                                        {% for subscription in subscriptions %}
+
+                                            <tr>
+
+                                                <td>
+                                                    {{
+                                                        subscription.user.name
+                                                        if subscription.user
+                                                        else subscription.user_id
+                                                    }}
+                                                </td>
+
+                                                <td>
+                                                    {{
+                                                        subscription.plan.name
+                                                        if subscription.plan
+                                                        else subscription.plan_id
+                                                    }}
+                                                </td>
+
+                                                <td>
+
+                                                    {% if subscription.status == "active" %}
+
+                                                        <span class="badge bg-success">
+                                                            Active
+                                                        </span>
+
+                                                    {% elif subscription.status == "incomplete" %}
+
+                                                        <span class="badge bg-warning text-dark">
+                                                            Incomplete
+                                                        </span>
+
+                                                    {% elif subscription.status == "past_due" %}
+
+                                                        <span class="badge bg-danger">
+                                                            Past Due
+                                                        </span>
+
+                                                    {% elif subscription.status == "canceled" %}
+
+                                                        <span class="badge bg-secondary">
+                                                            Canceled
+                                                        </span>
+
+                                                    {% else %}
+
+                                                        <span class="badge bg-light text-dark">
+                                                            {{ subscription.status }}
+                                                        </span>
+
+                                                    {% endif %}
+
+                                                </td>
+
+                                                <td>
+                                                    {{ subscription.provider }}
+                                                </td>
+
+                                                <td>
+                                                    {{
+                                                        subscription.created_at.strftime(
+                                                            "%Y-%m-%d %H:%M"
+                                                        )
+                                                        if subscription.created_at
+                                                        else "-"
+                                                    }}
+                                                </td>
+
+                                            </tr>
+
+                                        {% endfor %}
+
+                                    </tbody>
+                                </table>
+
+                            </div>
+
+                        {% else %}
+
+                            <p class="mb-0">
+                                No direct student subscriptions yet.
+                            </p>
+
+                        {% endif %}
+
+                    </div>
+                </div>
+            </div>
+
         </div>
     {% elif view_type == "teacher" %}
         <p class="text-muted">

@@ -360,17 +360,11 @@ def book_details(book_id):
     if not book:
         abort(404)
 
-    chapters = (
-        db_session.query(Chapter)
-        .filter_by(book_id=book.id)
-        .order_by(Chapter.position.asc())
-        .all()
-    )
-
-    return render_template(
-        "admin/book_details.html",
-        book=book,
-        chapters=chapters,
+    return redirect(
+        url_for(
+            "audiobook.book_details",
+            book_slug=book.slug,
+        )
     )
 
 

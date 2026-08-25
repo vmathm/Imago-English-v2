@@ -28,7 +28,35 @@ from app.models.user import User
 from app.services.asaas import SP_TZ, AsaasServiceError, ensure_customer_for_user, create_subscription as asaas_create_subscription, get_subscription_payments, get_pix_qr_code, get_subscription, normalize_asaas_status, parse_asaas_date, parse_asaas_due_date_as_sp_end_of_day
 from sqlalchemy import or_
 from app.extensions import csrf
-from app.services.access import trial_days_left, subscription_days_left
+from app.services.access import subscription_days_left
+
+
+
+
+
+PLATFORM_TENANT_SLUG = "imago"
+
+
+def get_or_create_platform_tenant(admin_user):
+    tenant = (
+        db_session.query(Tenant)
+        .filter_by(slug=PLATFORM_TENANT_SLUG)
+        .first()
+    )
+
+    if tenant:
+        return tenant
+
+    tenant = Tenant(
+        owner_user_id=admin_user.id,
+        name="Imago",
+        slug=PLATFORM_TENANT_SLUG,
+    )
+
+    db_session.add(tenant)
+    db_session.commit()
+
+    return tenant
 
 
 def generate_slug(name: str) -> str:
@@ -38,11 +66,134 @@ def generate_slug(name: str) -> str:
     return slug or "tenant"
 
 
+
+    
 @bp.route("/", methods=["GET", "POST"])
 @login_required
 def index():
+
     if current_user.is_admin():
-        return render_template("billing/index.html", view_type="admin")
+        tenant = get_or_create_platform_tenant(current_user)
+
+        billing_account = (
+            db_session.query(TenantBillingAccount)
+            .filter_by(tenant_id=tenant.id)
+            .first()
+        )
+
+        settings_form = AsaasSettingsForm()
+
+        if settings_form.validate_on_submit():
+            api_key_input = (
+                settings_form.api_key.data or ""
+            ).strip()
+
+            webhook_token_input = (
+                settings_form.webhook_auth_token.data or ""
+            ).strip()
+
+            if billing_account is None:
+                if not api_key_input or not webhook_token_input:
+                    flash(
+                        "API key and webhook auth token are required.",
+                        "danger",
+                    )
+                else:
+                    billing_account = TenantBillingAccount(
+                        tenant_id=tenant.id,
+                        provider=settings_form.provider.data or "asaas",
+                        is_sandbox=settings_form.is_sandbox.data,
+                        active=settings_form.active.data,
+                        api_key=api_key_input,
+                        webhook_auth_token=webhook_token_input,
+                    )
+
+                    db_session.add(billing_account)
+                    db_session.commit()
+
+                    flash(
+                        "Billing settings saved successfully.",
+                        "success",
+                    )
+
+                    return redirect(
+                        url_for("billing.index")
+                    )
+
+            else:
+                billing_account.provider = (
+                    settings_form.provider.data or "asaas"
+                )
+                billing_account.is_sandbox = (
+                    settings_form.is_sandbox.data
+                )
+                billing_account.active = (
+                    settings_form.active.data
+                )
+
+                if api_key_input:
+                    billing_account.api_key = api_key_input
+
+                if webhook_token_input:
+                    billing_account.webhook_auth_token = (
+                        webhook_token_input
+                    )
+
+                db_session.commit()
+
+                flash(
+                    "Billing settings saved successfully.",
+                    "success",
+                )
+
+                return redirect(
+                    url_for("billing.index")
+                )
+
+        if billing_account and not settings_form.is_submitted():
+            settings_form.provider.data = billing_account.provider
+            settings_form.is_sandbox.data = billing_account.is_sandbox
+            settings_form.active.data = billing_account.active
+
+        plan_form = PlanForm()
+
+        # Platform plans do not target individual students.
+        plan_form.eligible_student_ids.choices = []
+
+        plans = (
+            db_session.query(Plan)
+            .filter_by(tenant_id=tenant.id)
+            .order_by(
+                Plan.active.desc(),
+                Plan.created_at.desc(),
+            )
+            .all()
+        )
+
+        subscriptions = (
+            db_session.query(Subscription)
+            .filter_by(tenant_id=tenant.id)
+            .order_by(
+                Subscription.created_at.desc()
+            )
+            .all()
+        )
+
+        subscription_form = SubscriptionForm()
+
+        return render_template(
+            "billing/index.html",
+            view_type="admin",
+            tenant=tenant,
+            billing_account=billing_account,
+            settings_form=settings_form,
+            plan_form=plan_form,
+            plans=plans,
+            subscriptions=subscriptions,
+            subscription_form=subscription_form,
+        )
+
+   
 
     if not current_user.is_teacher():
         raise Forbidden("You are not allowed to access billing settings.")
@@ -189,8 +340,54 @@ def index():
 @bp.route("/plans/create", methods=["POST"])
 @login_required
 def create_plan():
+
     if current_user.is_admin():
-        return redirect(url_for("billing.index"))
+        tenant = get_or_create_platform_tenant(
+            current_user
+        )
+
+        plan_form = PlanForm()
+
+        # Admin plans apply to all unassigned
+        # internal students automatically.
+        plan_form.eligible_student_ids.choices = []
+
+        if not plan_form.validate_on_submit():
+            flash(
+                "Please correct the plan form errors.",
+                "danger",
+            )
+            return redirect(
+                url_for("billing.index")
+            )
+
+        plan = Plan(
+            tenant_id=tenant.id,
+            name=plan_form.name.data.strip(),
+            amount_cents=(
+                int(plan_form.amount_reais.data) * 100
+            ),
+            currency=plan_form.currency.data,
+            interval=plan_form.interval.data,
+            active=plan_form.active.data,
+
+            # Platform plans are universally available
+            # to eligible unassigned students.
+            available_to_all_students=True,
+        )
+
+        db_session.add(plan)
+        db_session.commit()
+
+        flash(
+            "Platform plan created successfully.",
+            "success",
+        )
+
+        return redirect(
+            url_for("billing.index")
+        )
+
 
     if not current_user.is_teacher():
         raise Forbidden("You are not allowed to manage billing plans.")
@@ -284,25 +481,34 @@ def create_plan():
 @bp.route("/plans/<int:plan_id>/toggle", methods=["POST"])
 @login_required
 def toggle_plan(plan_id):
+
     if current_user.is_admin():
-        return redirect(url_for("billing.index"))
+        tenant = get_or_create_platform_tenant(current_user)
 
-    if not current_user.is_teacher():
-        raise Forbidden("You are not allowed to manage billing plans.")
+    elif current_user.is_teacher():
+        tenant = (
+            db_session.query(Tenant)
+            .filter_by(owner_user_id=current_user.id)
+            .first()
+        )
 
-    tenant = (
-        db_session.query(Tenant)
-        .filter_by(owner_user_id=current_user.id)
-        .first()
-    )
-    if tenant is None:
-        abort(404)
+        if tenant is None:
+            abort(404)
+
+    else:
+        raise Forbidden(
+            "You are not allowed to manage billing plans."
+        )
 
     plan = (
         db_session.query(Plan)
-        .filter_by(id=plan_id, tenant_id=tenant.id)
+        .filter_by(
+            id=plan_id,
+            tenant_id=tenant.id,
+        )
         .first()
     )
+
     if plan is None:
         abort(404)
 
@@ -310,10 +516,14 @@ def toggle_plan(plan_id):
     db_session.commit()
 
     flash(
-        f'Plan "{plan.name}" {"activated" if plan.active else "deactivated"}.',
+        f'Plan "{plan.name}" '
+        f'{"activated" if plan.active else "deactivated"}.',
         "success",
     )
-    return redirect(url_for("billing.index"))
+
+    return redirect(
+        url_for("billing.index")
+    )
 
 
 
@@ -373,9 +583,14 @@ def student_subscription():
     available_plans = []
 
     if current_user.assigned_teacher_id:
+        # ---------------------------------
+        # Student assigned to a teacher
+        # ---------------------------------
         tenant = (
             db_session.query(Tenant)
-            .filter_by(owner_user_id=current_user.assigned_teacher_id)
+            .filter_by(
+                owner_user_id=current_user.assigned_teacher_id
+            )
             .first()
         )
 
@@ -387,10 +602,42 @@ def student_subscription():
                     Plan.active.is_(True),
                     or_(
                         Plan.available_to_all_students.is_(True),
-                        Plan.eligible_students.any(User.id == current_user.id),
+                        Plan.eligible_students.any(
+                            User.id == current_user.id
+                        ),
                     ),
                 )
-                .order_by(Plan.amount_cents.asc(), Plan.created_at.desc())
+                .order_by(
+                    Plan.amount_cents.asc(),
+                    Plan.created_at.desc(),
+                )
+                .all()
+            )
+
+    else:
+        # ---------------------------------
+        # Direct Imago student
+        # ---------------------------------
+        platform_tenant = (
+            db_session.query(Tenant)
+            .filter_by(
+                slug=PLATFORM_TENANT_SLUG
+            )
+            .first()
+        )
+
+        if platform_tenant:
+            available_plans = (
+                db_session.query(Plan)
+                .filter(
+                    Plan.tenant_id == platform_tenant.id,
+                    Plan.active.is_(True),
+                    Plan.available_to_all_students.is_(True),
+                )
+                .order_by(
+                    Plan.amount_cents.asc(),
+                    Plan.created_at.desc(),
+                )
                 .all()
             )
 
@@ -425,14 +672,10 @@ def student_subscription():
 )
     sp_tz = ZoneInfo("America/Sao_Paulo")
 
-    trial_days_remaining = None
     subscription_days_remaining = None
 
     if current_user.billing_mode == "internal":
         subscription_days_remaining = subscription_days_left(current_user)
-
-    if subscription_days_remaining is None:
-        trial_days_remaining = trial_days_left(current_user)
     
     return render_template(
         "billing/student_billing.html",
@@ -445,7 +688,6 @@ def student_subscription():
         days_left=days_left,
         is_pix_valid=is_pix_valid,
         sp_tz=sp_tz,
-        trial_days_remaining=trial_days_remaining,
         subscription_days_remaining=subscription_days_remaining
     )
 
@@ -464,43 +706,91 @@ def create_student_subscription():
         flash(f"Dados de cobrança inválidos: {form.errors}", "danger")
         return redirect(url_for("billing.student_subscription"))
 
-    if not current_user.assigned_teacher_id:
-        flash("Nenhum plano está disponível para sua conta.", "warning")
-        return redirect(url_for("billing.student_subscription"))
-
-    tenant = (
-        db_session.query(Tenant)
-        .filter_by(owner_user_id=current_user.assigned_teacher_id)
-        .first()
-    )
+    # --------------------------------------------------
+    # Determine which tenant owns this student's plans.
+    # --------------------------------------------------
+    if current_user.assigned_teacher_id:
+        tenant = (
+            db_session.query(Tenant)
+            .filter_by(
+                owner_user_id=current_user.assigned_teacher_id
+            )
+            .first()
+        )
+    else:
+        tenant = (
+            db_session.query(Tenant)
+            .filter_by(
+                slug=PLATFORM_TENANT_SLUG
+            )
+            .first()
+        )
 
     if tenant is None:
-        flash("Nenhum plano está disponível para sua conta.", "warning")
-        return redirect(url_for("billing.student_subscription"))
+        flash(
+            "Nenhum plano está disponível para sua conta.",
+            "warning",
+        )
+        return redirect(
+            url_for("billing.student_subscription")
+        )
 
     try:
         plan_id = int(form.plan_id.data)
     except (TypeError, ValueError):
-        flash("Plano inválido.", "danger")
-        return redirect(url_for("billing.student_subscription"))
-
-    plan = (
-        db_session.query(Plan)
-        .filter(
-            Plan.id == plan_id,
-            Plan.tenant_id == tenant.id,
-            Plan.active.is_(True),
-            or_(
-                Plan.available_to_all_students.is_(True),
-                Plan.eligible_students.any(User.id == current_user.id),
-            ),
+        flash(
+            "Plano inválido.",
+            "danger",
         )
-        .first()
-    )
+        return redirect(
+            url_for("billing.student_subscription")
+        )
+
+    # --------------------------------------------------
+    # Validate that the selected plan belongs to the
+    # correct tenant and is available to this student.
+    # --------------------------------------------------
+    if current_user.assigned_teacher_id:
+        plan = (
+            db_session.query(Plan)
+            .filter(
+                Plan.id == plan_id,
+                Plan.tenant_id == tenant.id,
+                Plan.active.is_(True),
+                or_(
+                    Plan.available_to_all_students.is_(True),
+                    Plan.eligible_students.any(
+                        User.id == current_user.id
+                    ),
+                ),
+            )
+            .first()
+        )
+
+    else:
+        # Platform plans are available to all unassigned
+        # internal students.
+        plan = (
+            db_session.query(Plan)
+            .filter(
+                Plan.id == plan_id,
+                Plan.tenant_id == tenant.id,
+                Plan.active.is_(True),
+                Plan.available_to_all_students.is_(True),
+            )
+            .first()
+        )
 
     if plan is None:
-        flash("Plano inválido ou indisponível para sua conta.", "danger")
-        return redirect(url_for("billing.student_subscription"))
+        flash(
+            "Plano inválido ou indisponível para sua conta.",
+            "danger",
+        )
+        return redirect(
+            url_for("billing.student_subscription")
+        )
+
+
 
     # Block a new signup flow if there is already a subscription in progress.
     # This does NOT mean the user has paid access yet.

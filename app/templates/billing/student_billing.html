@@ -22,53 +22,73 @@
     {% set problem_statuses = ["overdue", "past_due"] %}
     {% set canceled_statuses = ["canceled", "cancelled", "failed"] %}
 
-    {% set has_paid_access = latest_payment and latest_payment.status in paid_statuses %}
-    {% set has_open_payment = latest_payment and latest_payment.status in pending_statuses and is_pix_valid %}
+    {% set has_paid_access =
+        latest_payment
+        and latest_payment.status in paid_statuses
+    %}
 
-    {% set is_internal = current_user.billing_mode == 'internal' %}
-    {% set trial_active = trial_days_remaining is not none and trial_days_remaining > 0 %}
-    {% set trial_expired = trial_days_remaining == 0 %}
-    {% set subscription_active = subscription_days_remaining is not none and subscription_days_remaining > 0 %}
-    {% set subscription_expired = subscription_days_remaining == 0 %}
-    {% set block_payment_during_trial = is_internal and trial_active %}
+    {% set has_open_payment =
+        latest_payment
+        and latest_payment.status in pending_statuses
+        and is_pix_valid
+    %}
+
+    {% set is_internal =
+        current_user.billing_mode == "internal"
+    %}
+
+    {% set subscription_active =
+        subscription_days_remaining is not none
+        and subscription_days_remaining > 0
+    %}
+
+    {% set subscription_expired =
+        subscription_days_remaining == 0
+    %}
 
 
     <div class="accordion mt-3" id="studentBillingAccordion">
 
+        <!-- Current subscription -->
         <div class="accordion-item">
-            <h2 class="accordion-header" id="headingCurrentSubscription">
-                <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#collapseCurrentSubscription">
+
+            <h2
+                class="accordion-header"
+                id="headingCurrentSubscription"
+            >
+                <button
+                    class="accordion-button"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseCurrentSubscription"
+                >
                     Assinatura Atual
                 </button>
             </h2>
 
-            <div id="collapseCurrentSubscription" class="accordion-collapse collapse show">
+            <div
+                id="collapseCurrentSubscription"
+                class="accordion-collapse collapse show"
+            >
                 <div class="accordion-body">
 
-                    {% if is_internal %}
-
-                        {% if trial_active %}
-                            <div class="alert alert-info">
-                                Você está no período de teste gratuito.<br>
-                                Restam <strong>{{ trial_days_remaining }}</strong> dia{{ "s" if trial_days_remaining != 1 else "" }}.
-                            </div>
-
-                        {% elif trial_expired and not subscription_active %}
-                            <div class="alert alert-danger">
-                                Seu período de teste gratuito expirou.<br>
-                                Escolha um plano abaixo para continuar usando o app.
-                            </div>
-
-                        {% elif subscription_expired %}
-                            <div class="alert alert-danger">
-                                Sua assinatura expirou.<br>
-                                Gere uma nova cobrança para continuar.
-                            </div>
-
-                        {% endif %}
-
+                    {% if is_internal and not subscription %}
+                        <div class="alert alert-info">
+                            Você ainda não possui uma assinatura ativa.
+                            Assine um plano para acessar os capítulos exclusivos
+                            para assinantes.
+                        </div>
                     {% endif %}
+
+
+                    {% if subscription_expired %}
+                        <div class="alert alert-danger">
+                            Sua assinatura expirou.
+                            Gere uma nova cobrança para continuar acessando
+                            os capítulos exclusivos para assinantes.
+                        </div>
+                    {% endif %}
+
 
                     {% if subscription %}
 
@@ -76,52 +96,109 @@
                             <strong>Status:</strong>
 
                             {% if latest_payment %}
+
                                 {% if latest_payment.status in paid_statuses %}
-                                    <span class="badge bg-success">Pagamento confirmado</span>
-                                {% elif latest_payment.status in pending_statuses and is_pix_valid %}
-                                    <span class="badge bg-warning text-dark">Aguardando pagamento</span>
-                                {% elif latest_payment.status in pending_statuses and not is_pix_valid %}
-                                    <span class="badge bg-danger">PIX expirado</span>
+                                    <span class="badge bg-success">
+                                        Pagamento confirmado
+                                    </span>
+
+                                {% elif
+                                    latest_payment.status in pending_statuses
+                                    and is_pix_valid
+                                %}
+                                    <span class="badge bg-warning text-dark">
+                                        Aguardando pagamento
+                                    </span>
+
+                                {% elif
+                                    latest_payment.status in pending_statuses
+                                    and not is_pix_valid
+                                %}
+                                    <span class="badge bg-danger">
+                                        PIX expirado
+                                    </span>
+
                                 {% elif latest_payment.status in problem_statuses %}
-                                    <span class="badge bg-danger">Pagamento em atraso</span>
+                                    <span class="badge bg-danger">
+                                        Pagamento em atraso
+                                    </span>
+
                                 {% elif latest_payment.status in canceled_statuses %}
-                                    <span class="badge bg-secondary">Pagamento cancelado</span>
+                                    <span class="badge bg-secondary">
+                                        Pagamento cancelado
+                                    </span>
+
                                 {% else %}
-                                    <span class="badge bg-light text-dark">{{ latest_payment.status }}</span>
+                                    <span class="badge bg-light text-dark">
+                                        {{ latest_payment.status }}
+                                    </span>
                                 {% endif %}
+
                             {% else %}
-                                <span class="badge bg-info text-dark">Assinatura criada</span>
+                                <span class="badge bg-info text-dark">
+                                    Assinatura criada
+                                </span>
                             {% endif %}
                         </p>
 
+
                         {% if subscription.plan %}
-                            <p class="mb-2"><strong>Plano:</strong> {{ subscription.plan.name }}</p>
+
+                            <p class="mb-2">
+                                <strong>Plano:</strong>
+                                {{ subscription.plan.name }}
+                            </p>
+
                             <p class="mb-2">
                                 <strong>Valor:</strong>
-                                R$ {{ "%.2f"|format(subscription.plan.amount_cents / 100) }}
+                                R$ {{
+                                    "%.2f"|format(
+                                        subscription.plan.amount_cents / 100
+                                    )
+                                }}
                             </p>
+
                             <p class="mb-2">
                                 <strong>Intervalo:</strong>
-                                {{ interval_labels.get(subscription.plan.interval, subscription.plan.interval) }}
+                                {{
+                                    interval_labels.get(
+                                        subscription.plan.interval,
+                                        subscription.plan.interval
+                                    )
+                                }}
                             </p>
+
                         {% endif %}
+
 
                         {% if payment_date_sp %}
                             <p class="mb-2">
                                 <strong>Pagamento confirmado em:</strong>
-                                {{ payment_date_sp.strftime("%d/%m/%Y %H:%M") }}
+                                {{
+                                    payment_date_sp.strftime(
+                                        "%d/%m/%Y %H:%M"
+                                    )
+                                }}
                             </p>
                         {% endif %}
+
 
                         {% if expiring_date_sp %}
                             <p class="mb-2">
                                 <strong>Válida até:</strong>
-                                {{ expiring_date_sp.strftime("%d/%m/%Y") }}
+                                {{
+                                    expiring_date_sp.strftime(
+                                        "%d/%m/%Y"
+                                    )
+                                }}
                             </p>
+
                             <div class="form-text mb-2">
-                                Acesso válido até 23:59 desse dia no horário de São Paulo.
+                                Acesso válido até 23:59 desse dia
+                                no horário de São Paulo.
                             </div>
                         {% endif %}
+
 
                         {% if days_left is not none %}
                             <p class="mb-0">
@@ -136,72 +213,156 @@
             </div>
         </div>
 
+
+        <!-- Available plans -->
         <div class="accordion-item mt-3">
+
             <h2 class="accordion-header">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#collapseAvailablePlans">
+                <button
+                    class="accordion-button collapsed"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseAvailablePlans"
+                >
                     Planos Disponíveis
                 </button>
             </h2>
 
-            <div id="collapseAvailablePlans" class="accordion-collapse collapse">
+            <div
+                id="collapseAvailablePlans"
+                class="accordion-collapse collapse"
+            >
                 <div class="accordion-body">
 
                     {% if has_paid_access %}
-                        <div class="alert alert-warning">
+
+                        <div class="alert alert-success">
                             Você já possui uma assinatura com pagamento confirmado.
                         </div>
+
                     {% elif has_open_payment %}
+
                         <div class="alert alert-warning">
                             Você já possui uma cobrança pendente.
                         </div>
-                    {% elif latest_payment and latest_payment.status in pending_statuses and not is_pix_valid %}
+
+                    {% elif
+                        latest_payment
+                        and latest_payment.status in pending_statuses
+                        and not is_pix_valid
+                    %}
+
                         <div class="alert alert-danger">
-                            A cobrança PIX expirou. Gere uma nova cobrança para continuar.
+                            A cobrança PIX expirou.
+                            Gere uma nova cobrança para continuar.
                         </div>
+
                     {% endif %}
 
+
                     {% if available_plans %}
+
                         {% for plan in available_plans %}
+
                             <div class="card mb-3 shadow-sm">
                                 <div class="card-body">
 
-                                    <h5 class="card-title mb-2">{{ plan.name }}</h5>
+                                    <h5 class="card-title mb-2">
+                                        {{ plan.name }}
+                                    </h5>
 
                                     <p class="card-text mb-3">
-                                        <strong>R$ {{ "%.2f"|format(plan.amount_cents / 100) }}</strong>
+
+                                        <strong>
+                                            R$ {{
+                                                "%.2f"|format(
+                                                    plan.amount_cents / 100
+                                                )
+                                            }}
+                                        </strong>
+
                                         <span class="text-muted">
-                                            / {{ interval_labels.get(plan.interval, plan.interval)|lower }}
+                                            /
+                                            {{
+                                                interval_labels.get(
+                                                    plan.interval,
+                                                    plan.interval
+                                                )|lower
+                                            }}
                                         </span>
+
                                     </p>
 
-                                    <form method="post" action="{{ url_for('billing.create_student_subscription') }}">
-                                        <input type="hidden" name="csrf_token" value="{{ billing_form.csrf_token._value() }}">
-                                        <input type="hidden" name="plan_id" value="{{ plan.id }}">
 
-                                        <label for="{{ billing_form.cpf_cnpj.id }}_{{ plan.id }}" class="form-label">
+                                    <form
+                                        method="post"
+                                        action="{{
+                                            url_for(
+                                                'billing.create_student_subscription'
+                                            )
+                                        }}"
+                                    >
+
+                                        <input
+                                            type="hidden"
+                                            name="csrf_token"
+                                            value="{{
+                                                billing_form.csrf_token._value()
+                                            }}"
+                                        >
+
+                                        <input
+                                            type="hidden"
+                                            name="plan_id"
+                                            value="{{ plan.id }}"
+                                        >
+
+
+                                        <label
+                                            for="{{ billing_form.cpf_cnpj.id }}_{{ plan.id }}"
+                                            class="form-label"
+                                        >
                                             CPF ou CNPJ
                                         </label>
 
-                                        {{ billing_form.cpf_cnpj(
-                                            id="cpf_cnpj_" ~ plan.id,
-                                            class="form-control mb-1",
-                                            placeholder="Digite seu CPF ou CNPJ, somente números"
-                                        ) }}
+
+                                        {{
+                                            billing_form.cpf_cnpj(
+                                                id="cpf_cnpj_" ~ plan.id,
+                                                class="form-control mb-1",
+                                                placeholder="Digite seu CPF ou CNPJ, somente números"
+                                            )
+                                        }}
+
 
                                         <div class="form-text mb-3">
-                                            Precisamos do CPF ou CNPJ para gerar a cobrança PIX.
+                                            Precisamos do CPF ou CNPJ
+                                            para gerar a cobrança PIX.
                                         </div>
 
-                                        <button class="btn btn-primary w-100"
-                                                {% if has_paid_access or has_open_payment or block_payment_during_trial %}disabled{% endif %}>
+
+                                        <button
+                                            class="btn btn-primary w-100"
+                                            {% if has_paid_access or has_open_payment %}
+                                                disabled
+                                            {% endif %}
+                                        >
                                             Assinar este plano
                                         </button>
+
                                     </form>
 
                                 </div>
                             </div>
+
                         {% endfor %}
+
+                    {% else %}
+
+                        <p class="text-muted mb-0">
+                            Nenhum plano está disponível para sua conta no momento.
+                        </p>
+
                     {% endif %}
 
                 </div>
@@ -210,16 +371,28 @@
 
     </div>
 
+
     {% if latest_payment and is_pix_valid %}
+
         <div class="mt-3">
+
             <h5>Pagamento via PIX</h5>
 
             {% if latest_payment.pix_qr_code %}
-                <img src="data:image/png;base64,{{ latest_payment.pix_qr_code }}" style="max-width:200px;">
+                <img
+                    src="data:image/png;base64,{{ latest_payment.pix_qr_code }}"
+                    alt="QR Code PIX"
+                    style="max-width: 200px;"
+                >
             {% endif %}
 
-            <textarea class="form-control" readonly>{{ latest_payment.pix_copy_paste }}</textarea>
+            <textarea
+                class="form-control mt-2"
+                readonly
+            >{{ latest_payment.pix_copy_paste }}</textarea>
+
         </div>
+
     {% endif %}
 
 </div>

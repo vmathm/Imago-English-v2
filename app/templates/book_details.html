@@ -7,44 +7,56 @@
 <div class="container mt-5">
 
   {% if current_user.is_authenticated and current_user.is_admin() %}
-  <div class="mb-3">
-    <a
-      href="{{ url_for(
-        'admin.edit_book',
-        book_id=book.id
-      ) }}"
-      class="btn btn-outline-secondary btn-sm"
-    >
-      Edit Book
-    </a>
+    <div class="d-flex flex-wrap gap-2 mb-3">
 
-
-
-     <form
-      method="POST"
-      action="{{ url_for(
-        'admin.delete_book',
-        book_id=book.id
-      ) }}"
-      onsubmit="return confirm(
-        'Delete this book and all of its chapters permanently?'
-      );"
-    >
-      <input
-        type="hidden"
-        name="csrf_token"
-        value="{{ csrf_token() }}"
+      <a
+        href="{{ url_for(
+          'admin.edit_book',
+          book_id=book.id
+        ) }}"
+        class="btn btn-outline-secondary btn-sm"
       >
+        Edit Book
+      </a>
 
-      <button
-        type="submit"
-        class="btn btn-outline-danger btn-sm"
+      <a
+        href="{{ url_for(
+          'admin.create_chapter',
+          book_id=book.id
+        ) }}"
+        class="btn btn-primary btn-sm"
       >
-        Delete Book
-      </button>
-    </form>
-  </div>
-{% endif %}
+        Add Chapter
+      </a>
+
+      <form
+        method="POST"
+        action="{{ url_for(
+          'admin.delete_book',
+          book_id=book.id
+        ) }}"
+        class="d-inline"
+        onsubmit="return confirm(
+          'Delete this book and all of its chapters permanently?'
+        );"
+      >
+        <input
+          type="hidden"
+          name="csrf_token"
+          value="{{ csrf_token() }}"
+        >
+
+        <button
+          type="submit"
+          class="btn btn-outline-danger btn-sm"
+        >
+          Delete Book
+        </button>
+      </form>
+
+    </div>
+  {% endif %}
+
 
   <h1>{{ book.title }}</h1>
 
@@ -56,7 +68,9 @@
 
   {% if book.level %}
     <p class="mb-3">
-      <small>Level: {{ book.level }}</small>
+      <small>
+        Level: {{ book.level }}
+      </small>
     </p>
   {% endif %}
 
@@ -66,31 +80,39 @@
     </p>
   {% endif %}
 
-    <div class="mt-4 mb-3">
-    <strong>
-      {{ read_count }} / {{ total_chapters }} chapters read
-    </strong>
-    </div>
 
-    {% if next_chapter %}
+  {% if total_chapters is defined %}
+    <div class="mt-4 mb-3">
+      <strong>
+        {{ read_count }} / {{ total_chapters }} chapters read
+      </strong>
+    </div>
+  {% endif %}
+
+
+  {% if next_chapter %}
     <div class="mb-4">
-        <a
+      <a
         href="{{ url_for(
-            'audiobook.read_chapter',
-            book_slug=book.slug,
-            chapter_slug=next_chapter.slug
+          'audiobook.read_chapter',
+          book_slug=book.slug,
+          chapter_slug=next_chapter.slug
         ) }}"
         class="btn btn-success"
-        >
+      >
         Continue Reading
-        <small>({{ next_chapter.title }})</small>
-        </a>
+        <small>
+          ({{ next_chapter.title }})
+        </small>
+      </a>
     </div>
-    {% elif chapters %}
+
+  {% elif chapters and total_chapters is defined %}
     <div class="alert alert-success">
-        ✅ You have finished this book!
+      ✅ You have finished this book!
     </div>
-    {% endif %}
+  {% endif %}
+
 
   <h4 class="mt-4 mb-3">
     Chapters
@@ -99,92 +121,143 @@
 
   {% if chapters %}
 
-
-
     <div class="list-group">
 
       {% for chapter in chapters %}
 
-        <div class="list-group-item d-flex justify-content-between align-items-center">
+        <div
+          class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-3"
+        >
 
-            <div class="text-start">
-
-            <strong>
-                {{ chapter.position }}. {{ chapter.title }}
-            </strong>
+          <div class="text-start flex-grow-1">
 
             <div>
-                {% if chapter.id in read_chapter_ids %}
-                <small>✅ Read</small>
-                {% else %}
-                <small class="text-muted">Not read yet</small>
-                {% endif %}
+              <strong>
+                {{ chapter.position }}. {{ chapter.title }}
+              </strong>
+
+              {% if chapter.is_free %}
+                <span class="badge text-bg-success ms-2">
+                  Free
+                </span>
+              {% else %}
+                <span class="badge text-bg-secondary ms-2">
+                  Subscriber
+                </span>
+              {% endif %}
             </div>
 
-            </div>
-            
+            {% if read_chapter_ids is defined %}
+              <div class="mt-1">
+
+                {% if chapter.id in read_chapter_ids %}
+                  <small>
+                    ✅ Read
+                  </small>
+                {% else %}
+                  <small class="text-muted">
+                    Not read yet
+                  </small>
+                {% endif %}
+
+              </div>
+            {% endif %}
+
+          </div>
+
+
+          <div class="d-flex flex-wrap gap-2">
+          {% if chapter.is_free
+                or (current_user.is_authenticated and current_user.is_admin())
+                or (current_user.is_authenticated and current_user.is_teacher())
+                or (current_user.is_authenticated and current_user.billing_mode == "external")
+          %}
+
             <a
-            href="{{ url_for(
+              href="{{ url_for(
                 'audiobook.read_chapter',
                 book_slug=book.slug,
                 chapter_slug=chapter.slug
-            ) }}"
-            class="btn btn-primary btn-sm"
+              ) }}"
+              class="btn btn-primary btn-sm"
             >
-            Open
+              Open
             </a>
 
-                        
+          {% elif current_user.is_authenticated %}
+
+            {# Internal user: let backend verify subscription #}
+            <a
+              href="{{ url_for(
+                'audiobook.read_chapter',
+                book_slug=book.slug,
+                chapter_slug=chapter.slug
+              ) }}"
+              class="btn btn-primary btn-sm"
+            >
+              Open
+            </a>
+
+          {% else %}
+
+            {# Guest: show login/subscription message #}
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              data-bs-toggle="modal"
+              data-bs-target="#subscriptionLoginModal"
+            >
+              Open
+            </button>
+
+          {% endif %}
+
             {% if current_user.is_authenticated and current_user.is_admin() %}
-                <a
+
+              <a
                 href="{{ url_for(
-                    'admin.edit_chapter',
-                    chapter_id=chapter.id
+                  'admin.edit_chapter',
+                  chapter_id=chapter.id
                 ) }}"
                 class="btn btn-outline-secondary btn-sm"
-                >
+              >
                 Edit
-                </a>
+              </a>
+
+              <form
+                method="POST"
+                action="{{ url_for(
+                  'admin.delete_chapter',
+                  chapter_id=chapter.id
+                ) }}"
+                class="d-inline"
+                onsubmit="return confirm(
+                  'Delete this chapter permanently?'
+                );"
+              >
+                <input
+                  type="hidden"
+                  name="csrf_token"
+                  value="{{ csrf_token() }}"
+                >
+
+                <button
+                  type="submit"
+                  class="btn btn-outline-danger btn-sm"
+                >
+                  Delete
+                </button>
+              </form>
+
             {% endif %}
 
+          </div>
 
-
-
-            <form
-              method="POST"
-              action="{{ url_for(
-                'admin.delete_chapter',
-                chapter_id=chapter.id
-              ) }}"
-              class="d-inline"
-              onsubmit="return confirm('Delete this chapter permanently?');"
-            >
-              <input
-                type="hidden"
-                name="csrf_token"
-                value="{{ csrf_token() }}"
-              >
-
-              <button
-                type="submit"
-                class="btn btn-outline-danger btn-sm"
-              >
-                Delete
-              </button>
-            </form>
         </div>
 
-
-
-        
-          
       {% endfor %}
 
     </div>
-
-
-
-    
 
   {% else %}
 
@@ -196,12 +269,72 @@
 
 
   <div class="mt-4">
-    <a href="{{ url_for('audiobook.library') }}"
-       class="btn btn-outline-secondary">
+    <a
+      href="{{ url_for('audiobook.library') }}"
+      class="btn btn-outline-secondary"
+    >
       Back to Library
     </a>
   </div>
 
+</div>
+
+<div
+  class="modal fade"
+  id="subscriptionLoginModal"
+  tabindex="-1"
+  aria-hidden="true"
+>
+  <div
+    class="modal-dialog modal-dialog-centered"
+    style="max-width: 380px;"
+  >
+    <div
+      class="modal-content position-relative"
+      style="
+        border-radius: 0.75rem;
+        padding: 2.5rem 2rem 2rem;
+      "
+    >
+
+      <!-- Close button -->
+      <button
+        type="button"
+        class="btn-close position-absolute top-0 end-0 m-3"
+        data-bs-dismiss="modal"
+        aria-label="Close"
+      ></button>
+
+      <p class="text-muted">
+        Entre para assinar e ter acesso a este conteúdo.
+      </p>
+
+      <div class="text-center">
+        <a
+          href="{{ url_for('auth.login') }}"
+          class="btn btn-google d-inline-flex align-items-center justify-content-center gap-2"
+          style="
+            height: 2.7rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+          "
+        >
+          <img
+            src="{{ url_for(
+              'static',
+              filename='img/branding/google_logo.png'
+            ) }}"
+            alt="Google Logo"
+            class="google-icon"
+            style="width: 40px; height: 40px;"
+          >
+
+          <span>Sign in with Google</span>
+        </a>
+      </div>
+
+    </div>
+  </div>
 </div>
 
 {% endblock %}
