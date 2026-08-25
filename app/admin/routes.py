@@ -1,7 +1,6 @@
 from flask import Blueprint, current_app, render_template, request, redirect, url_for, abort, flash, jsonify
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
-from app.audiobook.forms import EditChapterForm
 from app.gcs_utils import delete_file_from_gcs_by_url, upload_file_to_gcs
 from app.models import User, Flashcard, Book, Chapter, SuggestedFlashcard
 from app.database import db_session
@@ -21,8 +20,10 @@ from app.admin.forms import (
     UpdateLearningLanguageForm,
     BookForm,
     ChapterForm,
+    EditChapterForm,
     EditBookForm
 )
+
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -374,7 +375,6 @@ def book_details(book_id):
 
 
 
-
 @bp.route("/create/chapter", methods=["GET", "POST"])
 @admin_required
 def create_chapter():
@@ -385,32 +385,57 @@ def create_chapter():
     )
 
     if not books:
-        flash("Create a book before adding chapters.", "warning")
-        return redirect(url_for("admin.create_book"))
+        flash(
+            "Create a book before adding chapters.",
+            "warning",
+        )
+        return redirect(
+            url_for("admin.create_book")
+        )
 
     form = ChapterForm()
 
     form.book_id.choices = [
-        (book.id, f"{book.title} — {book.author or 'Unknown author'}")
+        (
+            book.id,
+            f"{book.title} — {book.author or 'Unknown author'}",
+        )
         for book in books
     ]
 
-    selected_book_id = request.args.get("book_id", type=int)
+    selected_book_id = request.args.get(
+        "book_id",
+        type=int,
+    )
 
     if request.method == "GET" and selected_book_id:
-        valid_book_ids = {book.id for book in books}
+        valid_book_ids = {
+            book.id
+            for book in books
+        }
 
         if selected_book_id in valid_book_ids:
             form.book_id.data = selected_book_id
 
     if form.validate_on_submit():
-        book = db_session.get(Book, form.book_id.data)
+        book = db_session.get(
+            Book,
+            form.book_id.data,
+        )
 
         if not book:
-            flash("Book not found.", "danger")
-            return redirect(url_for("admin.create_chapter"))
+            flash(
+                "Book not found.",
+                "danger",
+            )
+            return redirect(
+                url_for("admin.create_chapter")
+            )
 
-        chapter_slug = form.slug.data.strip()
+        chapter_slug = (
+            form.slug.data
+            .strip()
+        )
 
         existing_slug = (
             db_session.query(Chapter)
@@ -426,6 +451,7 @@ def create_chapter():
                 "A chapter with this slug already exists for this book.",
                 "danger",
             )
+
             return render_template(
                 "admin/create_chapter.html",
                 form=form,
@@ -445,11 +471,13 @@ def create_chapter():
                 "A chapter already uses this position in this book.",
                 "danger",
             )
+
             return render_template(
                 "admin/create_chapter.html",
                 form=form,
             )
 
+        # Files are optional.
         text_path = None
         audio_path = None
 
@@ -458,8 +486,14 @@ def create_chapter():
 
             text_path = upload_file_to_gcs(
                 text_file.stream,
-                prefix=f"library/{book.slug}/{chapter_slug}/text",
-                content_type=text_file.mimetype or "text/plain",
+                prefix=(
+                    f"library/{book.slug}/"
+                    f"{chapter_slug}/text"
+                ),
+                content_type=(
+                    text_file.mimetype
+                    or "text/plain"
+                ),
             )
 
         if form.audio_file.data:
@@ -467,8 +501,14 @@ def create_chapter():
 
             audio_path = upload_file_to_gcs(
                 audio_file.stream,
-                prefix=f"library/{book.slug}/{chapter_slug}/audio",
-                content_type=audio_file.mimetype or "audio/mpeg",
+                prefix=(
+                    f"library/{book.slug}/"
+                    f"{chapter_slug}/audio"
+                ),
+                content_type=(
+                    audio_file.mimetype
+                    or "audio/mpeg"
+                ),
             )
 
         chapter = Chapter(
@@ -478,6 +518,7 @@ def create_chapter():
             position=form.position.data,
             text_path=text_path,
             audio_path=audio_path,
+            is_free=bool(form.is_free.data),
         )
 
         db_session.add(chapter)
@@ -612,6 +653,7 @@ def edit_chapter(chapter_id):
             chapter.title = title
             chapter.slug = slug
             chapter.position = position
+            chapter.is_free = form.is_free.data
 
             # Replace paths only when new files were uploaded.
             if new_text_path:
@@ -683,10 +725,7 @@ def edit_chapter(chapter_id):
         )
 
         return redirect(
-            url_for(
-                "admin.book_details",
-                book_id=chapter.book_id,
-            )
+            url_for("audiobook.library")
         )
 
     return render_template(

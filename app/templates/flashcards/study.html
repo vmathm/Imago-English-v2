@@ -20,8 +20,11 @@
   window.IMAGO_TTS_LANGUAGE = "{{ current_user.learning_language or 'en' }}";
 </script>
 <script>
-  window.HAS_ASSIGNED_TEACHER = {{ 
-    (current_user.is_authenticated and current_user.assigned_teacher_id) | tojson 
+  window.HAS_ASSIGNED_TEACHER = {{
+    (
+      current_user.is_authenticated
+      and current_user.assigned_teacher_id is not none
+    ) | tojson
   }};
 </script>
 <script src="{{ url_for('static', filename='js/study.js') }}"></script>

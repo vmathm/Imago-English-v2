@@ -14,11 +14,12 @@ from app.database import db_session
 from app.models.user_audiobook import UserAudiobook
 import requests
 from flask import current_app
-from app.audiobook.forms import EditChapterForm, UserAudiobookForm   
+from app.audiobook.forms import UserAudiobookForm   
 from app.gcs_utils import delete_file_from_gcs_by_url, upload_file_to_gcs
 from werkzeug.exceptions import Forbidden   
 from app.models import User, UserAudiobook 
 from app.utils.time import utcnow
+from app.services.access import sync_internal_access
 
 bp = Blueprint('audiobook', __name__, url_prefix='/audiobook')
 @bp.route('/audiobooks')
@@ -394,8 +395,6 @@ def read_chapter(book_slug, chapter_slug):
         .first()
     )
 
-    
-
     if not book:
         abort(404)
 
@@ -414,7 +413,39 @@ def read_chapter(book_slug, chapter_slug):
     if not chapter:
         abort(404)
 
+    # --------------------------------------------------
+    # Premium chapter access
+    # --------------------------------------------------
+    if not chapter.is_free:
+
+        # Guest cannot read paid chapters.
+        if not current_user.is_authenticated:
+            return render_template(
+                "subscription_required.html",
+                chapter=chapter,
+                book=book,
+                guest_mode=True,
+            ), 200
+
+        # Teachers/admins bypass subscription lock.
+        if not (current_user.is_teacher() or current_user.is_admin()):
+
+            # Students paying externally through a teacher keep access.
+            if current_user.billing_mode == "internal":
+                sync_internal_access(current_user)
+                db_session.commit()
+
+                if not current_user.active:
+                    return render_template(
+                        "subscription_required.html",
+                        chapter=chapter,
+                        book=book,
+                        guest_mode=False,
+                    ), 200
+
+    # --------------------------------------------------
     # Fetch chapter text from GCS
+    # --------------------------------------------------
     text_content = None
 
     try:
@@ -450,10 +481,7 @@ def read_chapter(book_slug, chapter_slug):
         else None
     )
 
-
     activity_mode = chapter.activity_enabled
-
-    
 
     # Current reading progress
     if current_user.is_authenticated:
@@ -490,12 +518,9 @@ def read_chapter(book_slug, chapter_slug):
         progress=progress,
         previous_chapter=previous_chapter,
         next_chapter=next_chapter,
-
-        # This route is not displaying a private UserAudiobook.
         audiobook=None,
         activity_mode=activity_mode,
     )
-
 
 
 @bp.route("/join/chapter/<int:chapter_id>")

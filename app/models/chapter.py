@@ -55,7 +55,7 @@ class Chapter(Base):
 
     audio_path = Column(
         String(500),
-        nullable=False,
+        nullable=True,
     )
     
     is_free = Column(

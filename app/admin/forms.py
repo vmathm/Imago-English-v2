@@ -112,72 +112,6 @@ class BookForm(FlaskForm):
     submit = SubmitField("Create book")
 
 
-
-    
-
-
-class ChapterForm(FlaskForm):
-    book_id = SelectField(
-        "Book",
-        coerce=int,
-        choices=[],
-        validators=[DataRequired()],
-    )
-
-    title = StringField(
-        "Chapter title",
-        validators=[
-            DataRequired(),
-            Length(max=255),
-        ],
-    )
-
-    slug = StringField(
-        "Chapter slug",
-        validators=[
-            DataRequired(),
-            Length(max=255),
-        ],
-    )
-
-    position = IntegerField(
-        "Position",
-        validators=[
-            DataRequired(),
-            NumberRange(min=1),
-        ],
-    )
-
-    text_file = FileField(
-        "Text file",
-        validators=[
-            FileRequired(),
-            FileAllowed(
-                ["txt"],
-                "Only .txt files are accepted.",
-            ),
-        ],
-    )
-
-    audio_file = FileField(
-        "Audio file",
-        validators=[
-            FileRequired(),
-            FileAllowed(
-                ["mp3", "m4a", "wav", "ogg"],
-                "Unsupported audio format.",
-            ),
-        ],
-    )
-
-    is_free = BooleanField(
-        "Free chapter",
-        default=False,
-    )
-
-    submit = SubmitField("Upload chapter")
-
-
 class EditBookForm(FlaskForm):
     title = StringField(
         "Title",
@@ -207,4 +141,58 @@ class EditBookForm(FlaskForm):
     )
 
     submit = SubmitField("Update Book")
+
+
+
+
+class ChapterForm(FlaskForm):
+    book_id = SelectField(
+        "Book",
+        coerce=int,
+        validators=[DataRequired()],
+        choices=[]
+    )
+
+    title = StringField(
+        "Chapter title",
+        validators=[DataRequired()]
+    )
+
+    slug = StringField(
+        "Slug",
+        validators=[DataRequired()]
+    )
+
+    position = IntegerField(
+        "Position",
+        validators=[
+            DataRequired(),
+            NumberRange(min=1)
+        ]
+    )
+
+    text_file = FileField(
+        "Text file",
+        validators=[
+            Optional(),
+            FileAllowed(["txt"], "Text files only."),
+        ],
+    )
+
+    audio_file = FileField(
+        "Audio file",
+        validators=[
+            Optional(),
+            FileAllowed(["mp3"], "MP3 files only."),
+        ],
+    )
+
+    is_free = BooleanField("Free chapter")
+
     
+    submit = SubmitField("Create Chapter")
+
+
+class EditChapterForm(ChapterForm):
+    submit = SubmitField("Update Chapter")
+
