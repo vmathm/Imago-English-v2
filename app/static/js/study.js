@@ -6,15 +6,24 @@ document.addEventListener("DOMContentLoaded", () => {
     (Array.isArray(window.flashcards)) ? window.flashcards.slice() :
     [];
 
-  // Student review mode if `studentId` is defined (teacher reviewing a student's cards)
-  const hasStudent = (typeof studentId !== "undefined" && studentId !== null);
+  // Student review mode if `studentId` is defined
+  // (teacher reviewing a student's cards)
+  const hasStudent =
+    (typeof studentId !== "undefined" && studentId !== null);
 
   // Dashboard URL injected by template (fallback to "/")
-  const DASHBOARD_URL = (typeof window.DASHBOARD_URL === "string" && window.DASHBOARD_URL) || "/";
+  const DASHBOARD_URL =
+    (typeof window.DASHBOARD_URL === "string" && window.DASHBOARD_URL) || "/";
 
   // TTS language injected by template, e.g. "en" or "pt-BR"
   const TTS_LANGUAGE =
-    (typeof window.IMAGO_TTS_LANGUAGE === "string" && window.IMAGO_TTS_LANGUAGE) || "en";
+    (typeof window.IMAGO_TTS_LANGUAGE === "string" &&
+      window.IMAGO_TTS_LANGUAGE) || "en";
+
+  // Whether the current registered student has an assigned teacher.
+  // Guests and unassigned students should receive false from the template.
+  const HAS_ASSIGNED_TEACHER =
+    window.HAS_ASSIGNED_TEACHER === true;
 
   // ====== DOM ======
   const container = document.getElementById("flashcard-container");
@@ -25,9 +34,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // ====== Early exit (no cards) ======
   if (cards.length === 0) {
     if (counterEl) counterEl.textContent = "0";
+
     container.replaceChildren();
+
     const p = document.createElement("p");
     p.textContent = "Você não tem flashcards para estudar.";
+
     container.appendChild(p);
     return;
   }
@@ -35,8 +47,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // ====== State ======
   let index = 0;
   let reviewPool = [];
+
   const queue = [...cards];
-  let isProcessing = false; // prevents overlapping async calls
+
+  let isProcessing = false;
 
   // Anti-rapid-rating throttle
   const MIN_RATING_INTERVAL_MS = 700;
@@ -46,40 +60,63 @@ document.addEventListener("DOMContentLoaded", () => {
   function shuffle(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
+
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
   }
+
   shuffle(queue);
 
   function csrf() {
-    const meta = document.querySelector('meta[name="csrf-token"]');
-    return meta ? meta.getAttribute("content") : "";
+    const meta = document.querySelector(
+      'meta[name="csrf-token"]'
+    );
+
+    return meta
+      ? meta.getAttribute("content")
+      : "";
   }
 
   function setButtonsEnabled(enabled) {
     document
-      .querySelectorAll(".rate-btn, #toggle-answer, #problem-card-btn, .card-help-option")
+      .querySelectorAll(
+        ".rate-btn, #toggle-answer, #problem-card-btn, .card-help-option"
+      )
       .forEach((b) => {
-        b.style.pointerEvents = enabled ? "auto" : "none";
-        b.style.opacity = enabled ? "1" : "0.6";
+        b.style.pointerEvents = enabled
+          ? "auto"
+          : "none";
+
+        b.style.opacity = enabled
+          ? "1"
+          : "0.6";
       });
   }
 
-   
   function updateCounter() {
     if (!counterEl) return;
+
     let remaining;
+
     if (hasStudent) {
       // Count currently rendered cards in teacher mode
-      remaining = container.querySelectorAll(".section-box").length;
+      remaining =
+        container.querySelectorAll(".section-box").length;
     } else {
       // Student mode: items left + review buffer
-      remaining = (queue.length - index) + reviewPool.length;
+      remaining =
+        (queue.length - index) + reviewPool.length;
     }
+
     remaining = Math.max(0, remaining);
+
     counterEl.textContent = String(remaining);
+
     if (counterEl.parentElement) {
-      counterEl.parentElement.style.display = remaining > 0 ? "block" : "none";
+      counterEl.parentElement.style.display =
+        remaining > 0
+          ? "block"
+          : "none";
     }
   }
 
@@ -87,18 +124,32 @@ document.addEventListener("DOMContentLoaded", () => {
   let selectedVoice = null;
 
   function pickVoice() {
-    if (!("speechSynthesis" in window)) return null;
+    if (!("speechSynthesis" in window)) {
+      return null;
+    }
 
-    const voices = window.speechSynthesis.getVoices();
-    if (!voices || voices.length === 0) return null;
+    const voices =
+      window.speechSynthesis.getVoices();
+
+    if (!voices || voices.length === 0) {
+      return null;
+    }
 
     // 1) Exact match, e.g. "pt-BR"
-    let v = voices.find((voice) => voice.lang === TTS_LANGUAGE);
+    let v = voices.find(
+      (voice) => voice.lang === TTS_LANGUAGE
+    );
 
-    // 2) Same base language, e.g. "pt" for "pt-BR", "en" for "en-US"
+    // 2) Same base language, e.g. "pt" for "pt-BR"
     if (!v) {
-      const base = TTS_LANGUAGE.split("-")[0];
-      v = voices.find((voice) => voice.lang && voice.lang.startsWith(base));
+      const base =
+        TTS_LANGUAGE.split("-")[0];
+
+      v = voices.find(
+        (voice) =>
+          voice.lang &&
+          voice.lang.startsWith(base)
+      );
     }
 
     // 3) Fallback: first available voice
@@ -110,19 +161,30 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if ("speechSynthesis" in window) {
-    window.speechSynthesis.onvoiceschanged = initializeVoices;
-    if (window.speechSynthesis.getVoices().length > 0) {
+    window.speechSynthesis.onvoiceschanged =
+      initializeVoices;
+
+    if (
+      window.speechSynthesis.getVoices().length > 0
+    ) {
       initializeVoices();
     }
   }
 
   function speakText(text, element) {
-    if (!("speechSynthesis" in window)) return;
+    if (!("speechSynthesis" in window)) {
+      return;
+    }
 
-    const synth = window.speechSynthesis;
-    if (synth.speaking || synth.pending) synth.cancel();
+    const synth =
+      window.speechSynthesis;
 
-    const utterance = new SpeechSynthesisUtterance(text);
+    if (synth.speaking || synth.pending) {
+      synth.cancel();
+    }
+
+    const utterance =
+      new SpeechSynthesisUtterance(text);
 
     if (selectedVoice) {
       utterance.voice = selectedVoice;
@@ -131,435 +193,975 @@ document.addEventListener("DOMContentLoaded", () => {
       utterance.lang = TTS_LANGUAGE;
     }
 
-    // Keep your existing tuning – this works fine for EN and PT-BR
     utterance.rate = 0.8;
     utterance.pitch = 1.1;
 
     if (element) {
       element.classList.add("speaking");
-      utterance.onend = () => element.classList.remove("speaking");
+
+      utterance.onend = () => {
+        element.classList.remove("speaking");
+      };
     }
 
     synth.speak(utterance);
   }
 
-  // Element helpers
-  function makeBtn({ text, className, dataset = {}, id, onClick }) {
+  // ====== Element helpers ======
+  function makeBtn({
+    text,
+    className,
+    dataset = {},
+    id,
+    onClick,
+  }) {
     const b = document.createElement("button");
-    if (id) b.id = id;
-    if (className) b.className = className;
+
+    if (id) {
+      b.id = id;
+    }
+
+    if (className) {
+      b.className = className;
+    }
+
     b.textContent = text;
-    Object.entries(dataset).forEach(([k, v]) => (b.dataset[k] = v));
-    if (onClick) b.onclick = onClick;
+
+    Object.entries(dataset).forEach(
+      ([k, v]) => {
+        b.dataset[k] = v;
+      }
+    );
+
+    if (onClick) {
+      b.onclick = onClick;
+    }
+
     return b;
   }
 
   function makeSpeakBtn(content) {
-    const b = document.createElement("button");
+    const b =
+      document.createElement("button");
+
     b.className = "speak-btn";
     b.textContent = "🔊";
-    b.setAttribute("data-text", content); // safe
+
+    b.setAttribute(
+      "data-text",
+      content
+    );
+
     return b;
   }
 
-  // ====== Completion redirect (shared) ======
-  // Prevent multiple redirects if the user double-clicks
+  // ====== Completion redirect ======
   let __redirectingCompleted = false;
 
   async function redirectToDashboardCompleted() {
-    if (__redirectingCompleted) return;
+    if (__redirectingCompleted) {
+      return;
+    }
+
     __redirectingCompleted = true;
 
-    const DEFAULT_MSG = "You studied all your flashcards! 🔥";
-    const DEFAULT_KIND = "success";
+    const DEFAULT_MSG =
+      "You studied all your flashcards! 🔥";
 
-    // small timeout so a flaky endpoint doesn't block the redirect
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 2000);
+    const DEFAULT_KIND =
+      "success";
+
+    // Small timeout so a flaky endpoint
+    // doesn't block the redirect.
+    const ctrl =
+      new AbortController();
+
+    const t =
+      setTimeout(
+        () => ctrl.abort(),
+        2000
+      );
 
     try {
-      const token = document.querySelector('meta[name="csrf-token"]')?.content || "";
-      const res = await fetch("/flashcard/completed_study", {
-        method: "POST",
-        headers: {
-          // Flask-WTF accepts either header name
-          "X-CSRF-Token": token,
-          "X-CSRFToken": token,
-        },
-        credentials: "same-origin",
-        cache: "no-store",
-        signal: ctrl.signal,
-      });
+      const token =
+        document.querySelector(
+          'meta[name="csrf-token"]'
+        )?.content || "";
+
+      const res =
+        await fetch(
+          "/flashcard/completed_study",
+          {
+            method: "POST",
+            headers: {
+              "X-CSRF-Token": token,
+              "X-CSRFToken": token,
+            },
+            credentials: "same-origin",
+            cache: "no-store",
+            signal: ctrl.signal,
+          }
+        );
 
       clearTimeout(t);
 
-      // Handle 204 or non-JSON gracefully
       let data = null;
+
       try {
         data = await res.json();
       } catch {
-        /* no body or non-json */
+        // No body or non-JSON response.
       }
 
-      const msg = (data && data.message) || DEFAULT_MSG;
-      const kind = data && data.status === "success" ? "success" : DEFAULT_KIND;
+      const msg =
+        (data && data.message) ||
+        DEFAULT_MSG;
 
-      sessionStorage.setItem("flash_msg", msg);
-      sessionStorage.setItem("flash_kind", kind);
+      const kind =
+        data &&
+        data.status === "success"
+          ? "success"
+          : DEFAULT_KIND;
+
+      sessionStorage.setItem(
+        "flash_msg",
+        msg
+      );
+
+      sessionStorage.setItem(
+        "flash_kind",
+        kind
+      );
     } catch {
-      // Network/timeout: fall back to default client message
-      sessionStorage.setItem("flash_msg", DEFAULT_MSG);
-      sessionStorage.setItem("flash_kind", DEFAULT_KIND);
+      sessionStorage.setItem(
+        "flash_msg",
+        DEFAULT_MSG
+      );
+
+      sessionStorage.setItem(
+        "flash_kind",
+        DEFAULT_KIND
+      );
     } finally {
-      // Always redirect
-      window.location.href = DASHBOARD_URL; // defined in your template
+      window.location.href =
+        DASHBOARD_URL;
     }
   }
 
-  // ===================== TEACHER MODE =====================
+  // =====================
+  // TEACHER MODE
+  // =====================
   if (hasStudent) {
     container.replaceChildren();
 
     queue.forEach((card) => {
-      const cardElement = document.createElement("div");
-      cardElement.className = "section-box";
-      cardElement.dataset.cardId = card.id;
+      const cardElement =
+        document.createElement("div");
+
+      cardElement.className =
+        "section-box";
+
+      cardElement.dataset.cardId =
+        card.id;
 
       // Q
-      const qP = document.createElement("p");
-      const qLabel = document.createElement("strong");
+      const qP =
+        document.createElement("p");
+
+      const qLabel =
+        document.createElement("strong");
+
       qLabel.textContent = "Q: ";
-      const qText = document.createTextNode(card.question);
-      const qBtn = makeSpeakBtn(card.question);
-      qP.append(qLabel, qText, document.createTextNode(" "), qBtn);
+
+      const qText =
+        document.createTextNode(
+          card.question
+        );
+
+      const qBtn =
+        makeSpeakBtn(
+          card.question
+        );
+
+      qP.append(
+        qLabel,
+        qText,
+        document.createTextNode(" "),
+        qBtn
+      );
 
       // A
-      const aP = document.createElement("p");
-      const aLabel = document.createElement("strong");
+      const aP =
+        document.createElement("p");
+
+      const aLabel =
+        document.createElement("strong");
+
       aLabel.textContent = "A: ";
-      const aText = document.createTextNode(card.answer);
-      const aBtn = makeSpeakBtn(card.answer);
-      aP.append(aLabel, aText, document.createTextNode(" "), aBtn);
+
+      const aText =
+        document.createTextNode(
+          card.answer
+        );
+
+      const aBtn =
+        makeSpeakBtn(
+          card.answer
+        );
+
+      aP.append(
+        aLabel,
+        aText,
+        document.createTextNode(" "),
+        aBtn
+      );
 
       // Level
-      const lvlP = document.createElement("p");
-      const lvlLabel = document.createElement("strong");
-      lvlLabel.textContent = "Nível: ";
-      const lvlText = document.createTextNode(card.level || "—");
-      lvlP.append(lvlLabel, lvlText);
+      const lvlP =
+        document.createElement("p");
+
+      const lvlLabel =
+        document.createElement("strong");
+
+      lvlLabel.textContent =
+        "Nível: ";
+
+      const lvlText =
+        document.createTextNode(
+          card.level || "—"
+        );
+
+      lvlP.append(
+        lvlLabel,
+        lvlText
+      );
 
       // Rate buttons
-      const btnWrap = document.createElement("div");
+      const btnWrap =
+        document.createElement("div");
+
       ["1", "2", "3"].forEach((v) => {
         const cls =
           v === "1"
             ? "btn btn-danger rate-btn"
             : v === "2"
-            ? "btn btn-warning rate-btn"
-            : "btn btn-success rate-btn";
-        const b = makeBtn({ text: v, className: cls, dataset: { value: v } });
+              ? "btn btn-warning rate-btn"
+              : "btn btn-success rate-btn";
+
+        const b =
+          makeBtn({
+            text: v,
+            className: cls,
+            dataset: {
+              value: v,
+            },
+          });
+
         btnWrap.appendChild(b);
       });
 
-      cardElement.append(qP, aP, lvlP, btnWrap);
-      container.appendChild(cardElement);
+      cardElement.append(
+        qP,
+        aP,
+        lvlP,
+        btnWrap
+      );
+
+      container.appendChild(
+        cardElement
+      );
     });
 
     updateCounter();
 
     // Rate handlers with throttle
-    container.querySelectorAll(".rate-btn").forEach((btn) => {
-      btn.onclick = async () => {
-        const now = Date.now();
-        if (now - lastRatingAt < MIN_RATING_INTERVAL_MS) return; // too fast
-        lastRatingAt = now;
+    container
+      .querySelectorAll(".rate-btn")
+      .forEach((btn) => {
+        btn.onclick = async () => {
+          const now = Date.now();
 
-        if (isProcessing) return;
-        isProcessing = true;
-        setButtonsEnabled(false);
+          if (
+            now - lastRatingAt <
+            MIN_RATING_INTERVAL_MS
+          ) {
+            return;
+          }
 
-        const rating = btn.dataset.value;
-        const cardDiv = btn.closest(".section-box");
-        const cardId = cardDiv.dataset.cardId;
+          lastRatingAt = now;
 
-        try {
-          const res = await fetch("/flashcard/review_flashcard", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-CSRF-Token": csrf(),
-            },
-            credentials: "same-origin",
-            body: JSON.stringify({ card_id: cardId, rating, student_id: studentId }),
-          });
+          if (isProcessing) {
+            return;
+          }
 
-          if (!res.ok) return;
+          isProcessing = true;
 
-          if (rating === "2" || rating === "3") {
-            cardDiv.remove();
-            updateCounter();
-            // If teacher finished reviewing everything, redirect with success
-            if (container.querySelectorAll(".section-box").length === 0) {
-              redirectToDashboardCompleted();
+          setButtonsEnabled(false);
+
+          const rating =
+            btn.dataset.value;
+
+          const cardDiv =
+            btn.closest(
+              ".section-box"
+            );
+
+          const cardId =
+            cardDiv.dataset.cardId;
+
+          try {
+            const res =
+              await fetch(
+                "/flashcard/review_flashcard",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type":
+                      "application/json",
+                    "X-CSRF-Token":
+                      csrf(),
+                  },
+                  credentials:
+                    "same-origin",
+                  body:
+                    JSON.stringify({
+                      card_id: cardId,
+                      rating,
+                      student_id:
+                        studentId,
+                    }),
+                }
+              );
+
+            if (!res.ok) {
               return;
             }
+
+            if (
+              rating === "2" ||
+              rating === "3"
+            ) {
+              cardDiv.remove();
+
+              updateCounter();
+
+              if (
+                container.querySelectorAll(
+                  ".section-box"
+                ).length === 0
+              ) {
+                redirectToDashboardCompleted();
+                return;
+              }
+            }
+          } finally {
+            isProcessing = false;
+
+            setButtonsEnabled(true);
           }
-        } finally {
-          isProcessing = false;
-          setButtonsEnabled(true);
-        }
-      };
-    });
-
-    // ===================== STUDENT MODE =====================
-  } else {
-    function renderCard(card, useReview) {
-      container.replaceChildren();
-
-      const box = document.createElement("div");
-      box.className = "section-box";
-
-      // Question + speak
-      const qP = document.createElement("p");
-      const qText = document.createTextNode(card.question);
-      const qBtn = makeSpeakBtn(card.question);
-      qP.append(qText, document.createTextNode(" "), qBtn);
-
-      // Toggle answer
-      const toggleBtn = makeBtn({
-        id: "toggle-answer",
-        text: "Show answer (Mostrar Resposta)",
-        className: "btn btn-secondary mb-3",
+        };
       });
 
-      // Answer + speak (hidden)
-      const aP = document.createElement("p");
+  // =====================
+  // STUDENT MODE
+  // =====================
+  } else {
+    function renderCard(
+      card,
+      useReview
+    ) {
+      container.replaceChildren();
+
+      const box =
+        document.createElement("div");
+
+      box.className =
+        "section-box";
+
+      // Question + speak
+      const qP =
+        document.createElement("p");
+
+      const qText =
+        document.createTextNode(
+          card.question
+        );
+
+      const qBtn =
+        makeSpeakBtn(
+          card.question
+        );
+
+      qP.append(
+        qText,
+        document.createTextNode(" "),
+        qBtn
+      );
+
+      // Toggle answer
+      const toggleBtn =
+        makeBtn({
+          id: "toggle-answer",
+          text:
+            "Show answer (Mostrar Resposta)",
+          className:
+            "btn btn-secondary mb-3",
+        });
+
+      // Answer + speak
+      const aP =
+        document.createElement("p");
+
       aP.id = "answer";
       aP.style.display = "none";
-      const aText = document.createTextNode(card.answer);
-      const aBtn = makeSpeakBtn(card.answer);
-      aP.append(aText, document.createTextNode(" "), aBtn);
+
+      const aText =
+        document.createTextNode(
+          card.answer
+        );
+
+      const aBtn =
+        makeSpeakBtn(
+          card.answer
+        );
+
+      aP.append(
+        aText,
+        document.createTextNode(" "),
+        aBtn
+      );
 
       // Rate buttons
-      const btnWrap = document.createElement("div");
+      const btnWrap =
+        document.createElement("div");
+
       ["1", "2", "3"].forEach((v) => {
         const cls =
           v === "1"
             ? "btn btn-danger rate-btn"
             : v === "2"
-            ? "btn btn-warning rate-btn"
-            : "btn btn-success rate-btn";
-        const b = makeBtn({ text: v, className: cls, dataset: { value: v } });
+              ? "btn btn-warning rate-btn"
+              : "btn btn-success rate-btn";
+
+        const b =
+          makeBtn({
+            text: v,
+            className: cls,
+            dataset: {
+              value: v,
+            },
+          });
+
         btnWrap.appendChild(b);
       });
 
-      // Problem / help button + options
-      const problemWrap = document.createElement("div");
-      problemWrap.className = "mt-3";
+      // =====================
+      // Teacher-help area
+      // =====================
+      const problemWrap =
+        document.createElement("div");
 
-      const problemBtn = makeBtn({
-        id: "problem-card-btn",
-        text: "😵 Preciso de ajuda com esse flashcard.",
-        className: "btn btn-outline-warning btn-sm",
-      });
+      problemWrap.className =
+        "mt-3";
 
-      const helpOptions = document.createElement("div");
-      helpOptions.id = "card-help-options";
-      helpOptions.className = "mt-2";
-      helpOptions.style.display = "none";
+      if (HAS_ASSIGNED_TEACHER) {
+        const problemBtn =
+          makeBtn({
+            id:
+              "problem-card-btn",
+            text:
+              "😵 Preciso de ajuda com esse flashcard.",
+            className:
+              "btn btn-outline-warning btn-sm",
+          });
 
-      const helpPrompt = document.createElement("p");
-      helpPrompt.className = "small mb-1 text-muted";
-      helpPrompt.textContent = "Qual o problema com este flashcard?";
+        const helpOptions =
+          document.createElement("div");
 
-      const helpButtonsWrap = document.createElement("div");
-      helpButtonsWrap.className = "d-flex flex-wrap gap-2";
+        helpOptions.id =
+          "card-help-options";
 
-      function addHelpOption(reason, label) {
-        const btn = makeBtn({
-          text: label,
-          className: "btn btn-outline-secondary btn-sm card-help-option",
-        });
-        btn.dataset.reason = reason;
-        btn.addEventListener("click", () => {
-          flagProblemCard(card, useReview, reason);
-        });
-        helpButtonsWrap.appendChild(btn);
-      }
+        helpOptions.className =
+          "mt-2";
 
-      addHelpOption("dont_understand", "Este flashcard é difícil demais");
-      addHelpOption("talk_next_class", "Quero falar sobre isso na minha próxima aula");
-      addHelpOption("has_mistake", "Acho que este flashcard tem um erro");
+        helpOptions.style.display =
+          "none";
 
-      helpOptions.appendChild(helpPrompt);
-      helpOptions.appendChild(helpButtonsWrap);
+        const helpPrompt =
+          document.createElement("p");
 
-      problemWrap.appendChild(problemBtn);
-      problemWrap.appendChild(helpOptions);
+        helpPrompt.className =
+          "small mb-1 text-muted";
 
-      box.append(qP, toggleBtn, aP, btnWrap, problemWrap);
+        helpPrompt.textContent =
+          "Qual o problema com este flashcard?";
+
+        const helpButtonsWrap =
+          document.createElement("div");
+
+        helpButtonsWrap.className =
+          "d-flex flex-wrap gap-2";
+
+        function addHelpOption(
+          reason,
+          label
+        ) {
+          const btn =
+            makeBtn({
+              text: label,
+              className:
+                "btn btn-outline-secondary btn-sm card-help-option",
+            });
+
+          btn.dataset.reason =
+            reason;
+
+          btn.addEventListener(
+            "click",
+            () => {
+              flagProblemCard(
+                card,
+                useReview,
+                reason
+              );
+            }
+          );
+
+          helpButtonsWrap.appendChild(
+            btn
+          );
+        }
+
+        addHelpOption(
+          "dont_understand",
+          "Este flashcard é difícil demais"
+        );
+
+        addHelpOption(
+          "talk_next_class",
+          "Quero falar sobre isso na minha próxima aula"
+        );
+
+        addHelpOption(
+          "has_mistake",
+          "Acho que este flashcard tem um erro"
+        );
+
+        helpOptions.appendChild(
+          helpPrompt
+        );
+
+        helpOptions.appendChild(
+          helpButtonsWrap
+        );
+
+        problemBtn.onclick = () => {
+          const isHidden =
+            helpOptions.style.display ===
+              "none" ||
+            helpOptions.style.display ===
+              "";
+
+          helpOptions.style.display =
+            isHidden
+              ? "block"
+              : "none";
+        };
+
+        problemWrap.appendChild(
+          problemBtn
+        );
+
+        problemWrap.appendChild(
+          helpOptions
+        );
+        } else {
+          const teacherInfo = document.createElement("p");
+
+          teacherInfo.className =
+            "small text-muted mb-0";
+
+          teacherInfo.append(
+            document.createTextNode(
+              "Precisa de ajuda com seus flashcards? "
+            )
+          );
+
+          const teacherLink =
+            document.createElement("a");
+
+          teacherLink.href =
+            "/calendar/admin";
+
+          teacherLink.textContent =
+            "Conecte-se a um professor.";
+
+          teacherInfo.appendChild(
+            teacherLink
+          );
+
+          problemWrap.appendChild(
+            teacherInfo
+          );
+        }
+
+      box.append(
+        qP,
+        toggleBtn,
+        aP,
+        btnWrap,
+        problemWrap
+      );
+
       container.appendChild(box);
 
       // Simple fade
-      container.classList.remove("fade-in");
-      container.classList.add("fade-out");
-      void container.offsetWidth; // reflow
-      container.classList.remove("fade-out");
-      container.classList.add("fade-in");
+      container.classList.remove(
+        "fade-in"
+      );
 
-      const answer = document.getElementById("answer");
+      container.classList.add(
+        "fade-out"
+      );
+
+      void container.offsetWidth;
+
+      container.classList.remove(
+        "fade-out"
+      );
+
+      container.classList.add(
+        "fade-in"
+      );
+
+      const answer =
+        document.getElementById(
+          "answer"
+        );
+
       toggleBtn.onclick = () => {
-        answer.style.display = answer.style.display === "block" ? "none" : "block";
+        answer.style.display =
+          answer.style.display ===
+          "block"
+            ? "none"
+            : "block";
       };
 
-      problemBtn.onclick = () => {
-        const isHidden =
-          helpOptions.style.display === "none" || helpOptions.style.display === "";
-        helpOptions.style.display = isHidden ? "block" : "none";
-      };
+      container
+        .querySelectorAll(
+          ".rate-btn"
+        )
+        .forEach((btn) => {
+          btn.onclick =
+            async () => {
+              const now =
+                Date.now();
 
-      container.querySelectorAll(".rate-btn").forEach((btn) => {
-        btn.onclick = async () => {
-          const now = Date.now();
-          if (now - lastRatingAt < MIN_RATING_INTERVAL_MS) return; // too fast
-          lastRatingAt = now;
-
-          if (isProcessing) return;
-          isProcessing = true;
-          setButtonsEnabled(false);
-
-          const rating = btn.dataset.value;
-
-          try {
-            const res = await fetch("/flashcard/review_flashcard", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-Token": csrf(),
-              },
-              credentials: "same-origin",
-              body: JSON.stringify({ card_id: card.id, rating }),
-            });
-
-            if (!res.ok) return;
-
-            if (rating === "1") {
-              if (!reviewPool.some((c) => c.id === card.id)) reviewPool.push(card);
-              if (useReview && reviewPool.length > 1) {
-                // rotate review pool: move current to the end
-                reviewPool.push(reviewPool.shift());
-              } else if (!useReview) {
-                index++;
+              if (
+                now -
+                  lastRatingAt <
+                MIN_RATING_INTERVAL_MS
+              ) {
+                return;
               }
-            } else {
-              if (useReview) {
-                reviewPool.shift();
-              } else {
-                index++;
-                reviewPool = reviewPool.filter((c) => c.id !== card.id);
+
+              lastRatingAt =
+                now;
+
+              if (isProcessing) {
+                return;
               }
-            }
 
-            if (index > queue.length) index = queue.length;
+              isProcessing =
+                true;
 
-            showNext();
-          } finally {
-            isProcessing = false;
-            setButtonsEnabled(true);
-          }
-        };
-      });
+              setButtonsEnabled(
+                false
+              );
+
+              const rating =
+                btn.dataset.value;
+
+              try {
+                const res =
+                  await fetch(
+                    "/flashcard/review_flashcard",
+                    {
+                      method:
+                        "POST",
+                      headers: {
+                        "Content-Type":
+                          "application/json",
+                        "X-CSRF-Token":
+                          csrf(),
+                      },
+                      credentials:
+                        "same-origin",
+                      body:
+                        JSON.stringify(
+                          {
+                            card_id:
+                              card.id,
+                            rating,
+                          }
+                        ),
+                    }
+                  );
+
+                if (!res.ok) {
+                  return;
+                }
+
+                if (
+                  rating === "1"
+                ) {
+                  if (
+                    !reviewPool.some(
+                      (c) =>
+                        c.id ===
+                        card.id
+                    )
+                  ) {
+                    reviewPool.push(
+                      card
+                    );
+                  }
+
+                  if (
+                    useReview &&
+                    reviewPool.length >
+                      1
+                  ) {
+                    reviewPool.push(
+                      reviewPool.shift()
+                    );
+                  } else if (
+                    !useReview
+                  ) {
+                    index++;
+                  }
+                } else {
+                  if (useReview) {
+                    reviewPool.shift();
+                  } else {
+                    index++;
+
+                    reviewPool =
+                      reviewPool.filter(
+                        (c) =>
+                          c.id !==
+                          card.id
+                      );
+                  }
+                }
+
+                if (
+                  index >
+                  queue.length
+                ) {
+                  index =
+                    queue.length;
+                }
+
+                showNext();
+              } finally {
+                isProcessing =
+                  false;
+
+                setButtonsEnabled(
+                  true
+                );
+              }
+            };
+        });
     }
 
-    async function flagProblemCard(card, useReview, reason) {
+    async function flagProblemCard(
+      card,
+      useReview,
+      reason
+    ) {
       const now = Date.now();
-      if (now - lastRatingAt < MIN_RATING_INTERVAL_MS) return;
+
+      if (
+        now - lastRatingAt <
+        MIN_RATING_INTERVAL_MS
+      ) {
+        return;
+      }
+
       lastRatingAt = now;
 
-      if (isProcessing) return;
+      if (isProcessing) {
+        return;
+      }
+
       isProcessing = true;
+
       setButtonsEnabled(false);
 
       try {
-        const res = await fetch("/flashcard/flag_card", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-Token": csrf(),
-          },
-          credentials: "same-origin",
-          body: JSON.stringify({ card_id: card.id, reason }),
-        });
+        const res =
+          await fetch(
+            "/flashcard/flag_card",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type":
+                  "application/json",
+                "X-CSRF-Token":
+                  csrf(),
+              },
+              credentials:
+                "same-origin",
+              body:
+                JSON.stringify({
+                  card_id: card.id,
+                  reason,
+                }),
+            }
+          );
 
         if (!res.ok) {
-          // optional: show error if you want
-          // showFlash("danger", "Não foi possível enviar o pedido de ajuda. Tente novamente.");
+          let message =
+            "Não foi possível enviar o pedido de ajuda.";
+
+          try {
+            const data =
+              await res.json();
+
+            if (data.message) {
+              message =
+                data.message;
+            }
+          } catch {
+            // Ignore non-JSON error body.
+          }
+
+          if (window.showFlash) {
+            window.showFlash(
+              message,
+              "danger"
+            );
+          }
+
           return;
         }
 
-        // ✅ Show success message to the student
-          if (window.showFlash) {
-        window.showFlash(
-          "Seu professor foi notificado e vai revisar este flashcard.",
-          "success" // or "success", both are mapped in your map
-        );
+        if (window.showFlash) {
+          window.showFlash(
+            "Seu professor foi notificado e vai revisar este flashcard.",
+            "success"
+          );
         }
 
-        // Remove this card from the current session
+        // Remove this card
+        // from the current session.
         if (useReview) {
-          if (reviewPool.length && reviewPool[0].id === card.id) {
+          if (
+            reviewPool.length &&
+            reviewPool[0].id ===
+              card.id
+          ) {
             reviewPool.shift();
           } else {
-            reviewPool = reviewPool.filter((c) => c.id !== card.id);
+            reviewPool =
+              reviewPool.filter(
+                (c) =>
+                  c.id !== card.id
+              );
           }
         } else {
-          const idx = queue.findIndex((c) => c.id === card.id);
+          const idx =
+            queue.findIndex(
+              (c) =>
+                c.id === card.id
+            );
+
           if (idx !== -1) {
-            queue.splice(idx, 1);
+            queue.splice(
+              idx,
+              1
+            );
           }
-          // ensure index not out of range
-          if (index > queue.length) {
-            index = queue.length;
+
+          if (
+            index >
+            queue.length
+          ) {
+            index =
+              queue.length;
           }
         }
 
         showNext();
       } finally {
         isProcessing = false;
+
         setButtonsEnabled(true);
       }
     }
 
-
     function showNext() {
-      const hasQueue = index < queue.length;
-      const hasReview = reviewPool.length > 0;
+      const hasQueue =
+        index < queue.length;
 
-      // Finished: redirect to dashboard and flash success
-      if (!hasQueue && !hasReview) {
+      const hasReview =
+        reviewPool.length > 0;
+
+      // Finished: redirect
+      // to dashboard and flash success.
+      if (
+        !hasQueue &&
+        !hasReview
+      ) {
         redirectToDashboardCompleted();
         return;
       }
 
       updateCounter();
 
-      // BUFFER RULE: use reviewPool when 5+ or when queue empty
-      const useReview = reviewPool.length >= 5 || (!hasQueue && hasReview);
-      const card = useReview ? reviewPool[0] : queue[index];
+      // BUFFER RULE:
+      // use reviewPool when 5+
+      // or when queue is empty.
+      const useReview =
+        reviewPool.length >= 5 ||
+        (!hasQueue && hasReview);
 
-      renderCard(card, useReview);
+      const card =
+        useReview
+          ? reviewPool[0]
+          : queue[index];
+
+      renderCard(
+        card,
+        useReview
+      );
     }
 
     showNext();
   }
 
-  // ----- Text-to-Speech (event delegation for both modes) -----
-  document.addEventListener("click", (e) => {
-    if (e.target.classList.contains("speak-btn")) {
-      const text = e.target.dataset.text || "";
-      speakText(text, e.target);
+  // ====== Text-to-Speech event delegation ======
+  document.addEventListener(
+    "click",
+    (e) => {
+      if (
+        e.target.classList.contains(
+          "speak-btn"
+        )
+      ) {
+        const text =
+          e.target.dataset.text ||
+          "";
+
+        speakText(
+          text,
+          e.target
+        );
+      }
     }
-  });
+  );
 
   updateCounter();
 });
