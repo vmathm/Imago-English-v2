@@ -39,7 +39,8 @@ class PlanForm(FlaskForm):
     )
     interval = SelectField(
         "Interval",
-        choices=[("monthly", "Monthly")],
+        choices=[("monthly", "Monthly"), ("yearly", "Yearly")],
+        
         validators=[DataRequired()],
     )
     active = BooleanField("Active", default=True)
