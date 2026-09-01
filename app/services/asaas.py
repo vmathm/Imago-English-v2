@@ -110,6 +110,7 @@ def create_customer(
     payload = {
         "name": user.name.strip(),
         "cpfCnpj": normalized_cpf_cnpj,
+        "notificationDisabled": True,
     }
 
     if email:

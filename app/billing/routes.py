@@ -25,7 +25,7 @@ from app.billing.forms import AsaasSettingsForm, PlanForm, StudentBillingForm, S
 from app.database import db_session
 from app.models.billing import Payment, Subscription, Tenant, TenantBillingAccount, Plan
 from app.models.user import User
-from app.services.asaas import SP_TZ, AsaasServiceError, ensure_customer_for_user, create_subscription as asaas_create_subscription, get_subscription_payments, get_pix_qr_code, get_subscription, normalize_asaas_status, parse_asaas_date, parse_asaas_due_date_as_sp_end_of_day
+from app.services.asaas import SP_TZ, AsaasServiceError, create_pix_payment, ensure_customer_for_user, create_subscription as asaas_create_subscription, get_subscription_payments, get_pix_qr_code, get_subscription, normalize_asaas_status, parse_asaas_date, parse_asaas_due_date_as_sp_end_of_day
 from sqlalchemy import or_
 from app.extensions import csrf
 from app.services.access import subscription_days_left
@@ -836,12 +836,6 @@ def create_student_subscription():
             )
             return redirect(url_for("billing.student_subscription"))
 
-    ASAAS_CYCLE_MAP = {
-        "monthly": "MONTHLY",
-        "month": "MONTHLY",
-        "weekly": "WEEKLY",
-        "yearly": "YEARLY",
-    }
 
     try:
         customer_id = ensure_customer_for_user(
@@ -850,13 +844,11 @@ def create_student_subscription():
             cpf_cnpj=form.cpf_cnpj.data,
         )
 
-        asaas_subscription = asaas_create_subscription(
+        asaas_payment = create_pix_payment(
             tenant_id=plan.tenant_id,
             customer_id=customer_id,
             amount_cents=plan.amount_cents,
             description=f"Assinatura {plan.name}",
-            cycle=ASAAS_CYCLE_MAP.get(plan.interval, "MONTHLY"),
-            billing_type="PIX",
         )
 
 
@@ -864,43 +856,33 @@ def create_student_subscription():
             tenant_id=plan.tenant_id,
             user_id=current_user.id,
             plan_id=plan.id,
-            status=(asaas_subscription.get("status") or "inactive").lower(),
+            status="inactive",
             provider="asaas",
-            provider_subscription_id=asaas_subscription.get("id"),
+            provider_subscription_id=None,
         )
 
         db_session.add(subscription)
         db_session.flush()
 
-        payments_data = get_subscription_payments(
-            tenant_id=plan.tenant_id,
-            subscription_id=asaas_subscription["id"],
-        )
-
-        payments_list = payments_data.get("data", [])
-        first_payment = payments_list[0] if payments_list else None
-
-        if not first_payment:
-            raise AsaasServiceError(
-                "Subscription created, but no generated payment was returned by Asaas."
-            )
 
         payment = Payment(
             tenant_id=plan.tenant_id,
             user_id=current_user.id,
             subscription_id=subscription.id,
             provider="asaas",
-            provider_payment_id=first_payment["id"],
-            status=(first_payment.get("status") or "pending").lower(),
+            provider_payment_id=asaas_payment["id"],
+            status=(asaas_payment.get("status") or "pending").lower(),
             amount_cents=plan.amount_cents,
             currency=plan.currency,
-            billing_type=first_payment.get("billingType", "PIX"),
+            billing_type=asaas_payment.get("billingType", "PIX"),
         )
+
         db_session.add(payment)
+
 
         pix_data = get_pix_qr_code(
             tenant_id=plan.tenant_id,
-            payment_id=first_payment["id"],
+            payment_id=asaas_payment["id"],
         )
 
         expires_str = pix_data.get("expirationDate")
@@ -965,11 +947,6 @@ def asaas_webhook():
 
     payment_status = normalize_asaas_status(payment_data.get("status"))
 
-    print("=== ASAAS WEBHOOK DEBUG ===")
-    print("event:", event)
-    print("provider_payment_id:", provider_payment_id)
-    print("provider_subscription_id:", provider_subscription_id)
-    print("payment_status:", payment_status)
 
     try:
         payment = None
@@ -1020,20 +997,27 @@ def asaas_webhook():
                 subscription.status = "active"
                 subscription.current_period_start = payment.paid_at
 
-                if subscription.provider_subscription_id:
-                    try:
-                        asaas_subscription = get_subscription(
-                            tenant_id=subscription.tenant_id,
-                            subscription_id=subscription.provider_subscription_id,
-                        )
-                        next_due_date = parse_asaas_due_date_as_sp_end_of_day(
-                            asaas_subscription.get("nextDueDate")
-                        )
-                        if next_due_date is not None:
-                            subscription.current_period_end = next_due_date
+                plan = (
+                    db_session.query(Plan)
+                    .filter_by(id=subscription.plan_id)
+                    .first()
+                )
 
-                    except AsaasServiceError as exc:
-                        print("Could not refresh Asaas subscription after payment:", exc)
+                if plan is not None:
+                    if plan.interval in ("monthly", "month"):
+                        subscription.current_period_end = (
+                            payment.paid_at + timedelta(days=30)
+                        )
+
+                    elif plan.interval == "weekly":
+                        subscription.current_period_end = (
+                            payment.paid_at + timedelta(days=7)
+                        )
+
+                    elif plan.interval == "yearly":
+                        subscription.current_period_end = (
+                            payment.paid_at + timedelta(days=365)
+                        )
 
 
         elif payment_status in OPEN_PAYMENT_STATUSES:
