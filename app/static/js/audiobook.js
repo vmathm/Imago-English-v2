@@ -338,9 +338,8 @@ document.addEventListener("DOMContentLoaded", () => {
     } finally {
       toggleSelection(false);
     }
+
   }
-
-
   // ==================================================
   // Translation / flashcard modal
   // ==================================================

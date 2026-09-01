@@ -78,7 +78,7 @@ def audiobooks():
 
 
 @bp.route("/translate", methods=["POST"])
-@login_required
+@user_or_guest_required
 def translate_route():
     data = request.get_json()
 
@@ -426,18 +426,22 @@ def read_chapter(book_slug, chapter_slug):
     # --------------------------------------------------
     if not chapter.is_free:
 
-        # Guests need to create/claim an account first.
         if not current_user.is_authenticated:
-            flash(
-                "Crie uma conta para acessar este capítulo.",
-                "info",
-            )
-            return redirect(
-                url_for(
-                    "auth.login",
-                    next=request.path,
+                return render_template(
+                    "audiobooks.html",
+                    library_mode=True,
+                    guest_mode=True,
+                    access_locked=True,
+                    access_reason="login",
+                    book=book,
+                    chapter=chapter,
+                    text_content=None,
+                    progress=None,
+                    previous_chapter=None,
+                    next_chapter=None,
+                    audiobook=None,
+                    activity_mode=False,
                 )
-            )
 
         # Teachers and admins can access all chapters.
         if not (current_user.is_teacher() or current_user.is_admin()):
@@ -448,12 +452,20 @@ def read_chapter(book_slug, chapter_slug):
                 db_session.commit()
 
                 if not current_user.active:
-                    flash(
-                        "Este capítulo está disponível para assinantes.",
-                        "info",
-                    )
-                    return redirect(
-                        url_for("billing.student_subscription")
+                    return render_template(
+                        "audiobooks.html",
+                        library_mode=True,
+                        guest_mode=True,
+                        access_locked=True,
+                        access_reason="subscription",
+                        book=book,
+                        chapter=chapter,
+                        text_content=None,
+                        progress=None,
+                        previous_chapter=None,
+                        next_chapter=None,
+                        audiobook=None,
+                        activity_mode=False,
                     )
     # --------------------------------------------------
     # Fetch chapter text from GCS
@@ -523,6 +535,7 @@ def read_chapter(book_slug, chapter_slug):
     return render_template(
         "audiobooks.html",
         library_mode=True,
+        access_locked=False,
         guest_mode=guest_mode,
         book=book,
         chapter=chapter,

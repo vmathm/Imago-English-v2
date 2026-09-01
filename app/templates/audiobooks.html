@@ -46,7 +46,7 @@
           Add as Suggested Flashcard
       </button>
 
-  {% endif %}
+      {% endif %}
 
       <button class="modal-btn btn btn-secondary" id="noBtn" type="button">
         Cancel
@@ -62,10 +62,6 @@
 
       <div class="pt-4">
 
-        {# ----------------------------- #}
-        {# Intro / context message       #}
-        {# ----------------------------- #}
-
         {% if library_mode %}
 
           <div class="p-3 mb-3 bg-body-tertiary rounded-3 border">
@@ -80,41 +76,44 @@
             </small>
           </div>
 
-          {% if guest_mode %}
-              <div class="alert alert-info p-3">
+          {% if guest_mode and not access_locked %}
+            <div class="alert alert-info p-3">
 
-          <p class="mb-1 fw-semibold">
-            You are reading as a guest.
-          </p>
+              <p class="mb-1 fw-semibold">
+                You are reading as a guest.
+              </p>
 
-          <p class="mb-2">
-            Your flashcards and reading progress are saved temporarily.
-          </p>
+              <p class="mb-2">
+                Your flashcards and reading progress are saved temporarily.
+              </p>
 
-          <p class="small text-muted fst-italic mb-3">
-            Você está lendo como visitante. Seus flashcards e seu progresso
-            são salvos temporariamente.
-          </p>
+              <p class="small text-muted fst-italic mb-3">
+                Você está lendo como visitante. Seus flashcards e seu progresso
+                são salvos temporariamente.
+              </p>
 
-          <hr>
+              <hr>
 
-          <p class="small mb-3">
-            Crie uma conta para manter seus flashcards e progresso permanentemente.
-          </p>
+              <p class="small mb-3">
+                Crie uma conta para manter seus flashcards e progresso permanentemente.
+              </p>
 
-          <a href="{{ url_for('auth.login') }}"
-            class="btn btn-google d-inline-flex align-items-center justify-content-center gap-2"
-            style="height: 2.7rem; border-radius: 0.5rem; font-size: 1rem;">
+              <a
+                href="{{ url_for('auth.login', next=request.path) }}"
+                class="btn btn-google d-inline-flex align-items-center justify-content-center gap-2"
+                style="height: 2.7rem; border-radius: 0.5rem; font-size: 1rem;"
+              >
+                <img
+                  src="{{ url_for('static', filename='img/branding/google_logo.png') }}"
+                  alt="Google Logo"
+                  class="google-icon"
+                  style="width: 32px; height: 32px;"
+                >
 
-            <img src="{{ url_for('static', filename='img/branding/google_logo.png') }}"
-                alt="Google Logo"
-                class="google-icon"
-                style="width: 32px; height: 32px;">
+                <span>Entrar com Google</span>
+              </a>
 
-            <span>Entrar com Google</span>
-          </a>
-
-        </div>
+            </div>
           {% endif %}
 
 
@@ -133,7 +132,6 @@
               criar flashcards.
             </small>
           </div>
-
 
         {% else %}
 
@@ -154,28 +152,7 @@
       </div>
 
 
-      {# ========================================================= #}
-      {# LIBRARY CHAPTER                                           #}
-      {# ========================================================= #}
-
       {% if library_mode %}
-
-        {% if chapter.audio_path %}
-          <br>
-
-          <audio
-            id="audio-player"
-            controls
-            class="mt-3 d-block mx-auto"
-            style="width: 350px; max-width: 100%;"
-          >
-            <source src="{{ chapter.audio_path }}" type="audio/mpeg">
-            Your browser does not support the audio element.
-          </audio>
-        {% endif %}
-
-
-        <br>
 
         <h3 class="mb-1">
           {{ chapter.title }}
@@ -185,227 +162,385 @@
           {{ book.title }}
         </small>
 
-        {% if current_user.is_authenticated and current_user.is_admin() %}
-          {% if not chapter.activity_enabled %}
-          <form
-              method="POST"
-              action="{{ url_for(
-                  'admin.enable_activity',
-                  chapter_id=chapter.id
-              ) }}"
-              class="mb-3"
+
+        {% if access_locked %}
+
+          <div
+            class="modal fade"
+            id="premiumAccessModal"
+            tabindex="-1"
+            aria-hidden="true"
+            data-bs-backdrop="static"
+            data-bs-keyboard="false"
           >
-              <input
+            <div
+              class="modal-dialog modal-dialog-centered"
+              style="max-width: 380px;"
+            >
+            <div
+            class="modal-content position-relative"
+            style="
+              border-radius: 0.75rem;
+              padding: 2rem;
+              min-height: 0;
+              height: auto;
+              top: auto;
+              left: auto;
+              transform: none;
+            "
+             >
+
+                <h4 class="text-center mb-3">
+                  Conteúdo exclusivo
+                </h4>
+
+
+                {% if access_reason == "login" %}
+
+                  <p class="text-muted text-center mb-3">
+                    Para acessar este conteúdo, entre com sua conta Google.
+                  </p>
+
+                  <div class="text-center">
+                    <a
+                      href="{{ url_for('auth.login', next=request.path) }}"
+                      class="btn btn-google d-inline-flex align-items-center justify-content-center gap-2"
+                      style="
+                        height: 2.7rem;
+                        border-radius: 0.5rem;
+                        font-size: 1rem;
+                      "
+                    >
+                      <img
+                        src="{{ url_for(
+                          'static',
+                          filename='img/branding/google_logo.png'
+                        ) }}"
+                        alt="Google Logo"
+                        class="google-icon"
+                        style="width: 32px; height: 32px;"
+                      >
+
+                      <span>Entrar com Google</span>
+                    </a>
+                  </div>
+
+
+                {% elif access_reason == "subscription" %}
+
+                  <p class="text-muted text-center mb-3">
+                    Faça uma assinatura mensal para ter acesso a todos os livros,
+                    áudios e conteúdos exclusivos do Imago English.
+                  </p>
+
+                  <div class="text-center">
+                    <a
+                      href="{{ url_for('billing.student_subscription') }}"
+                      class="btn btn-primary"
+                    >
+                      Ver planos de assinatura
+                    </a>
+                  </div>
+
+                {% endif %}
+
+
+                <div class="text-center mt-2">
+                  <button
+                    type="button"
+                    class="btn btn-link text-secondary p-0"
+                    onclick="history.back()"
+                  >
+                    ← Voltar
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+
+          <script>
+            document.addEventListener("DOMContentLoaded", function () {
+              const modalElement =
+                document.getElementById("premiumAccessModal");
+
+              if (modalElement) {
+                const modal = new bootstrap.Modal(
+                  modalElement,
+                  {
+                    backdrop: "static",
+                    keyboard: false
+                  }
+                );
+
+                modal.show();
+              }
+            });
+          </script>
+
+
+        {% else %}
+
+          {% if chapter.audio_path %}
+            <br>
+
+            <audio
+              id="audio-player"
+              controls
+              class="mt-3 d-block mx-auto"
+              style="width: 350px; max-width: 100%;"
+            >
+              <source src="{{ chapter.audio_path }}" type="audio/mpeg">
+              Your browser does not support the audio element.
+            </audio>
+          {% endif %}
+
+
+          <br>
+
+
+          {% if current_user.is_authenticated and current_user.is_admin() %}
+            {% if not chapter.activity_enabled %}
+
+              <form
+                method="POST"
+                action="{{ url_for(
+                    'admin.enable_activity',
+                    chapter_id=chapter.id
+                ) }}"
+                class="mb-3"
+              >
+                <input
                   type="hidden"
                   name="csrf_token"
                   value="{{ csrf_token() }}"
-              >
+                >
 
-              <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary">
                   Create Reading Activity
-              </button>
-          </form>
-        
+                </button>
+              </form>
+
             {% else %}
-                <div class="alert alert-success mb-3">
-                    <strong>Reading activity enabled.</strong>
 
-                    <div class="mt-2">
-                        Activity link:
-                        <code>
-                            {{ url_for('audiobook.join_chapter_activity',
-                                      chapter_id=chapter.id,
-                                      _external=True) }}
-                        </code>
-                    </div>
+              <div class="alert alert-success mb-3">
+                <strong>Reading activity enabled.</strong>
+
+                <div class="mt-2">
+                  Activity link:
+                  <code>
+                    {{ url_for(
+                      'audiobook.join_chapter_activity',
+                      chapter_id=chapter.id,
+                      _external=True
+                    ) }}
+                  </code>
                 </div>
+              </div>
+
             {% endif %}
-        
-      {% endif %}
+          {% endif %}
 
 
-        <pre id="text-content" class="mt-3">{{ text_content }}</pre>
+          <pre id="text-content" class="mt-3">{{ text_content }}</pre>
 
 
-        {# Reading progress #}
-        <div class="mt-4">
+          <div class="mt-4">
 
-          {% if progress and progress.is_read %}
+            {% if progress and progress.is_read %}
 
-            <div class="alert alert-success mb-3">
-              This chapter has been marked as read.
-            </div>
+              <div class="alert alert-success mb-3">
+                This chapter has been marked as read.
+              </div>
 
-          {% else %}
+            {% else %}
 
-            <form
-              method="POST"
-              action="{{ url_for(
-                'audiobook.mark_chapter_read',
-                book_slug=book.slug,
-                chapter_slug=chapter.slug
-              ) }}"
-            >
-              <input
-                type="hidden"
-                name="csrf_token"
-                value="{{ csrf_token() }}"
+              <form
+                method="POST"
+                action="{{ url_for(
+                  'audiobook.mark_chapter_read',
+                  book_slug=book.slug,
+                  chapter_slug=chapter.slug
+                ) }}"
               >
+                <input
+                  type="hidden"
+                  name="csrf_token"
+                  value="{{ csrf_token() }}"
+                >
 
-              <button type="submit" class="btn btn-success">
-                Mark chapter as read
-              </button>
-            </form>
+                <button type="submit" class="btn btn-success">
+                  Mark chapter as read
+                </button>
+              </form>
+
+            {% endif %}
+          </div>
+
+
+          {% if activity_mode
+                and chapter.suggested_flashcards
+                and not (
+                    current_user.is_authenticated
+                    and current_user.is_admin()
+                ) %}
+
+            <section class="mt-5 mb-4">
+              <h4>Suggested Flashcards</h4>
+
+              <p class="text-muted">
+                Select the flashcards you want to add.
+              </p>
+
+              <form id="suggested-flashcards-form">
+
+                {% for card in chapter.suggested_flashcards %}
+
+                  <div class="form-check mb-2 text-start">
+                    <input
+                      class="form-check-input suggested-flashcard-checkbox"
+                      type="checkbox"
+                      value="{{ card.id }}"
+                      id="suggested-card-{{ card.id }}"
+                      checked
+                    >
+
+                    <label
+                      class="form-check-label text-start text-wrap"
+                      for="suggested-card-{{ card.id }}"
+                    >
+                      <strong>{{ card.question }}</strong>
+                      →
+                      {{ card.answer }}
+                    </label>
+                  </div>
+
+                {% endfor %}
+
+                <button
+                  type="button"
+                  id="add-selected-suggested-flashcards"
+                  class="btn btn-primary mt-3"
+                  data-url="{{ url_for(
+                      'flashcard.add_suggested_flashcards',
+                      chapter_id=chapter.id
+                  ) }}"
+                >
+                  Add Selected Flashcards
+                </button>
+
+              </form>
+            </section>
 
           {% endif %}
-        </div>
 
 
-
-              {% if activity_mode
-                    and chapter.suggested_flashcards
-                    and not (
-                        current_user.is_authenticated
-                        and current_user.is_admin()
-              ) %}
-              <section class=" mt-5 mb-4">
-                  <h4>Suggested Flashcards</h4>
-
-                  <p class="text-muted">
-                      Select the flashcards you want to add.
-                  </p>
-
-                  <form id="suggested-flashcards-form">
-                      {% for card in chapter.suggested_flashcards %}
-                          <div class="form-check mb-2 text-start">
-                              <input
-                                  class="form-check-input suggested-flashcard-checkbox"
-                                  type="checkbox"
-                                  value="{{ card.id }}"
-                                  id="suggested-card-{{ card.id }}"
-                                  checked
-                              >
-
-                              <label
-                                  class="form-check-label text-start text-wrap"
-                                  for="suggested-card-{{ card.id }}"
-                              >
-                                  <strong>{{ card.question }}</strong>
-                                  →
-                                  {{ card.answer }}
-                              </label>
-                          </div>
-                      {% endfor %}
-
-                  <button
-                      type="button"
-                      id="add-selected-suggested-flashcards"
-                      class="btn btn-primary mt-3"
-                      data-url="{{ url_for(
-                          'flashcard.add_suggested_flashcards',
-                          chapter_id=chapter.id
-                      ) }}"
-                  >
-                      Add Selected Flashcards
-                  </button>
-                  </form>
-              </section>
-          {% endif %}
-
-
-
-
-
-
-          {% if library_mode
-                and current_user.is_authenticated
+          {% if current_user.is_authenticated
                 and current_user.is_admin()
                 and chapter.activity_enabled %}
 
-          <div class="mt-4">
+            <div class="mt-4">
               <h5>Suggested Flashcards</h5>
 
               {% if chapter.suggested_flashcards %}
-                  <div id="suggested-flashcards-list">
-                      {% for card in chapter.suggested_flashcards %}
-                          <div
-                              class="card mb-2 suggested-flashcard-item"
-                              data-card-id="{{ card.id }}"
-                          >
-                              <div class="card-body">
-                                  <strong>{{ card.position }}.</strong>
-                                  {{ card.question }}
-                                  →
-                                  {{ card.answer }}
 
-                                  <button
-                                      type="button"
-                                      class="btn btn-sm btn-outline-danger ms-2 delete-suggested-flashcard"
-                                      data-url="{{ url_for(
-                                          'admin.delete_suggested_flashcard',
-                                          card_id=card.id
-                                      ) }}"
-                                  >
-                                      Delete
-                                  </button>
-                              </div>
-                          </div>
-                      {% endfor %}
-                  </div>
+                <div id="suggested-flashcards-list">
+
+                  {% for card in chapter.suggested_flashcards %}
+
+                    <div
+                      class="card mb-2 suggested-flashcard-item"
+                      data-card-id="{{ card.id }}"
+                    >
+                      <div class="card-body">
+
+                        <strong>{{ card.position }}.</strong>
+                        {{ card.question }}
+                        →
+                        {{ card.answer }}
+
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-danger ms-2 delete-suggested-flashcard"
+                          data-url="{{ url_for(
+                              'admin.delete_suggested_flashcard',
+                              card_id=card.id
+                          ) }}"
+                        >
+                          Delete
+                        </button>
+
+                      </div>
+                    </div>
+
+                  {% endfor %}
+
+                </div>
+
               {% else %}
-                  <p class="text-muted">
-                      No suggested flashcards yet.
-                  </p>
+
+                <p class="text-muted">
+                  No suggested flashcards yet.
+                </p>
+
               {% endif %}
-          </div>
+            </div>
 
-      {% endif %}
-
-        {# Previous / next navigation #}
-        <nav class="d-flex justify-content-between mt-4">
-
-          <div>
-            {% if previous_chapter %}
-              <a
-                class="btn btn-outline-secondary"
-                href="{{ url_for(
-                  'audiobook.read_chapter',
-                  book_slug=book.slug,
-                  chapter_slug=previous_chapter.slug
-                ) }}"
-              >
-                Previous chapter
-              </a>
-            {% endif %}
-          </div>
+          {% endif %}
 
 
-          <div>
-            {% if next_chapter %}
-              <a
-                class="btn btn-primary"
-                href="{{ url_for(
-                  'audiobook.read_chapter',
-                  book_slug=book.slug,
-                  chapter_slug=next_chapter.slug
-                ) }}"
-              >
-                Next chapter
-              </a>
-            {% endif %}
-          </div>
+          <nav class="d-flex justify-content-between mt-4">
 
-        </nav>
+            <div>
+              {% if previous_chapter %}
+                <a
+                  class="btn btn-outline-secondary"
+                  href="{{ url_for(
+                    'audiobook.read_chapter',
+                    book_slug=book.slug,
+                    chapter_slug=previous_chapter.slug
+                  ) }}"
+                >
+                  Previous chapter
+                </a>
+              {% endif %}
+            </div>
+
+            <div>
+              {% if next_chapter %}
+                <a
+                  class="btn btn-primary"
+                  href="{{ url_for(
+                    'audiobook.read_chapter',
+                    book_slug=book.slug,
+                    chapter_slug=next_chapter.slug
+                  ) }}"
+                >
+                  Next chapter
+                </a>
+              {% endif %}
+            </div>
+
+          </nav>
 
 
-        {# audiobook.js expects these elements to exist #}
-        <input type="file" id="audio-input" accept="audio/*" hidden>
-        <input type="file" id="text-input" accept=".txt" hidden>
+          <input
+            type="file"
+            id="audio-input"
+            accept="audio/*"
+            hidden
+          >
 
+          <input
+            type="file"
+            id="text-input"
+            accept=".txt"
+            hidden
+          >
 
-      {# ========================================================= #}
-      {# PRIVATE USER AUDIOBOOK                                    #}
-      {# ========================================================= #}
+        {% endif %}
+
 
       {% elif audiobook %}
 
@@ -419,7 +554,10 @@
             class="mt-3 d-block mx-auto"
             style="width: 350px; max-width: 100%;"
           >
-            <source src="{{ audiobook.audio_url }}" type="audio/mpeg">
+            <source
+              src="{{ audiobook.audio_url }}"
+              type="audio/mpeg"
+            >
             Your browser does not support the audio element.
           </audio>
 
@@ -427,6 +565,7 @@
 
 
         <br>
+
 
         {% if audiobook.title %}
           <h3 class="mb-2">
@@ -438,19 +577,36 @@
         <pre id="text-content" class="mt-3">{{ text_content }}</pre>
 
 
-        {# audiobook.js expects these elements to exist #}
-        <input type="file" id="audio-input" accept="audio/*" hidden>
-        <input type="file" id="text-input" accept=".txt" hidden>
+        <input
+          type="file"
+          id="audio-input"
+          accept="audio/*"
+          hidden
+        >
 
+        <input
+          type="file"
+          id="text-input"
+          accept=".txt"
+          hidden
+        >
 
-      {# ========================================================= #}
-      {# ORIGINAL LOCAL-UPLOAD FLOW                                #}
-      {# ========================================================= #}
 
       {% else %}
 
-        <input type="file" id="audio-input" accept="audio/*" hidden>
-        <input type="file" id="text-input" accept=".txt" hidden>
+        <input
+          type="file"
+          id="audio-input"
+          accept="audio/*"
+          hidden
+        >
+
+        <input
+          type="file"
+          id="text-input"
+          accept=".txt"
+          hidden
+        >
 
 
         <button id="load-audio" class="btn btn-primary">
@@ -482,17 +638,30 @@
   </div>
 </div>
 
-{% if activity_mode and chapter.suggested_flashcards %}
-<script id="suggested-flashcards-data" type="application/json">
+
+{% if activity_mode
+      and chapter.suggested_flashcards
+      and not access_locked %}
+
+<script
+  id="suggested-flashcards-data"
+  type="application/json"
+>
 [
-    {% for card in chapter.suggested_flashcards %}
-        {
-            "question": {{ card.question|tojson }}
-        }{% if not loop.last %},{% endif %}
-    {% endfor %}
+  {% for card in chapter.suggested_flashcards %}
+    {
+      "question": {{ card.question|tojson }}
+    }{% if not loop.last %},{% endif %}
+  {% endfor %}
 ]
 </script>
+
 {% endif %}
+
+
+{% if not access_locked %}
 <script src="{{ url_for('static', filename='js/audiobook.js') }}"></script>
+{% endif %}
 
 {% endblock %}
+

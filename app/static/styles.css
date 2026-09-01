@@ -816,3 +816,28 @@ html[data-bs-theme="light"] #studentsAccordion .accordion-button.bg-warning-subt
     padding: 0 0.08em;
     border-radius: 0.15em;
 }
+
+
+
+.premium-modal-content {
+    min-height: auto;
+}
+
+.premium-modal-body {
+    display: block;
+}
+
+.premium-modal-body p {
+    margin-bottom: 0.75rem;
+}
+
+.premium-modal-body .btn-google,
+.premium-modal-body .btn-primary {
+    margin-bottom: 0;
+}
+
+.premium-modal-body .btn-link {
+    margin-top: 0;
+    padding-top: 0.35rem;
+    padding-bottom: 0;
+}
