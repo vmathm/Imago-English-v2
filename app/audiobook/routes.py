@@ -78,13 +78,18 @@ def audiobooks():
 
 
 @bp.route("/translate", methods=["POST"])
-@user_or_guest_required
+@login_required
 def translate_route():
     data = request.get_json()
+
     if not data or "text" not in data:
         return jsonify({"error": "Missing 'text' in request"}), 400
 
-    translation = translate_text(data["text"])
+    try:
+        translation = translate_text(data["text"])
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 413
+
     return jsonify({"translation": translation})
 
 

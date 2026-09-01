@@ -306,17 +306,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       );
 
+      const data = await response.json();
+
       if (!response.ok) {
         showFlash(
-          "Translation failed. Try again.",
+          data.error || "Translation failed. Try again.",
           "error"
         );
 
         return;
       }
 
-      const { translation } =
-        await response.json();
+      const { translation } = data;
 
       showModal(
         selection,

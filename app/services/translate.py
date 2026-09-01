@@ -1,6 +1,10 @@
 from html import unescape
-from google.cloud import translate_v2 as translate
+
 from flask_login import current_user
+from google.cloud import translate_v2 as translate
+
+
+MAX_TRANSLATION_CHARS = 2000
 
 _client = None
 
@@ -31,6 +35,13 @@ def translate_text(text: str, target_language: str | None = None) -> str:
     if not text:
         return ""
 
+    text = text.strip()
+
+    if len(text) > MAX_TRANSLATION_CHARS:
+        raise ValueError(
+            f"Translation text exceeds the {MAX_TRANSLATION_CHARS}-character limit."
+        )
+
     if target_language is None:
         target_language = _default_target_language()
 
@@ -40,4 +51,5 @@ def translate_text(text: str, target_language: str | None = None) -> str:
         target_language=target_language,
         format_="text",
     )
+
     return unescape(result["translatedText"])
