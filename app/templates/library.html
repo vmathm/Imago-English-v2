@@ -4,55 +4,159 @@
 
 {% block main %}
 
+<style>
+    .book-card {
+        max-width: 280px;
+        margin: 0 auto;
+    }
+
+    .book-link {
+        color: inherit;
+        text-decoration: none;
+        display: block;
+    }
+
+    .book-cover-wrapper {
+        width: 100%;
+        aspect-ratio: 2 / 3;
+        overflow: hidden;
+        border-radius: 0.5rem;
+        background-color: #f1f1f1;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
+    }
+
+    .book-link:hover .book-cover-wrapper {
+        transform: translateY(-4px);
+        box-shadow: 0 7px 18px rgba(0, 0, 0, 0.18);
+    }
+
+    .book-cover {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .book-cover-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        text-align: center;
+        background-color: #e9ecef;
+        color: #6c757d;
+    }
+
+    .book-info {
+        padding-top: 0.9rem;
+    }
+
+    .book-title {
+        margin-bottom: 0.25rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .book-author {
+        margin-bottom: 0.25rem;
+        color: #6c757d;
+    }
+
+    .book-level {
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+</style>
+
+
 <h1 class="mt-5">Library</h1>
 
 {% if guest_user %}
-    <small>
+    <small class="text-muted">
         Você está navegando como convidado.
     </small>
 {% endif %}
 
+
 {% if books %}
 
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mt-2 justify-content-center">
+    <div
+        class="
+            row
+            row-cols-2
+            row-cols-md-3
+            row-cols-lg-4
+            g-4
+            mt-2
+            justify-content-center
+        "
+    >
 
         {% for book in books %}
 
             <div class="col">
 
-                <div class="card h-100">
-                    <div class="card-body">
+                <div class="book-card">
 
-                        <h5 class="card-title">
-                            {{ book.title }}
-                        </h5>
+                    <a
+                        href="{{ url_for(
+                            'audiobook.book_details',
+                            book_slug=book.slug
+                        ) }}"
+                        class="book-link"
+                    >
 
-                        {% if book.author %}
-                            <p class="card-text">
-                                {{ book.author }}
-                            </p>
-                        {% endif %}
+                        <div class="book-cover-wrapper">
 
-                        {% if book.level %}
-                            <p class="card-text">
-                                <small>Level: {{ book.level }}</small>
-                            </p>
-                        {% endif %}
+                            {% if book.cover_object_name %}
 
-                        {% if book.description %}
-                            <p class="card-text mt-2">
-                                {{ book.description }}
-                            </p>
-                        {% endif %}
+                                <img
+                                    src="{{ book.cover_object_name }}"
+                                    alt="Cover of {{ book.title }}"
+                                    class="book-cover"
+                                    loading="lazy"
+                                >
 
-                        <a
-                            href="{{ url_for('audiobook.book_details', book_slug=book.slug) }}"
-                            class="btn btn-primary"
-                        >
-                            Open
-                        </a>
+                            {% else %}
 
-                    </div>
+                                <div class="book-cover-placeholder">
+                                    <span>
+                                        {{ book.title }}
+                                    </span>
+                                </div>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="book-info">
+
+                            <h5 class="book-title">
+                                {{ book.title }}
+                            </h5>
+
+                            {% if book.author %}
+                                <p class="book-author">
+                                    {{ book.author }}
+                                </p>
+                            {% endif %}
+
+                            {% if book.level %}
+                                <div class="book-level">
+                                    Level: {{ book.level }}
+                                </div>
+                            {% endif %}
+
+                        </div>
+
+                    </a>
+
                 </div>
 
             </div>

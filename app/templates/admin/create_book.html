@@ -1,73 +1,163 @@
 {% extends "layout.html" %}
 
-{% block title %}Create book{% endblock %}
+{% block title %}Create Book{% endblock %}
 
 {% block main %}
-<div class="container py-4">
-    <h1>Create book</h1>
 
-    <form method="POST">
+<div class="container mt-5">
+
+    <h1 class="mb-4">
+        Create Book
+    </h1>
+
+    <form
+        method="POST"
+        enctype="multipart/form-data"
+    >
+
         {{ form.hidden_tag() }}
 
+
         <div class="mb-3">
-            {{ form.title.label(class="form-label") }}
-            {{ form.title(class="form-control") }}
+
+            {{ form.title.label(
+                class="form-label"
+            ) }}
+
+            {{ form.title(
+                class="form-control"
+            ) }}
 
             {% for error in form.title.errors %}
                 <div class="text-danger">
                     {{ error }}
                 </div>
             {% endfor %}
+
         </div>
 
-        <div class="mb-3">
-            {{ form.slug.label(class="form-label") }}
-            {{ form.slug(class="form-control") }}
 
-            <div class="form-text">
-                Example: bartleby-the-scrivener
-            </div>
+        <div class="mb-3">
+
+            {{ form.slug.label(
+                class="form-label"
+            ) }}
+
+            {{ form.slug(
+                class="form-control"
+            ) }}
 
             {% for error in form.slug.errors %}
                 <div class="text-danger">
                     {{ error }}
                 </div>
             {% endfor %}
+
         </div>
 
-        <div class="mb-3">
-            {{ form.author.label(class="form-label") }}
-            {{ form.author(class="form-control") }}
-        </div>
 
         <div class="mb-3">
-            {{ form.description.label(class="form-label") }}
-            {{ form.description(
-                class="form-control",
-                rows="4"
-            ) }}
-        </div>
 
-        <div class="mb-3">
-            {{ form.level.label(class="form-label") }}
-            {{ form.level(class="form-select") }}
-        </div>
-
-        <div class="mb-3">
-            {{ form.cover_object_name.label(
+            {{ form.author.label(
                 class="form-label"
             ) }}
 
-            {{ form.cover_object_name(
+            {{ form.author(
                 class="form-control"
             ) }}
 
-            <div class="form-text">
-                Example: books/bartleby/cover.jpg
-            </div>
+            {% for error in form.author.errors %}
+                <div class="text-danger">
+                    {{ error }}
+                </div>
+            {% endfor %}
+
         </div>
 
-        {{ form.submit(class="btn btn-primary") }}
+
+        <div class="mb-3">
+
+            {{ form.description.label(
+                class="form-label"
+            ) }}
+
+            {{ form.description(
+                class="form-control",
+                rows="5"
+            ) }}
+
+            {% for error in form.description.errors %}
+                <div class="text-danger">
+                    {{ error }}
+                </div>
+            {% endfor %}
+
+        </div>
+
+
+        <div class="mb-3">
+
+            {{ form.level.label(
+                class="form-label"
+            ) }}
+
+            {{ form.level(
+                class="form-select"
+            ) }}
+
+            {% for error in form.level.errors %}
+                <div class="text-danger">
+                    {{ error }}
+                </div>
+            {% endfor %}
+
+        </div>
+
+
+        <div class="mb-4">
+
+            {{ form.cover.label(
+                class="form-label"
+            ) }}
+
+            {{ form.cover(
+                class="form-control",
+                accept=".jpg,.jpeg,.png,.webp"
+            ) }}
+
+            <div class="form-text">
+                JPG, PNG or WebP.
+            </div>
+
+            {% for error in form.cover.errors %}
+                <div class="text-danger">
+                    {{ error }}
+                </div>
+            {% endfor %}
+
+        </div>
+
+
+        <div class="d-flex flex-wrap gap-2">
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                Create Book
+            </button>
+
+            <a
+                href="{{ url_for('audiobook.library') }}"
+                class="btn btn-outline-secondary"
+            >
+                Cancel
+            </a>
+
+        </div>
+
     </form>
+
 </div>
+
 {% endblock %}

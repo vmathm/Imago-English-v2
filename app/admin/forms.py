@@ -109,6 +109,17 @@ class BookForm(FlaskForm):
         ],
     )
 
+    cover = FileField(
+    "Cover",
+    validators=[
+        Optional(),
+        FileAllowed(
+            ["jpg", "jpeg", "png", "webp"],
+            "Image files only."
+        ),
+    ],
+    )   
+
     submit = SubmitField("Create book")
 
 
@@ -138,6 +149,17 @@ class EditBookForm(FlaskForm):
             ("C2", "C2"),
         ],
         validators=[DataRequired()],
+    )
+
+
+    cover = FileField(
+    "Cover image",
+    validators=[
+        FileAllowed(
+            ["jpg", "jpeg", "png", "webp"],
+            "Only JPG, PNG and WebP images are allowed.",
+        )
+    ],
     )
 
     submit = SubmitField("Update Book")

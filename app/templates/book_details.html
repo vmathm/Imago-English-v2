@@ -4,10 +4,36 @@
 
 {% block main %}
 
+<style>
+  .book-details-cover {
+    width: 100%;
+    max-width: 260px;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+  }
+
+  .book-details-cover-placeholder {
+    width: 100%;
+    max-width: 260px;
+    aspect-ratio: 2 / 3;
+    border-radius: 0.75rem;
+    background-color: #e9ecef;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1.5rem;
+  }
+</style>
+
+
 <div class="container mt-5">
 
   {% if current_user.is_authenticated and current_user.is_admin() %}
-    <div class="d-flex flex-wrap gap-2 mb-3">
+    <div class="d-flex flex-wrap gap-2 mb-4">
 
       <a
         href="{{ url_for(
@@ -58,63 +84,103 @@
   {% endif %}
 
 
-  <h1>{{ book.title }}</h1>
+  <div class="row g-4 align-items-start">
 
-  {% if book.author %}
-    <p class="mb-1">
-      <strong>{{ book.author }}</strong>
-    </p>
-  {% endif %}
+    <div class="col-8 col-sm-6 col-md-4 col-lg-3 mx-auto mx-md-0">
 
-  {% if book.level %}
-    <p class="mb-3">
-      <small>
-        Level: {{ book.level }}
-      </small>
-    </p>
-  {% endif %}
+      {% if book.cover_object_name %}
 
-  {% if book.description %}
-    <p class="mb-4">
-      {{ book.description }}
-    </p>
-  {% endif %}
+        <img
+          src="{{ book.cover_object_name }}"
+          alt="Cover of {{ book.title }}"
+          class="book-details-cover"
+        >
 
+      {% else %}
 
-  {% if total_chapters is defined %}
-    <div class="mt-4 mb-3">
-      <strong>
-        {{ read_count }} / {{ total_chapters }} chapters read
-      </strong>
-    </div>
-  {% endif %}
+        <div class="book-details-cover-placeholder">
+          <span>
+            {{ book.title }}
+          </span>
+        </div>
 
+      {% endif %}
 
-  {% if next_chapter %}
-    <div class="mb-4">
-      <a
-        href="{{ url_for(
-          'audiobook.read_chapter',
-          book_slug=book.slug,
-          chapter_slug=next_chapter.slug
-        ) }}"
-        class="btn btn-success"
-      >
-        Continue Reading
-        <small>
-          ({{ next_chapter.title }})
-        </small>
-      </a>
     </div>
 
-  {% elif chapters and total_chapters is defined %}
-    <div class="alert alert-success">
-      ✅ You have finished this book!
+
+    <div class="col-md-8 col-lg-9">
+
+      <h1>
+        {{ book.title }}
+      </h1>
+
+      {% if book.author %}
+        <p class="mb-1">
+          <strong>
+            {{ book.author }}
+          </strong>
+        </p>
+      {% endif %}
+
+      {% if book.level %}
+        <p class="mb-3">
+          <small class="text-muted">
+            Level: {{ book.level }}
+          </small>
+        </p>
+      {% endif %}
+
+      {% if book.description %}
+        <p class="mb-4">
+          {{ book.description }}
+        </p>
+      {% endif %}
+
+
+      {% if total_chapters is defined %}
+        <div class="mb-3">
+          <strong>
+            {{ read_count }} / {{ total_chapters }} chapters read
+          </strong>
+        </div>
+      {% endif %}
+
+
+      {% if next_chapter %}
+        <div class="mb-4">
+
+          <a
+            href="{{ url_for(
+              'audiobook.read_chapter',
+              book_slug=book.slug,
+              chapter_slug=next_chapter.slug
+            ) }}"
+            class="btn btn-success"
+          >
+            Continue Reading
+
+            <small>
+              ({{ next_chapter.title }})
+            </small>
+          </a>
+
+        </div>
+
+      {% elif chapters and total_chapters is defined %}
+
+        <div class="alert alert-success">
+          ✅ You have finished this book!
+        </div>
+
+      {% endif %}
+
     </div>
-  {% endif %}
+
+  </div>
 
 
-  <h4 class="mt-4 mb-3">
+  <h4 class="mt-5 mb-3">
     Chapters
   </h4>
 
@@ -132,85 +198,102 @@
           <div class="text-start flex-grow-1">
 
             <div>
+
               <strong>
                 {{ chapter.position }}. {{ chapter.title }}
               </strong>
 
               {% if chapter.is_free %}
+
                 <span class="badge text-bg-success ms-2">
                   Free
                 </span>
+
               {% else %}
+
                 <span class="badge text-bg-secondary ms-2">
                   Subscriber
                 </span>
+
               {% endif %}
+
             </div>
 
+
             {% if read_chapter_ids is defined %}
+
               <div class="mt-1">
 
                 {% if chapter.id in read_chapter_ids %}
+
                   <small>
                     ✅ Read
                   </small>
+
                 {% else %}
+
                   <small class="text-muted">
                     Not read yet
                   </small>
+
                 {% endif %}
 
               </div>
+
             {% endif %}
 
           </div>
 
 
           <div class="d-flex flex-wrap gap-2">
-          {% if chapter.is_free
-                or (current_user.is_authenticated and current_user.is_admin())
-                or (current_user.is_authenticated and current_user.is_teacher())
-                or (current_user.is_authenticated and current_user.billing_mode == "external")
-          %}
 
-            <a
-              href="{{ url_for(
-                'audiobook.read_chapter',
-                book_slug=book.slug,
-                chapter_slug=chapter.slug
-              ) }}"
-              class="btn btn-primary btn-sm"
-            >
-              Open
-            </a>
+            {% if chapter.is_free
+                  or (current_user.is_authenticated and current_user.is_admin())
+                  or (current_user.is_authenticated and current_user.is_teacher())
+                  or (current_user.is_authenticated and current_user.billing_mode == "external")
+            %}
 
-          {% elif current_user.is_authenticated %}
+              <a
+                href="{{ url_for(
+                  'audiobook.read_chapter',
+                  book_slug=book.slug,
+                  chapter_slug=chapter.slug
+                ) }}"
+                class="btn btn-primary btn-sm"
+              >
+                Open
+              </a>
 
-            {# Internal user: let backend verify subscription #}
-            <a
-              href="{{ url_for(
-                'audiobook.read_chapter',
-                book_slug=book.slug,
-                chapter_slug=chapter.slug
-              ) }}"
-              class="btn btn-primary btn-sm"
-            >
-              Open
-            </a>
+            {% elif current_user.is_authenticated %}
 
-          {% else %}
+              {# Internal user: let backend verify subscription #}
 
-            {# Guest: show login/subscription message #}
-            <button
-              type="button"
-              class="btn btn-primary btn-sm"
-              data-bs-toggle="modal"
-              data-bs-target="#subscriptionLoginModal"
-            >
-              Open
-            </button>
+              <a
+                href="{{ url_for(
+                  'audiobook.read_chapter',
+                  book_slug=book.slug,
+                  chapter_slug=chapter.slug
+                ) }}"
+                class="btn btn-primary btn-sm"
+              >
+                Open
+              </a>
 
-          {% endif %}
+            {% else %}
+
+              {# Guest: show login/subscription message #}
+
+              <button
+                type="button"
+                class="btn btn-primary btn-sm"
+                data-bs-toggle="modal"
+                data-bs-target="#subscriptionLoginModal"
+              >
+                Open
+              </button>
+
+            {% endif %}
+
 
             {% if current_user.is_authenticated and current_user.is_admin() %}
 
@@ -247,6 +330,7 @@
                 >
                   Delete
                 </button>
+
               </form>
 
             {% endif %}
@@ -269,15 +353,18 @@
 
 
   <div class="mt-4">
+
     <a
       href="{{ url_for('audiobook.library') }}"
       class="btn btn-outline-secondary"
     >
       Back to Library
     </a>
+
   </div>
 
 </div>
+
 
 <div
   class="modal fade"
@@ -297,7 +384,6 @@
       "
     >
 
-      <!-- Close button -->
       <button
         type="button"
         class="btn-close position-absolute top-0 end-0 m-3"
@@ -310,6 +396,7 @@
       </p>
 
       <div class="text-center">
+
         <a
           href="{{ url_for('auth.login') }}"
           class="btn btn-google d-inline-flex align-items-center justify-content-center gap-2"
@@ -329,8 +416,11 @@
             style="width: 40px; height: 40px;"
           >
 
-          <span>Sign in with Google</span>
+          <span>
+            Sign in with Google
+          </span>
         </a>
+
       </div>
 
     </div>

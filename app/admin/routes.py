@@ -235,74 +235,6 @@ def set_language(student_id):
     return redirect(url_for("dashboard.index"))
 
 
-@bp.route("/books/create", methods=["GET", "POST"])
-@admin_required
-def create_book():
-    form = BookForm()
-
-    if form.validate_on_submit():
-        title = form.title.data.strip()
-        slug = form.slug.data.strip().lower()
-        author = (
-            form.author.data.strip()
-            if form.author.data
-            else None
-        )
-        description = (
-            form.description.data.strip()
-            if form.description.data
-            else None
-        )
-        cover_object_name = (
-            form.cover_object_name.data.strip()
-            if form.cover_object_name.data
-            else None
-        )
-
-        existing_slug = (
-            db_session.query(Book)
-            .filter_by(slug=slug)
-            .first()
-        )
-
-        if existing_slug:
-            flash(
-                "A book with this slug already exists.",
-                "danger",
-            )
-            return render_template(
-                "admin/create_book.html",
-                form=form,
-            )
-
-        book = Book(
-            title=title,
-            slug=slug,
-            author=author,
-            description=description,
-            level=form.level.data,
-            cover_object_name=cover_object_name,
-        )
-
-        db_session.add(book)
-        db_session.commit()
-
-        flash(
-            f'Book "{book.title}" created successfully.',
-            "success",
-        )
-
-        return redirect(
-            url_for(
-                "admin.create_book",
-            )
-        )
-
-    return render_template(
-        "admin/create_book.html",
-        form=form,
-    )
-
 
 
 
@@ -788,7 +720,114 @@ def delete_chapter(chapter_id):
         )
     )
 
-@bp.route("/books/<int:book_id>/edit", methods=["GET", "POST"])
+
+@bp.route("/books/create", methods=["GET", "POST"])
+@admin_required
+def create_book():
+    form = BookForm()
+
+    if form.validate_on_submit():
+        title = form.title.data.strip()
+        slug = form.slug.data.strip().lower()
+
+        author = (
+            form.author.data.strip()
+            if form.author.data
+            else None
+        )
+
+        description = (
+            form.description.data.strip()
+            if form.description.data
+            else None
+        )
+
+        existing_slug = (
+            db_session.query(Book)
+            .filter_by(slug=slug)
+            .first()
+        )
+
+        if existing_slug:
+            flash(
+                "A book with this slug already exists.",
+                "danger",
+            )
+
+            return render_template(
+                "admin/create_book.html",
+                form=form,
+            )
+
+        cover_object_name = None
+
+        if form.cover.data:
+            cover_file = form.cover.data
+
+            cover_object_name = upload_file_to_gcs(
+                cover_file,
+                prefix=f"books/{slug}/cover",
+                content_type=cover_file.mimetype,
+            )
+
+        book = Book(
+            title=title,
+            slug=slug,
+            author=author,
+            description=description,
+            level=form.level.data,
+            cover_object_name=cover_object_name,
+        )
+
+        try:
+            db_session.add(book)
+            db_session.commit()
+
+        except Exception:
+            db_session.rollback()
+
+            # If the GCS upload succeeded but the DB insert failed,
+            # remove the newly uploaded cover to avoid an orphaned file.
+            if cover_object_name:
+                delete_file_from_gcs_by_url(
+                    cover_object_name
+                )
+
+            current_app.logger.exception(
+                "Could not create library book."
+            )
+
+            flash(
+                "The book could not be created.",
+                "danger",
+            )
+
+            return render_template(
+                "admin/create_book.html",
+                form=form,
+            )
+
+        flash(
+            f'Book "{book.title}" created successfully.',
+            "success",
+        )
+
+        return redirect(
+            url_for(
+                "admin.create_book",
+            )
+        )
+
+    return render_template(
+        "admin/create_book.html",
+        form=form,
+    )
+
+
+@bp.route(
+    "/books/<int:book_id>/edit",
+    methods=["GET", "POST"],
+)
 @admin_required
 def edit_book(book_id):
     book = db_session.get(Book, book_id)
@@ -823,21 +862,72 @@ def edit_book(book_id):
                 book=book,
             )
 
+        old_cover_url = book.cover_object_name
+        new_cover_url = None
+
+        if form.cover.data:
+            cover_file = form.cover.data
+
+            new_cover_url = upload_file_to_gcs(
+                cover_file,
+                prefix=f"books/{slug}/cover",
+                content_type=cover_file.mimetype,
+            )
+
         book.title = title
         book.slug = slug
+
         book.author = (
             form.author.data.strip()
             if form.author.data
             else None
         )
+
         book.description = (
             form.description.data.strip()
             if form.description.data
             else None
         )
+
         book.level = form.level.data
 
-        db_session.commit()
+        if new_cover_url:
+            book.cover_object_name = new_cover_url
+
+        try:
+            db_session.commit()
+
+        except Exception:
+            db_session.rollback()
+
+            # A new cover may already have been uploaded.
+            # Remove it if the DB update fails.
+            if new_cover_url:
+                delete_file_from_gcs_by_url(
+                    new_cover_url
+                )
+
+            current_app.logger.exception(
+                "Could not update library book."
+            )
+
+            flash(
+                "The book could not be updated.",
+                "danger",
+            )
+
+            return render_template(
+                "admin/edit_book.html",
+                form=form,
+                book=book,
+            )
+
+        # Only delete the old cover once the DB update
+        # has successfully committed.
+        if new_cover_url and old_cover_url:
+            delete_file_from_gcs_by_url(
+                old_cover_url
+            )
 
         flash(
             f'Book "{book.title}" updated successfully.',
@@ -858,8 +948,10 @@ def edit_book(book_id):
     )
 
 
-
-@bp.route("/books/<int:book_id>/delete", methods=["POST"])
+@bp.route(
+    "/books/<int:book_id>/delete",
+    methods=["POST"],
+)
 @admin_required
 def delete_book(book_id):
     book = db_session.get(Book, book_id)
@@ -868,6 +960,9 @@ def delete_book(book_id):
         abort(404)
 
     book_title = book.title
+    book_slug = book.slug
+
+    cover_url = book.cover_object_name
 
     chapters = (
         db_session.query(Chapter)
@@ -902,12 +997,18 @@ def delete_book(book_id):
         return redirect(
             url_for(
                 "audiobook.book_details",
-                book_slug=book.slug,
+                book_slug=book_slug,
             )
         )
 
     # Database deletion succeeded.
-    # Now clean up chapter files in GCS.
+    # Now clean up the associated GCS files.
+
+    if cover_url:
+        delete_file_from_gcs_by_url(
+            cover_url
+        )
+
     for files in chapter_files:
 
         if files["text_path"]:
@@ -928,7 +1029,6 @@ def delete_book(book_id):
     return redirect(
         url_for("audiobook.library")
     )
-
 
 
 
