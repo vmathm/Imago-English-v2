@@ -5,6 +5,8 @@ from flask_login import current_user
 
 from app.database import db_session
 from app.services.access import sync_internal_access
+from app.services.guest_session import get_or_create_guest_user
+
 
 def active_required(view_func=None, *, template_name="inactive_user.html"):
 
@@ -41,10 +43,20 @@ def active_required(view_func=None, *, template_name="inactive_user.html"):
 def user_or_guest_required(fn):
     @wraps(fn)
     def wrapped(*args, **kwargs):
+
+        # Registered user
         if current_user.is_authenticated:
             return fn(*args, **kwargs)
 
-        if getattr(g, "guest_user", None):
+        # Existing guest loaded earlier in the request
+        guest_user = getattr(g, "guest_user", None)
+
+        # No guest yet: create or restore one
+        if guest_user is None:
+            guest_user = get_or_create_guest_user()
+            g.guest_user = guest_user
+
+        if guest_user:
             return fn(*args, **kwargs)
 
         return redirect(url_for("auth.login"))
