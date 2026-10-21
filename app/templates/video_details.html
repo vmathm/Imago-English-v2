@@ -1,0 +1,268 @@
+
+{% extends "layout.html" %}
+
+{% block title %}{{ video.title }}{% endblock %}
+
+{% block main %}
+
+<div class="container mt-5 mb-5">
+
+    <div id="flash-message-container"></div>
+
+    <div class="text-center">
+
+        <h1 class="mb-3">
+            {{ video.title }}
+        </h1>
+
+        <p class="text-muted mb-4">
+            Level: {{ video.level }}
+        </p>
+
+        {% if embed_url %}
+            <div
+                class="mx-auto mb-4"
+                style="max-width: 400px;"
+            >
+                <div
+                    style="
+                        position: relative;
+                        width: 100%;
+                        aspect-ratio: 9 / 16;
+                    "
+                >
+                    <iframe
+                        src="{{ embed_url }}?cc_lang_pref=en"
+                        title="{{ video.title }}"
+                        style="
+                            position: absolute;
+                            inset: 0;
+                            width: 100%;
+                            height: 100%;
+                            border: 0;
+                        "
+                        allow="
+                            accelerometer;
+                            autoplay;
+                            clipboard-write;
+                            encrypted-media;
+                            gyroscope;
+                            picture-in-picture;
+                            web-share
+                        "
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        allowfullscreen
+                    ></iframe>
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+
+    {% if text_content %}
+        <section class="mt-5 mb-4">
+            <h2 class="mb-3">Lesson Text</h2>
+
+            <div
+                class="text-start"
+                style="white-space: pre-wrap;"
+            >{{ text_content }}</div>
+        </section>
+    {% endif %}
+
+    {% if video.suggested_flashcards %}
+        <section class="mt-5 mb-4">
+
+            <h2 class="mb-3">
+                Suggested Flashcards
+            </h2>
+
+            <p class="text-muted">
+                Select the flashcards you want to add.
+            </p>
+
+            <form id="video-suggested-flashcards-form">
+
+                {% for card in video.suggested_flashcards %}
+                    <div class="form-check mb-2 text-start">
+
+                        <input
+                            class="form-check-input video-suggested-flashcard-checkbox"
+                            type="checkbox"
+                            value="{{ card.id }}"
+                            id="video-suggested-card-{{ card.id }}"
+                            checked
+                        >
+
+                        <label
+                            class="form-check-label text-start text-wrap"
+                            for="video-suggested-card-{{ card.id }}"
+                        >
+                            {{ card.question }} → {{ card.answer }}
+                        </label>
+
+                    </div>
+                {% endfor %}
+
+               <div class="d-flex flex-wrap gap-2 mt-3">
+
+                    <button
+                        type="button"
+                        id="add-selected-video-suggested-flashcards"
+                        class="btn btn-primary"
+                        data-url="{{ url_for(
+                            'flashcard.add_video_suggested_flashcards',
+                            video_id=video.id
+                        ) }}"
+                    >
+                        Add Selected Flashcards
+                    </button>
+
+                    <button
+                        type="button"
+                        id="deselect-all-video-flashcards"
+                        class="btn btn-outline-secondary"
+                    >
+                        Deselect All
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+    {% endif %}
+
+</div>
+
+<script>
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        function showFlash(msg, kind = "success") {
+            const container = document.getElementById(
+                "flash-message-container"
+            );
+
+            if (!container) return;
+
+            const message = document.createElement("div");
+
+            message.className =
+                `flashcard-${kind}-message`;
+
+            message.textContent = msg;
+
+            container.appendChild(message);
+
+            setTimeout(() => {
+                message.remove();
+            }, 3000);
+        }
+
+        const button = document.getElementById(
+            "add-selected-video-suggested-flashcards"
+        );
+
+        if (!button) {
+            return;
+        }
+
+        const deselectButton = document.getElementById(
+            "deselect-all-video-flashcards"
+        );
+
+        if (deselectButton) {
+            deselectButton.addEventListener("click", function () {
+                const checkboxes = document.querySelectorAll(
+                    ".video-suggested-flashcard-checkbox"
+                );
+
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+            });
+        }
+
+        button.addEventListener(
+            "click",
+            async function () {
+
+                const checkboxes = document.querySelectorAll(
+                    ".video-suggested-flashcard-checkbox:checked"
+                );
+
+                const flashcardIds = Array.from(
+                    checkboxes
+                ).map(
+                    checkbox => Number(checkbox.value)
+                );
+
+                if (flashcardIds.length === 0) {
+                    showFlash(
+                        "Select at least one flashcard.",
+                        "error"
+                    );
+                    return;
+                }
+
+                button.disabled = true;
+
+                try {
+                    const response = await fetch(
+                        button.dataset.url,
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json",
+
+                                "X-CSRFToken":
+                                    "{{ csrf_token() }}"
+                            },
+
+                            body: JSON.stringify({
+                                flashcard_ids: flashcardIds
+                            })
+                        }
+                    );
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        showFlash(
+                            data.message ||
+                            "The flashcards could not be added.",
+                            "error"
+                        );
+                        return;
+                    }
+
+                    showFlash(
+                        data.message,
+                        "success"
+                    );
+
+                } catch (error) {
+                    console.error(
+                        "Flashcard error:",
+                        error
+                    );
+
+                    showFlash(
+                        "The flashcards could not be added.",
+                        "error"
+                    );
+
+                } finally {
+                    button.disabled = false;
+                }
+            }
+        );
+    }
+);
+</script>
+
+{% endblock %}

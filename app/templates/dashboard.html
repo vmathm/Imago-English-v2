@@ -403,28 +403,51 @@
   {# Completely anonymous     #}
   {# ------------------------ #}
 
-  <div class="d-flex justify-content-center my-3">
+  <div class="d-flex flex-column align-items-center gap-3 my-4">
 
-    <a href="{{ url_for('auth.login') }}"
-       class="btn btn-google d-flex align-items-center justify-content-center gap-2"
-       style="
-         height: 2.5rem;
-         padding: 0 1rem;
-         border-radius: 0.5rem;
-         font-size: 1rem;
-         width: auto;
-       ">
+    <h4 class="text-center">
+      Welcome to Imago English
+    </h4>
 
+    <p class="text-muted text-center">
+      Sign in to save your progress, or explore the app as a guest.
+    </p>
+
+    <a
+      href="{{ url_for('auth.login') }}"
+      class="btn btn-google d-flex align-items-center justify-content-center gap-2"
+      style="
+        height: 2.7rem;
+        border-radius: 0.5rem;
+        width: 260px;
+      "
+    >
       <img
         src="{{ url_for('static', filename='img/branding/google_logo.png') }}"
         alt="Google Logo"
         class="google-icon"
-        style="width: 45px; height: 45px;"
+        style="width: 40px; height: 40px;"
       >
 
       <span>Sign in with Google</span>
-
     </a>
+
+    <div class="text-muted small">or</div>
+
+    <a
+      href="{{ url_for('auth.guest_login') }}"
+      class="btn btn-outline-primary"
+      style="
+        width: 260px;
+        padding: 0.6rem;
+      "
+    >
+      Explore as a guest
+    </a>
+
+    <small class="text-muted text-center">
+      No account required to explore free activities.
+    </small>
 
   </div>
 

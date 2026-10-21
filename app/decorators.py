@@ -1,6 +1,6 @@
 from functools import wraps
 
-from flask import redirect, render_template, url_for, g
+from flask import redirect, render_template, request, url_for, g
 from flask_login import current_user
 
 from app.database import db_session
@@ -47,6 +47,6 @@ def user_or_guest_required(fn):
         if getattr(g, "guest_user", None):
             return fn(*args, **kwargs)
 
-        return redirect(url_for("auth.login"))
+        return redirect(url_for("dashboard.index"))
 
     return wrapped

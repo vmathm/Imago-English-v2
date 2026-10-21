@@ -220,6 +220,73 @@
 
 
 
+    <!-- Create Video -->
+<div class="accordion-item mb-2 border-0">
+  <h2 class="accordion-header" id="headingCreateVideo">
+    <button class="accordion-button collapsed w-100 py-3 fw-semibold"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#collapseCreateVideo"
+            aria-expanded="false"
+            aria-controls="collapseCreateVideo">
+      Create Video
+    </button>
+  </h2>
+
+  <div id="collapseCreateVideo"
+       class="accordion-collapse collapse"
+       aria-labelledby="headingCreateVideo"
+       data-bs-parent="#adminAccordion">
+
+    <div class="accordion-body">
+
+      <p class="mb-3">
+        Create a new video for the shared video library.
+      </p>
+
+      <a href="{{ url_for('admin.create_video') }}"
+         class="btn btn-primary w-100">
+        Create Video
+      </a>
+
+    </div>
+  </div>
+</div>
+
+<!-- Guest Accounts -->
+<div class="accordion-item mb-2 border-0">
+  <h2 class="accordion-header" id="headingGuestAccounts">
+    <button class="accordion-button collapsed w-100 py-3 fw-semibold"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#collapseGuestAccounts"
+            aria-expanded="false"
+            aria-controls="collapseGuestAccounts">
+      Guest Accounts
+    </button>
+  </h2>
+
+  <div id="collapseGuestAccounts"
+       class="accordion-collapse collapse"
+       aria-labelledby="headingGuestAccounts"
+       data-bs-parent="#adminAccordion">
+
+    <div class="accordion-body">
+
+      <p class="mb-3">
+        View guest accounts, activity, expiration status,
+        and flashcards.
+      </p>
+
+      <a href="{{ url_for('admin.guests') }}"
+         class="btn btn-primary w-100">
+        Manage Guest Accounts
+      </a>
+
+    </div>
+  </div>
+</div>
+
   </div>
 </div>
 <br><br>

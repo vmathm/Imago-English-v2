@@ -1,4 +1,4 @@
-from flask import Blueprint, request, redirect, url_for, flash, render_template, jsonify, abort, g
+from flask import Blueprint, current_app, request, redirect, url_for, flash, render_template, jsonify, abort, g
 from flask_login import current_user, login_required
 from app.database import db_session
 from app.decorators import active_required, user_or_guest_required
@@ -17,6 +17,8 @@ from app.models import (
     GuestFlashcard,
     SuggestedFlashcard,
     Chapter,
+    Video,
+    VideoSuggestedFlashcard,
 )
 
 bp = Blueprint("flashcard", __name__, url_prefix="/flashcard")
@@ -1282,7 +1284,7 @@ def add_suggested_flashcards(chapter_id):
                 "message": (
                     f"Você pode adicionar no máximo mais "
                     f"{available} flashcard(s) agora. "
-                    "Desmarque alguns e tente novamente."
+                    "Estude seus flashcards antes de adicionar novos, assim você não ficará sobrecarregado."
                 ),
             }), 409
 
@@ -1379,7 +1381,7 @@ def add_suggested_flashcards(chapter_id):
             "message": (
                 f"Você pode adicionar no máximo mais "
                 f"{available} flashcard(s) agora. "
-                "Desmarque alguns e tente novamente."
+                "Estude seus flashcards antes de adicionar novos, assim você não ficará sobrecarregado."
             ),
         }), 409
 
@@ -1406,4 +1408,224 @@ def add_suggested_flashcards(chapter_id):
         "added": len(cards_to_add),
         "skipped": len(existing_questions),
         "guest": False,
+    }), 201
+
+
+
+@bp.route(
+    "/video/<int:video_id>/suggested-flashcards",
+    methods=["POST"],
+)
+@user_or_guest_required
+def add_video_suggested_flashcards(video_id):
+    data = request.get_json(silent=True) or {}
+
+    # Accept the field already used by video_details.html.
+    card_ids = data.get("flashcard_ids") or []
+
+    if not isinstance(card_ids, list) or not card_ids:
+        return jsonify({
+            "status": "error",
+            "message": "Select at least one flashcard.",
+        }), 400
+
+    try:
+        card_ids = list({int(card_id) for card_id in card_ids})
+    except (TypeError, ValueError):
+        return jsonify({
+            "status": "error",
+            "message": "Invalid flashcard selection.",
+        }), 400
+
+    video = db_session.get(Video, video_id)
+
+    if not video:
+        return jsonify({
+            "status": "error",
+            "message": "Video not found.",
+        }), 404
+
+    suggestions = (
+        db_session.query(VideoSuggestedFlashcard)
+        .filter(
+            VideoSuggestedFlashcard.video_id == video.id,
+            VideoSuggestedFlashcard.id.in_(card_ids),
+        )
+        .order_by(VideoSuggestedFlashcard.position)
+        .all()
+    )
+
+    if len(suggestions) != len(card_ids):
+        return jsonify({
+            "status": "error",
+            "message": "One or more selected flashcards are invalid.",
+        }), 400
+
+    MAX_NEVER_STUDIED = 10
+    MAX_ONE_DAY_INTERVAL = 15
+
+    # --------------------------------------------------
+    # Guest
+    # --------------------------------------------------
+    if not current_user.is_authenticated:
+        guest_user = get_or_create_guest_user()
+
+        if guest_user is None:
+            return jsonify({
+                "status": "error",
+                "message": "Could not create guest session.",
+            }), 500
+
+        card_model = GuestFlashcard
+        owner_filter = (
+            GuestFlashcard.guest_user_id == guest_user.id
+        )
+
+    # --------------------------------------------------
+    # Registered user
+    # --------------------------------------------------
+    else:
+        guest_user = None
+        card_model = Flashcard
+        owner_filter = (
+            Flashcard.user_id == current_user.id
+        )
+
+    # --------------------------------------------------
+    # Existing flashcards
+    # --------------------------------------------------
+    existing_questions = {
+        row[0]
+        for row in (
+            db_session.query(card_model.question)
+            .filter(
+                owner_filter,
+                card_model.question.in_(
+                    [card.question for card in suggestions]
+                ),
+            )
+            .all()
+        )
+    }
+
+    cards_to_add = [
+        card
+        for card in suggestions
+        if card.question not in existing_questions
+    ]
+
+    # --------------------------------------------------
+    # Learning-load limits
+    # --------------------------------------------------
+    never_studied_count = (
+        db_session.query(card_model)
+        .filter(
+            owner_filter,
+            card_model.level == 0,
+        )
+        .count()
+    )
+
+    one_day_interval_count = (
+        db_session.query(card_model)
+        .filter(
+            owner_filter,
+            card_model.level != 0,
+            card_model.interval == 1,
+        )
+        .count()
+    )
+
+    if never_studied_count >= MAX_NEVER_STUDIED:
+        return jsonify({
+            "status": "error",
+            "message": (
+                "Você já tem 10 flashcards que ainda não foram estudados. "
+                "Estude alguns deles antes de adicionar novos."
+            ),
+        }), 409
+
+    if one_day_interval_count >= MAX_ONE_DAY_INTERVAL:
+        return jsonify({
+            "status": "error",
+            "message": (
+                "Você já tem 15 flashcards em revisão diária. "
+                "Continue estudando-os antes de adicionar novos."
+            ),
+        }), 409
+
+    if (
+        never_studied_count + len(cards_to_add)
+        > MAX_NEVER_STUDIED
+    ):
+        available = max(
+            0,
+            MAX_NEVER_STUDIED - never_studied_count,
+        )
+
+        return jsonify({
+            "status": "error",
+            "message": (
+                f"Você pode adicionar no máximo mais "
+                f"{available} flashcard(s) agora. "
+                "Estude seus flashcards antes de adicionar novos, assim você não ficará sobrecarregado."
+            ),
+        }), 409
+
+    # --------------------------------------------------
+    # Create flashcards
+    # --------------------------------------------------
+    try:
+        for suggestion in cards_to_add:
+            if guest_user is not None:
+                flashcard = GuestFlashcard(
+                    guest_user_id=guest_user.id,
+                    question=suggestion.question,
+                    answer=suggestion.answer,
+                    level=0,
+                    ease=Decimal("1.30"),
+                    interval=1,
+                    last_review=None,
+                    next_review=None,
+                    show_answer=False,
+                    reviewed_by_tc=False,
+                    add_by_tc=False,
+                    add_by_user=True,
+                    created_at=utcnow(),
+                )
+            else:
+                flashcard = Flashcard(
+                    question=suggestion.question,
+                    answer=suggestion.answer,
+                    user_id=current_user.id,
+                    reviewed_by_tc=False,
+                    add_by_tc=False,
+                    add_by_user=True,
+                    created_at=utcnow(),
+                )
+
+            db_session.add(flashcard)
+
+        db_session.commit()
+
+    except Exception:
+        db_session.rollback()
+
+        current_app.logger.exception(
+            "Could not add video suggested flashcards."
+        )
+
+        return jsonify({
+            "status": "error",
+            "message": "The flashcards could not be added.",
+        }), 500
+
+    return jsonify({
+        "status": "success",
+        "message": (
+            f"{len(cards_to_add)} flashcard(s) added."
+        ),
+        "added": len(cards_to_add),
+        "skipped": len(existing_questions),
+        "guest": guest_user is not None,
     }), 201

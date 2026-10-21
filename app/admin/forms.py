@@ -218,3 +218,136 @@ class ChapterForm(FlaskForm):
 class EditChapterForm(ChapterForm):
     submit = SubmitField("Update Chapter")
 
+
+
+
+class VideoForm(FlaskForm):
+    title = StringField(
+        "Title",
+        validators=[
+            DataRequired(),
+            Length(max=255),
+        ],
+    )
+
+    video_url = StringField(
+        "Video URL",
+        validators=[
+            DataRequired(),
+            Length(max=500),
+        ],
+    )
+
+    level = SelectField(
+        "Level",
+        choices=[
+            ("A1", "A1"),
+            ("A2", "A2"),
+            ("B1", "B1"),
+            ("B2", "B2"),
+            ("C1", "C1"),
+            ("C2", "C2"),
+        ],
+        validators=[DataRequired()],
+    )
+
+    thumbnail = FileField(
+        "Thumbnail",
+        validators=[
+            Optional(),
+            FileAllowed(
+                ["jpg", "jpeg", "png", "webp"],
+                "Image files only.",
+            ),
+        ],
+    )
+
+    text = FileField(
+        "Text",
+        validators=[
+            Optional(),
+            FileAllowed(
+                ["txt"],
+                "TXT files only.",
+            ),
+        ],
+    )
+
+    submit = SubmitField("Create video")
+
+
+
+class EditVideoForm(FlaskForm):
+    title = StringField(
+        "Title",
+        validators=[
+            DataRequired(),
+            Length(max=255),
+        ],
+    )
+
+    video_url = StringField(
+        "YouTube URL",
+        validators=[
+            DataRequired(),
+            Length(max=500),
+        ],
+    )
+
+    level = SelectField(
+        "Level",
+        choices=[
+            ("A1", "A1"),
+            ("A2", "A2"),
+            ("B1", "B1"),
+            ("B2", "B2"),
+            ("C1", "C1"),
+            ("C2", "C2"),
+        ],
+        validators=[DataRequired()],
+    )
+
+    thumbnail = FileField(
+        "Replace thumbnail",
+        validators=[
+            Optional(),
+            FileAllowed(
+                ["jpg", "jpeg", "png", "webp"],
+                "Image files only.",
+            ),
+        ],
+    )
+
+    text = FileField(
+        "Replace text",
+        validators=[
+            Optional(),
+            FileAllowed(
+                ["txt"],
+                "TXT files only.",
+            ),
+        ],
+    )
+
+    submit = SubmitField("Update video")
+
+
+
+class VideoSuggestedFlashcardForm(FlaskForm):
+    question = StringField(
+        "Question",
+        validators=[
+            DataRequired(),
+        ],
+    )
+
+    answer = StringField(
+        "Answer",
+        validators=[
+            DataRequired(),
+        ],
+    )
+
+    submit = SubmitField(
+        "Add suggested flashcard"
+    )

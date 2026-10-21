@@ -1,0 +1,321 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit Video{% endblock %}
+
+{% block main %}
+
+<div class="container mt-5">
+
+    <h1 class="mb-4">
+        Edit Video
+    </h1>
+
+    <form
+        method="POST"
+        enctype="multipart/form-data"
+    >
+
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+            {{ form.title.label(class="form-label") }}
+            {{ form.title(class="form-control") }}
+
+            {% for error in form.title.errors %}
+                <div class="text-danger">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="mb-3">
+            {{ form.video_url.label(class="form-label") }}
+            {{ form.video_url(
+                class="form-control",
+                placeholder="https://www.youtube.com/..."
+            ) }}
+
+            <div class="form-text">
+                YouTube video URL.
+            </div>
+
+            {% for error in form.video_url.errors %}
+                <div class="text-danger">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="mb-3">
+            {{ form.level.label(class="form-label") }}
+            {{ form.level(class="form-select") }}
+
+            {% for error in form.level.errors %}
+                <div class="text-danger">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="mb-3">
+            {{ form.thumbnail.label(class="form-label") }}
+            {{ form.thumbnail(
+                class="form-control",
+                accept=".jpg,.jpeg,.png,.webp"
+            ) }}
+
+            {% if video.thumbnail_object_name %}
+                <div class="mt-3">
+                    <img
+                        src="{{ video.thumbnail_object_name }}"
+                        alt="{{ video.title }}"
+                        style="
+                            max-width: 300px;
+                            width: 100%;
+                            height: auto;
+                            border-radius: 0.5rem;
+                        "
+                    >
+                </div>
+            {% endif %}
+
+            {% for error in form.thumbnail.errors %}
+                <div class="text-danger">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="mb-4">
+            {{ form.text.label(class="form-label") }}
+            {{ form.text(
+                class="form-control",
+                accept=".txt"
+            ) }}
+
+            {% if video.text_path %}
+                <div class="form-text">
+                    This video currently has a lesson text.
+                    Upload a new TXT file to replace it.
+                </div>
+            {% else %}
+                <div class="form-text">
+                    No lesson text currently uploaded.
+                </div>
+            {% endif %}
+
+            {% for error in form.text.errors %}
+                <div class="text-danger">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                Update Video
+            </button>
+
+            <a
+                href="{{ url_for(
+                    'video.video_details',
+                    video_id=video.id
+                ) }}"
+                class="btn btn-outline-secondary"
+            >
+                View Video
+            </a>
+
+            <a
+                href="{{ url_for('video.videos') }}"
+                class="btn btn-outline-secondary"
+            >
+                Back to Videos
+            </a>
+
+        </div>
+
+    </form>
+
+
+
+<hr class="my-5">
+
+
+<section>
+
+    <h2 class="mb-3">
+        Suggested Flashcards
+    </h2>
+
+    <p class="text-muted">
+        Add flashcards that students can choose to add
+        after watching this video.
+    </p>
+
+
+    <form
+        method="POST"
+        action="{{ url_for(
+            'admin.add_video_suggested_flashcard',
+            video_id=video.id
+        ) }}"
+        class="mb-4"
+    >
+
+        {{ suggested_flashcard_form.hidden_tag() }}
+
+
+        <div class="mb-3">
+
+            {{
+                suggested_flashcard_form.question.label(
+                    class="form-label"
+                )
+            }}
+
+            {{
+                suggested_flashcard_form.question(
+                    class="form-control",
+                    placeholder="Question"
+                )
+            }}
+
+        </div>
+
+
+        <div class="mb-3">
+
+            {{
+                suggested_flashcard_form.answer.label(
+                    class="form-label"
+                )
+            }}
+
+            {{
+                suggested_flashcard_form.answer(
+                    class="form-control",
+                    placeholder="Answer"
+                )
+            }}
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="btn btn-primary"
+        >
+            Add Suggested Flashcard
+        </button>
+
+    </form>
+
+
+    {% if video.suggested_flashcards %}
+
+        <div class="mt-4">
+
+            <h3 class="h5 mb-3">
+                Current Suggestions
+            </h3>
+
+
+            {% for card in video.suggested_flashcards %}
+
+                <div
+                    class="
+                        border
+                        rounded
+                        p-3
+                        mb-3
+                    "
+                >
+
+                    <div class="mb-2">
+
+                        <strong>
+                            Question
+                        </strong>
+
+                        <div>
+                            {{ card.question }}
+                        </div>
+
+                    </div>
+
+
+                    <div>
+
+                        <strong>
+                            Answer
+                        </strong>
+
+                        <div>
+                            {{ card.answer }}
+                        </div>
+
+                    </div>
+
+
+                    <div class="mt-3">
+
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'admin.delete_video_suggested_flashcard',
+                            video_id=video.id,
+                            flashcard_id=card.id
+                        ) }}"
+                    >
+
+                        <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="{{ csrf_token() }}"
+                        >
+
+                        <button
+                            type="submit"
+                            class="btn btn-outline-danger btn-sm"
+                            onclick="
+                                return confirm(
+                                    'Delete this suggested flashcard?'
+                                );
+                            "
+                        >
+                            Delete
+                        </button>
+
+                    </form>
+
+                </div>
+
+                </div>
+
+
+
+            {% endfor %}
+
+        </div>
+
+
+        
+
+    {% else %}
+
+        <p class="text-muted mt-4">
+            No suggested flashcards yet.
+        </p>
+
+    {% endif %}
+
+</section>
+
+</div>
+
+{% endblock %}

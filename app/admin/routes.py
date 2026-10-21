@@ -1,8 +1,11 @@
 from flask import Blueprint, current_app, render_template, request, redirect, url_for, abort, flash, jsonify
+from datetime import datetime, timezone
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app.gcs_utils import delete_file_from_gcs_by_url, upload_file_to_gcs
-from app.models import User, Flashcard, Book, Chapter, SuggestedFlashcard
+from app.models import User, Flashcard, Book, Chapter, SuggestedFlashcard, Video, VideoSuggestedFlashcard
+from app.models.guest_user import GuestUser
+from app.models.guest_flashcard import GuestFlashcard
 from app.database import db_session
 from functools import wraps
 from pathlib import Path
@@ -21,7 +24,10 @@ from app.admin.forms import (
     BookForm,
     ChapterForm,
     EditChapterForm,
-    EditBookForm
+    EditBookForm,
+    VideoForm,
+    EditVideoForm,
+    VideoSuggestedFlashcardForm,
 )
 
 
@@ -1159,3 +1165,501 @@ def delete_suggested_flashcard(card_id):
         "message": "Suggested flashcard deleted.",
         "card_id": card_id,
     })
+
+
+@bp.route("/videos/create", methods=["GET", "POST"])
+@admin_required
+def create_video():
+    form = VideoForm()
+
+    if form.validate_on_submit():
+        title = form.title.data.strip()
+        video_url = form.video_url.data.strip()
+
+        thumbnail_object_name = None
+        text_path = None
+
+        if form.thumbnail.data:
+            thumbnail_file = form.thumbnail.data
+
+            thumbnail_object_name = upload_file_to_gcs(
+                thumbnail_file,
+                prefix="videos/thumbnail",
+                content_type=thumbnail_file.mimetype,
+            )
+
+        if form.text.data:
+            text_file = form.text.data
+
+            text_path = upload_file_to_gcs(
+                text_file,
+                prefix="videos/text",
+                content_type=text_file.mimetype,
+            )
+
+        video = Video(
+            title=title,
+            video_url=video_url,
+            level=form.level.data,
+            thumbnail_object_name=thumbnail_object_name,
+            text_path=text_path,
+        )
+
+        try:
+            db_session.add(video)
+            db_session.commit()
+
+        except Exception:
+            db_session.rollback()
+
+            if thumbnail_object_name:
+                delete_file_from_gcs_by_url(
+                    thumbnail_object_name
+                )
+
+            if text_path:
+                delete_file_from_gcs_by_url(
+                    text_path
+                )
+
+            current_app.logger.exception(
+                "Could not create video."
+            )
+
+            flash(
+                "The video could not be created.",
+                "danger",
+            )
+
+            return render_template(
+                "admin/create_video.html",
+                form=form,
+            )
+
+        flash(
+            f'Video "{video.title}" created successfully.',
+            "success",
+        )
+
+        return redirect(
+            url_for(
+                "admin.edit_video",
+                video_id=video.id,
+            )
+        )
+
+    return render_template(
+        "admin/create_video.html",
+        form=form,
+    )
+
+
+
+@bp.route(
+    "/videos/<int:video_id>/edit",
+    methods=["GET", "POST"],
+)
+@admin_required
+def edit_video(video_id):
+    video = db_session.get(
+        Video,
+        video_id,
+    )
+
+    if not video:
+        abort(404)
+
+    form = EditVideoForm(obj=video)
+
+    suggested_flashcard_form = (
+    VideoSuggestedFlashcardForm()
+    )   
+
+    if form.validate_on_submit():
+        old_thumbnail = video.thumbnail_object_name
+        old_text_path = video.text_path
+
+        new_thumbnail = None
+        new_text_path = None
+
+        try:
+            if form.thumbnail.data:
+                thumbnail_file = form.thumbnail.data
+
+                new_thumbnail = upload_file_to_gcs(
+                    thumbnail_file.stream,
+                    prefix="videos/thumbnail",
+                    content_type=(
+                        thumbnail_file.mimetype
+                        or "image/jpeg"
+                    ),
+                )
+
+            if form.text.data:
+                text_file = form.text.data
+
+                new_text_path = upload_file_to_gcs(
+                    text_file.stream,
+                    prefix="videos/text",
+                    content_type=(
+                        text_file.mimetype
+                        or "text/plain"
+                    ),
+                )
+
+            video.title = form.title.data.strip()
+            video.video_url = (
+                form.video_url.data.strip()
+            )
+            video.level = form.level.data
+
+            if new_thumbnail:
+                video.thumbnail_object_name = (
+                    new_thumbnail
+                )
+
+            if new_text_path:
+                video.text_path = new_text_path
+
+            db_session.commit()
+
+        except Exception:
+            db_session.rollback()
+
+            if new_thumbnail:
+                delete_file_from_gcs_by_url(
+                    new_thumbnail
+                )
+
+            if new_text_path:
+                delete_file_from_gcs_by_url(
+                    new_text_path
+                )
+
+            current_app.logger.exception(
+                "Video update failed."
+            )
+
+            flash(
+                "The video could not be updated.",
+                "danger",
+            )
+
+            return render_template(
+                "admin/edit_video.html",
+                form=form,
+                video=video,
+                suggested_flashcard_form=suggested_flashcard_form,
+            )
+
+        if (
+            new_thumbnail
+            and old_thumbnail
+            and old_thumbnail != new_thumbnail
+        ):
+            delete_file_from_gcs_by_url(
+                old_thumbnail
+            )
+
+        if (
+            new_text_path
+            and old_text_path
+            and old_text_path != new_text_path
+        ):
+            delete_file_from_gcs_by_url(
+                old_text_path
+            )
+
+        flash(
+            f'Video "{video.title}" updated successfully.',
+            "success",
+        )
+
+        return redirect(
+            url_for(
+                "admin.edit_video",
+                video_id=video.id,
+            )
+        )
+
+    return render_template(
+        "admin/edit_video.html",
+        form=form,
+        video=video,
+        suggested_flashcard_form=suggested_flashcard_form,
+    )
+
+
+
+@bp.route(
+    "/videos/<int:video_id>/suggested-flashcards",
+    methods=["POST"],
+)
+@admin_required
+def add_video_suggested_flashcard(video_id):
+    video = db_session.get(
+        Video,
+        video_id,
+    )
+
+    if not video:
+        abort(404)
+
+    form = VideoSuggestedFlashcardForm()
+
+    if not form.validate_on_submit():
+        flash(
+            "The suggested flashcard could not be added.",
+            "danger",
+        )
+
+        return redirect(
+            url_for(
+                "admin.edit_video",
+                video_id=video.id,
+            )
+        )
+
+    # New cards are placed after the existing ones.
+    last_card = (
+        db_session.query(VideoSuggestedFlashcard)
+        .filter_by(video_id=video.id)
+        .order_by(
+            VideoSuggestedFlashcard.position.desc()
+        )
+        .first()
+    )
+
+    position = (
+        last_card.position + 1
+        if last_card
+        else 1
+    )
+
+    suggested_flashcard = VideoSuggestedFlashcard(
+        video_id=video.id,
+        question=form.question.data.strip(),
+        answer=form.answer.data.strip(),
+        position=position,
+    )
+
+    try:
+        db_session.add(
+            suggested_flashcard
+        )
+        db_session.commit()
+
+    except Exception:
+        db_session.rollback()
+
+        current_app.logger.exception(
+            "Could not create video suggested flashcard."
+        )
+
+        flash(
+            "The suggested flashcard could not be added.",
+            "danger",
+        )
+
+        return redirect(
+            url_for(
+                "admin.edit_video",
+                video_id=video.id,
+            )
+        )
+
+    flash(
+        "Suggested flashcard added.",
+        "success",
+    )
+
+    return redirect(
+        url_for(
+            "admin.edit_video",
+            video_id=video.id,
+        )
+    )
+
+
+@bp.route(
+    "/videos/<int:video_id>/suggested-flashcards/<int:flashcard_id>/delete",
+    methods=["POST"],
+)
+@admin_required
+def delete_video_suggested_flashcard(
+    video_id,
+    flashcard_id,
+):
+    video = db_session.get(
+        Video,
+        video_id,
+    )
+
+    if not video:
+        abort(404)
+
+    flashcard = db_session.get(
+        VideoSuggestedFlashcard,
+        flashcard_id,
+    )
+
+    if not flashcard:
+        abort(404)
+
+    # Prevent deleting a flashcard through
+    # a different video's URL.
+    if flashcard.video_id != video.id:
+        abort(404)
+
+    try:
+        db_session.delete(flashcard)
+        db_session.commit()
+
+    except Exception:
+        db_session.rollback()
+
+        current_app.logger.exception(
+            "Could not delete video suggested flashcard."
+        )
+
+        flash(
+            "The suggested flashcard could not be deleted.",
+            "danger",
+        )
+
+        return redirect(
+            url_for(
+                "admin.edit_video",
+                video_id=video.id,
+            )
+        )
+
+    flash(
+        "Suggested flashcard deleted.",
+        "success",
+    )
+
+    return redirect(
+        url_for(
+            "admin.edit_video",
+            video_id=video.id,
+        )
+    )
+
+
+
+
+@bp.route("/guests", methods=["GET"])
+@admin_required
+def guests():
+    now = datetime.now(timezone.utc)
+
+    flashcard_counts = (
+        db_session.query(
+            GuestFlashcard.guest_user_id,
+            func.count(GuestFlashcard.id).label("card_count"),
+        )
+        .group_by(GuestFlashcard.guest_user_id)
+        .subquery()
+    )
+
+    rows = (
+        db_session.query(
+            GuestUser,
+            func.coalesce(
+                flashcard_counts.c.card_count, 0
+            ).label("card_count"),
+        )
+        .outerjoin(
+            flashcard_counts,
+            GuestUser.id == flashcard_counts.c.guest_user_id,
+        )
+        .order_by(GuestUser.created_at.desc())
+        .all()
+    )
+
+    guest_rows = []
+    counts = {
+        "total": 0,
+        "active": 0,
+        "expired": 0,
+        "claimed": 0,
+        "flashcards": 0,
+    }
+
+    for guest, card_count in rows:
+        # SQLite may return naive datetimes even when
+        # timezone=True is declared in the model.
+        expires_at = guest.expires_at
+
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(
+                tzinfo=timezone.utc
+            )
+
+        if guest.is_claimed:
+            status = "Claimed"
+        elif expires_at <= now:
+            status = "Expired"
+        else:
+            status = "Active"
+
+        counts["total"] += 1
+        counts[status.lower()] += 1
+        counts["flashcards"] += card_count
+
+        guest_rows.append({
+            "guest": guest,
+            "status": status,
+            "card_count": card_count,
+        })
+
+    return render_template(
+        "admin/guests.html",
+        guest_rows=guest_rows,
+        counts=counts,
+    )
+
+
+@bp.route("/guests/<string:guest_id>", methods=["GET"])
+@admin_required
+def guest_detail(guest_id):
+    guest = db_session.get(GuestUser, guest_id)
+
+    if guest is None:
+        abort(404)
+
+    now = datetime.now(timezone.utc)
+    expires_at = guest.expires_at
+
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(
+            tzinfo=timezone.utc
+        )
+
+    if guest.is_claimed:
+        status = "Claimed"
+    elif expires_at <= now:
+        status = "Expired"
+    else:
+        status = "Active"
+
+    flashcards = (
+        db_session.query(GuestFlashcard)
+        .filter_by(guest_user_id=guest.id)
+        .order_by(GuestFlashcard.created_at.desc())
+        .all()
+    )
+
+    studied_count = sum(
+        1 for card in flashcards
+        if card.last_review is not None
+    )
+
+    return render_template(
+        "admin/guest_detail.html",
+        guest=guest,
+        status=status,
+        flashcards=flashcards,
+        studied_count=studied_count,
+    )
