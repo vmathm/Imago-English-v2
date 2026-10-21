@@ -1,0 +1,153 @@
+{% extends "layout.html" %}
+
+{% block title %}Create Video{% endblock %}
+
+{% block main %}
+
+<div class="container mt-5">
+
+    <h1 class="mb-4">
+        Create Video
+    </h1>
+
+    <form
+        method="POST"
+        enctype="multipart/form-data"
+    >
+
+        {{ form.hidden_tag() }}
+
+
+        <div class="mb-3">
+
+            {{ form.title.label(
+                class="form-label"
+            ) }}
+
+            {{ form.title(
+                class="form-control"
+            ) }}
+
+            {% for error in form.title.errors %}
+                <div class="text-danger">
+                    {{ error }}
+                </div>
+            {% endfor %}
+
+        </div>
+
+
+        <div class="mb-3">
+
+            {{ form.video_url.label(
+                class="form-label"
+            ) }}
+
+            {{ form.video_url(
+                class="form-control",
+                placeholder="https://..."
+            ) }}
+
+            <div class="form-text">
+                YouTube or Instagram video URL.
+            </div>
+
+            {% for error in form.video_url.errors %}
+                <div class="text-danger">
+                    {{ error }}
+                </div>
+            {% endfor %}
+
+        </div>
+
+
+        <div class="mb-3">
+
+            {{ form.level.label(
+                class="form-label"
+            ) }}
+
+            {{ form.level(
+                class="form-select"
+            ) }}
+
+            {% for error in form.level.errors %}
+                <div class="text-danger">
+                    {{ error }}
+                </div>
+            {% endfor %}
+
+        </div>
+
+
+        <div class="mb-3">
+
+            {{ form.thumbnail.label(
+                class="form-label"
+            ) }}
+
+            {{ form.thumbnail(
+                class="form-control",
+                accept=".jpg,.jpeg,.png,.webp"
+            ) }}
+
+            <div class="form-text">
+                JPG, PNG or WebP.
+            </div>
+
+            {% for error in form.thumbnail.errors %}
+                <div class="text-danger">
+                    {{ error }}
+                </div>
+            {% endfor %}
+
+        </div>
+
+
+        <div class="mb-4">
+
+            {{ form.text.label(
+                class="form-label"
+            ) }}
+
+            {{ form.text(
+                class="form-control",
+                accept=".txt"
+            ) }}
+
+            <div class="form-text">
+                Optional TXT file with supporting lesson text.
+            </div>
+
+            {% for error in form.text.errors %}
+                <div class="text-danger">
+                    {{ error }}
+                </div>
+            {% endfor %}
+
+        </div>
+
+
+        <div class="d-flex flex-wrap gap-2">
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                Create Video
+            </button>
+
+            <a
+                href="{{ url_for('video.videos') }}"
+                class="btn btn-outline-secondary"
+            >
+                Cancel
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

@@ -25,7 +25,17 @@ def load_guest_user():
         session.pop(GUEST_SESSION_KEY, None)
         return
 
-    if guest_user.expires_at <= datetime.now(timezone.utc):
+    if guest_user.is_claimed:
+        session.pop(GUEST_SESSION_KEY, None)
+        return
+
+    expires_at = guest_user.expires_at
+
+    # Normalize legacy naive UTC timestamps, if any.
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+    if expires_at <= datetime.now(timezone.utc):
         session.pop(GUEST_SESSION_KEY, None)
         return
 

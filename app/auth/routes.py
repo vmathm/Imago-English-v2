@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, date
 from flask import Blueprint, redirect, abort, current_app, request, url_for, session, render_template
-from flask_login import login_user, logout_user
+from flask_login import current_user, login_user, logout_user
 from app.utils.time import SP_TZ
 from app.models import User
 from app.database import db_session
@@ -9,7 +9,7 @@ from app.services.google_auth import get_google_user_info
 from app.services.access import sync_internal_access
 from urllib.parse import urlparse, urljoin
 from app.services.guest_claim import claim_guest_workspace
-from app.services.guest_session import GUEST_SESSION_KEY
+from app.services.guest_session import GUEST_SESSION_KEY, get_or_create_guest_user
 import os
 
 
@@ -31,18 +31,22 @@ def is_safe_url(target: str) -> bool:
 
 def is_allowed_post_login_target(target: str) -> bool:
     """
-    Prevent redirecting back into auth endpoints that can loop or log the user out.
+    Prevent redirects to authentication endpoints
+    that could cause loops or unexpected behavior.
     """
     if not target or not is_safe_url(target):
         return False
 
     blocked_paths = {
         url_for("auth.login"),
+        url_for("auth.guest_login"),
         url_for("auth.logout"),
         url_for("auth.demo_login"),
+        url_for("auth.google_complete"),
     }
 
     parsed = urlparse(urljoin(request.host_url, target))
+
     return parsed.path not in blocked_paths
 
 
@@ -82,21 +86,17 @@ def demo_login(user_id):
     return redirect(url_for("dashboard.index"))
 
 
+
+
 @bp.route("/login/google")
 def login():
     """
-    Start Google OAuth flow.
-
-    Only trust an explicit ?next=... parameter.
-    Do not use request.referrer, because it can easily point to /auth/demo_login
-    or another auth route and create loops / accidental logout.
+    Start the Google OAuth flow.
     """
     next_url = request.args.get("next")
 
     if next_url and is_allowed_post_login_target(next_url):
         session["post_login_redirect"] = next_url
-    else:
-        session.pop("post_login_redirect", None)
 
     return redirect(url_for("google.login"))
 
@@ -198,6 +198,22 @@ def google_complete():
 
     return redirect(target)
 
+
+@bp.route("/login/guest")
+def guest_login():
+    """
+    Create or reuse an anonymous guest workspace
+    and redirect to the dashboard.
+    """
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard.index"))
+
+    guest_user = get_or_create_guest_user()
+
+    if guest_user is None:
+        return redirect(url_for("dashboard.index"))
+
+    return redirect(url_for("dashboard.index"))
 
 @bp.route("/logout")
 def logout():

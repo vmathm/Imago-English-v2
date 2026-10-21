@@ -9,6 +9,8 @@ from .book import Book
 from .chapter import Chapter
 from .chapter_progress import UserChapterProgress, GuestChapterProgress
 from .suggested_flashcard import SuggestedFlashcard
+from .video import Video
+from .video_suggested_flashcard import VideoSuggestedFlashcard
 from .billing import (
     Tenant,
     TenantBillingAccount,

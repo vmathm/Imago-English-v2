@@ -1,4 +1,4 @@
-from flask import Flask, g
+from flask import Flask, app, g
 from werkzeug.middleware.proxy_fix import ProxyFix
 import os
 
@@ -105,6 +105,7 @@ def create_app():
     from .progress.routes import bp as progress_bp
     from .calendar.routes import bp as calendar_bp
     from .staticpages.routes import bp as staticpages_bp
+    from .video.routes import bp as video_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -117,5 +118,6 @@ def create_app():
     app.register_blueprint(google_bp, url_prefix="/auth")
     app.register_blueprint(staticpages_bp)
     app.register_blueprint(billing_bp)
-
+    app.register_blueprint(video_bp)
+    
     return app

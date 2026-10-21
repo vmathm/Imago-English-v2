@@ -1,0 +1,201 @@
+{% extends "layout.html" %}
+
+{% block title %}Videos{% endblock %}
+
+{% block main %}
+
+<style>
+    .video-card {
+    max-width: 260px;
+    margin: 0 auto;
+    }
+
+    .video-thumbnail-wrapper {
+        width: 100%;
+        aspect-ratio: 9 / 16;
+        overflow: hidden;
+        border-radius: 0.5rem;
+        background-color: #f1f1f1;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
+    }
+
+    .video-link {
+        color: inherit;
+        text-decoration: none;
+        display: block;
+    }
+
+    .video-link:hover {
+        color: inherit;
+        text-decoration: none;
+    }
+
+
+    .video-link:hover .video-thumbnail-wrapper {
+        transform: translateY(-4px);
+        box-shadow: 0 7px 18px rgba(0, 0, 0, 0.18);
+    }
+
+    .video-thumbnail {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .video-thumbnail-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        text-align: center;
+        background-color: #e9ecef;
+        color: #6c757d;
+    }
+
+    .video-info {
+        padding-top: 0.9rem;
+    }
+
+    .video-title {
+        margin-bottom: 0.25rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .video-level {
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+</style>
+
+
+<div class="container mt-5">
+
+    <h1>
+        Videos
+    </h1>
+
+    <p class="text-muted">
+        Short videos to practice your English.
+    </p>
+
+
+    {% if videos %}
+
+        <div
+            class="
+                row
+                row-cols-1
+                row-cols-md-2
+                row-cols-lg-3
+                g-4
+                mt-2
+                justify-content-center
+            "
+        >
+
+            {% for video in videos %}
+
+                <div class="col">
+
+                    <div class="video-card">
+
+                        <a
+                            href="{{ url_for(
+                                'video.video_details',
+                                video_id=video.id
+                            ) }}"
+                            class="video-link"
+                        >
+
+                            <div class="video-thumbnail-wrapper">
+
+                                {% if video.thumbnail_object_name %}
+
+                                    <img
+                                        src="{{ video.thumbnail_object_name }}"
+                                        alt="{{ video.title }}"
+                                        class="video-thumbnail"
+                                        loading="lazy"
+                                    >
+
+                                {% else %}
+
+                                    <div class="video-thumbnail-placeholder">
+                                        <span>
+                                            {{ video.title }}
+                                        </span>
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <div class="video-info">
+
+                                <h5 class="video-title">
+                                    {{ video.title }}
+                                </h5>
+
+                                {% if video.level %}
+
+                                    <div class="video-level">
+                                        Level: {{ video.level }}
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+                        </a>
+
+
+                        {% if current_user.is_authenticated
+                              and current_user.is_admin() %}
+
+                            <div class="mt-2">
+
+                                <a
+                                    href="{{ url_for(
+                                        'admin.edit_video',
+                                        video_id=video.id
+                                    ) }}"
+                                    class="
+                                        btn
+                                        btn-outline-secondary
+                                        btn-sm
+                                    "
+                                >
+                                    Edit
+                                </a>
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <p class="mt-4">
+            No videos available yet.
+        </p>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

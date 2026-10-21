@@ -856,6 +856,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ==================================================
+  // Deselect all suggested flashcards
+  // ==================================================
+
+  const deselectAllBtn = document.getElementById(
+      "deselect-all-suggested-flashcards"
+  );
+
+  if (deselectAllBtn) {
+      deselectAllBtn.addEventListener("click", () => {
+          document
+              .querySelectorAll(
+                  ".suggested-flashcard-checkbox"
+              )
+              .forEach(checkbox => {
+                  checkbox.checked = false;
+              });
+      });
+  }
+
+
+
+
+
+  // ==================================================
   // Bulk-add selected suggested flashcards
   // ==================================================
 

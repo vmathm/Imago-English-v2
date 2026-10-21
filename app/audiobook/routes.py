@@ -278,35 +278,9 @@ def mark_chapter_read(book_slug, chapter_slug):
 @user_or_guest_required
 def library():
 
-    query = (
-        db_session.query(Book)
-        .filter(Book.chapters.any())
-    )
-
-    if current_user.is_authenticated:
-
-        # Only students are level-restricted.
-        if current_user.role == "student":
-            if not current_user.level:
-                abort(403)
-
-            query = query.filter(
-                Book.level == current_user.level
-            )
-
-    else:
-        # Guests are also level-restricted.
-        guest_user = g.guest_user
-
-        if not guest_user or not guest_user.level:
-            abort(403)
-
-        query = query.filter(
-            Book.level == guest_user.level
-        )
-
     books = (
-        query
+        db_session.query(Book)
+        .filter(Book.chapters.any()) 
         .order_by(Book.title.asc())
         .all()
     )
@@ -315,6 +289,7 @@ def library():
         "library.html",
         books=books,
     )
+
 
 @bp.route("/library/<string:book_slug>")
 @user_or_guest_required
@@ -550,6 +525,7 @@ def read_chapter(book_slug, chapter_slug):
 
 @bp.route("/join/chapter/<int:chapter_id>")
 def join_chapter_activity(chapter_id):
+
     chapter = db_session.get(Chapter, chapter_id)
 
     if not chapter:
@@ -564,10 +540,7 @@ def join_chapter_activity(chapter_id):
         abort(404)
 
     if not current_user.is_authenticated:
-        guest_user = get_or_create_guest_user()
-
-        guest_user.level = book.level
-        db_session.commit()
+        get_or_create_guest_user()
 
     return redirect(
         url_for(
