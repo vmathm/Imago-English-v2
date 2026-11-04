@@ -1,6 +1,6 @@
 from urllib.parse import urlparse, parse_qs
 
-from flask import Blueprint, abort, render_template, current_app, flash
+from flask import Blueprint, abort, render_template, current_app, flash, request
 import requests
 from app.database import db_session
 from app.models import Video
@@ -57,13 +57,26 @@ def get_youtube_embed_url(url):
     return None
 
 
+
 @bp.route("/")
 def videos():
     if not current_user.is_authenticated:
         get_or_create_guest_user()
 
+    valid_levels = {"A1", "A2", "B1", "B2", "C1", "C2"}
+
+    selected_level = request.args.get("level", "").strip().upper()
+
+    if selected_level not in valid_levels:
+        selected_level = None
+
+    query = db_session.query(Video)
+
+    if selected_level:
+        query = query.filter(Video.level == selected_level)
+
     videos = (
-        db_session.query(Video)
+        query
         .order_by(Video.id.desc())
         .all()
     )
@@ -71,7 +84,9 @@ def videos():
     return render_template(
         "videos.html",
         videos=videos,
+        selected_level=selected_level,
     )
+
 
 @bp.route("/<int:video_id>")
 def video_details(video_id):

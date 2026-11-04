@@ -1,3 +1,4 @@
+
 {% extends "layout.html" %}
 
 {% block title %}Videos{% endblock %}
@@ -6,8 +7,8 @@
 
 <style>
     .video-card {
-    max-width: 260px;
-    margin: 0 auto;
+        max-width: 260px;
+        margin: 0 auto;
     }
 
     .video-thumbnail-wrapper {
@@ -32,7 +33,6 @@
         color: inherit;
         text-decoration: none;
     }
-
 
     .video-link:hover .video-thumbnail-wrapper {
         transform: translateY(-4px);
@@ -85,6 +85,40 @@
         Short videos to practice your English.
     </p>
 
+
+    {# CEFR level navigation #}
+
+    {% set levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] %}
+
+    <nav
+        class="d-flex flex-wrap justify-content-center gap-2 mt-4 mb-3"
+        aria-label="Filter videos by CEFR level"
+    >
+
+        <a
+            href="{{ url_for('video.videos') }}"
+            class="btn btn-sm {{ 'btn-primary' if not selected_level else 'btn-outline-primary' }}"
+            {% if not selected_level %}aria-current="page"{% endif %}
+        >
+            All levels
+        </a>
+
+        {% for level in levels %}
+
+            <a
+                href="{{ url_for('video.videos', level=level) }}"
+                class="btn btn-sm {{ 'btn-primary' if selected_level == level else 'btn-outline-primary' }}"
+                {% if selected_level == level %}aria-current="page"{% endif %}
+            >
+                {{ level }}
+            </a>
+
+        {% endfor %}
+
+    </nav>
+
+
+    {# Video grid #}
 
     {% if videos %}
 
@@ -190,8 +224,12 @@
 
     {% else %}
 
-        <p class="mt-4">
-            No videos available yet.
+        <p class="mt-4 text-muted">
+            {% if selected_level %}
+                No videos available at level {{ selected_level }} yet.
+            {% else %}
+                No videos available yet.
+            {% endif %}
         </p>
 
     {% endif %}

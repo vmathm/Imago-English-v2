@@ -1,3 +1,4 @@
+
 {% extends "layout.html" %}
 
 {% block title %}Library{% endblock %}
@@ -74,103 +75,145 @@
 </style>
 
 
-<h1 class="mt-5">Library</h1>
+<div class="container mt-5">
 
-{% if guest_user %}
-    <small class="text-muted">
-        Você está navegando como convidado.
-    </small>
-{% endif %}
+    <h1>Library</h1>
+
+    {% if guest_user %}
+        <small class="text-muted">
+            Você está navegando como convidado.
+        </small>
+    {% endif %}
 
 
-{% if books %}
+    {# CEFR level navigation #}
 
-    <div
-        class="
-            row
-            row-cols-2
-            row-cols-md-3
-            row-cols-lg-4
-            g-4
-            mt-2
-            justify-content-center
-        "
+    {% set levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] %}
+
+    <nav
+        class="d-flex flex-wrap justify-content-center gap-2 mt-4 mb-3"
+        aria-label="Filter books by CEFR level"
     >
 
-        {% for book in books %}
+        <a
+            href="{{ url_for('audiobook.library') }}"
+            class="btn btn-sm {{ 'btn-primary' if not selected_level else 'btn-outline-primary' }}"
+            {% if not selected_level %}aria-current="page"{% endif %}
+        >
+            All levels
+        </a>
 
-            <div class="col">
+        {% for level in levels %}
 
-                <div class="book-card">
-
-                    <a
-                        href="{{ url_for(
-                            'audiobook.book_details',
-                            book_slug=book.slug
-                        ) }}"
-                        class="book-link"
-                    >
-
-                        <div class="book-cover-wrapper">
-
-                            {% if book.cover_object_name %}
-
-                                <img
-                                    src="{{ book.cover_object_name }}"
-                                    alt="Cover of {{ book.title }}"
-                                    class="book-cover"
-                                    loading="lazy"
-                                >
-
-                            {% else %}
-
-                                <div class="book-cover-placeholder">
-                                    <span>
-                                        {{ book.title }}
-                                    </span>
-                                </div>
-
-                            {% endif %}
-
-                        </div>
-
-
-                        <div class="book-info">
-
-                            <h5 class="book-title">
-                                {{ book.title }}
-                            </h5>
-
-                            {% if book.author %}
-                                <p class="book-author">
-                                    {{ book.author }}
-                                </p>
-                            {% endif %}
-
-                            {% if book.level %}
-                                <div class="book-level">
-                                    Level: {{ book.level }}
-                                </div>
-                            {% endif %}
-
-                        </div>
-
-                    </a>
-
-                </div>
-
-            </div>
+            <a
+                href="{{ url_for('audiobook.library', level=level) }}"
+                class="btn btn-sm {{ 'btn-primary' if selected_level == level else 'btn-outline-primary' }}"
+                {% if selected_level == level %}aria-current="page"{% endif %}
+            >
+                {{ level }}
+            </a>
 
         {% endfor %}
 
-    </div>
+    </nav>
 
-{% else %}
 
-    <p class="mt-4">
-        No books available yet.
-    </p>
+    {# Book grid #}
 
-{% endif %}
+    {% if books %}
+
+        <div
+            class="
+                row
+                row-cols-2
+                row-cols-md-3
+                row-cols-lg-4
+                g-4
+                mt-2
+                justify-content-center
+            "
+        >
+
+            {% for book in books %}
+
+                <div class="col">
+
+                    <div class="book-card">
+
+                        <a
+                            href="{{ url_for(
+                                'audiobook.book_details',
+                                book_slug=book.slug
+                            ) }}"
+                            class="book-link"
+                        >
+
+                            <div class="book-cover-wrapper">
+
+                                {% if book.cover_object_name %}
+
+                                    <img
+                                        src="{{ book.cover_object_name }}"
+                                        alt="Cover of {{ book.title }}"
+                                        class="book-cover"
+                                        loading="lazy"
+                                    >
+
+                                {% else %}
+
+                                    <div class="book-cover-placeholder">
+                                        <span>
+                                            {{ book.title }}
+                                        </span>
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <div class="book-info">
+
+                                <h5 class="book-title">
+                                    {{ book.title }}
+                                </h5>
+
+                                {% if book.author %}
+                                    <p class="book-author">
+                                        {{ book.author }}
+                                    </p>
+                                {% endif %}
+
+                                {% if book.level %}
+                                    <div class="book-level">
+                                        Level: {{ book.level }}
+                                    </div>
+                                {% endif %}
+
+                            </div>
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <p class="mt-4 text-muted">
+            {% if selected_level %}
+                No books available at level {{ selected_level }} yet.
+            {% else %}
+                No books available yet.
+            {% endif %}
+        </p>
+
+    {% endif %}
+
+</div>
 
 {% endblock %}

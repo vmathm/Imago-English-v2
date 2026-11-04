@@ -278,9 +278,23 @@ def mark_chapter_read(book_slug, chapter_slug):
 @user_or_guest_required
 def library():
 
-    books = (
+    valid_levels = {"A1", "A2", "B1", "B2", "C1", "C2"}
+
+    selected_level = request.args.get("level", "").strip().upper()
+
+    if selected_level not in valid_levels:
+        selected_level = None
+
+    query = (
         db_session.query(Book)
-        .filter(Book.chapters.any()) 
+        .filter(Book.chapters.any())
+    )
+
+    if selected_level:
+        query = query.filter(Book.level == selected_level)
+
+    books = (
+        query
         .order_by(Book.title.asc())
         .all()
     )
@@ -288,6 +302,7 @@ def library():
     return render_template(
         "library.html",
         books=books,
+        selected_level=selected_level,
     )
 
 
