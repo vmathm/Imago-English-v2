@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, request, redirect, url_for, flash, render_template, jsonify, abort, g
+from flask import Blueprint, current_app, request, redirect, url_for, flash, render_template, jsonify, abort, g, session
 from flask_login import current_user, login_required
 from app.database import db_session
 from app.decorators import active_required, user_or_guest_required
@@ -734,18 +734,23 @@ def study():
     )
 
 
+
 @bp.route("/review_flashcard", methods=["POST"])
 @user_or_guest_required
 def review_flashcard():
     """
     Update flashcard scheduling after a rating of 1, 2, or 3.
 
-    Supports:
-    - anonymous guests reviewing GuestFlashcard records;
-    - authenticated users reviewing their own Flashcard records;
-    - teachers/admins reviewing student Flashcard records.
+    Student/guest binary rating behavior:
+    - Wrong (1): retry during the current study session.
+    - Right (3), without a previous failure today: normal SRS.
+    - Right (3), after a previous failure today: apply rating 2.
 
-    Updates the owner's study streak when no due cards remain.
+    Failure history is stored in the Flask session and scoped
+    to the card owner and São Paulo study date.
+
+    Teachers/admins reviewing another user's cards retain
+    the original numeric rating behavior.
     """
     data = request.get_json(silent=True) or {}
     card_id = data.get("card_id")
@@ -853,7 +858,7 @@ def review_flashcard():
                 .first()
             )
 
-        # Student or another normal user reviewing their own cards.
+        # Student or another user reviewing their own cards.
         else:
             recipient = current_user
 
@@ -867,6 +872,64 @@ def review_flashcard():
         owner_column = Flashcard.user_id
         owner_id = flashcard.user_id
         is_guest = False
+
+    # --------------------------------------------------
+    # Session-aware rating resolution
+    # --------------------------------------------------
+    # The student/guest interface sends:
+    #   1 = Wrong
+    #   3 = Right
+    #
+    # Teachers/admins reviewing another person's cards
+    # retain the original 1/2/3 rating behavior.
+
+    is_reviewing_other_user = (
+        current_user.is_authenticated
+        and flashcard.user_id != current_user.id
+    ) if not is_guest else False
+
+    use_binary_rating = not is_reviewing_other_user
+
+    # Use separate namespaces for guests and registered users.
+    owner_key = (
+        f"guest:{owner_id}"
+        if is_guest
+        else f"user:{owner_id}"
+    )
+
+    today_sp = now_sp().date().isoformat()
+
+    # The Flask session remembers incorrect answers
+    # across refreshes during the same São Paulo day.
+    session_key = "flashcard_binary_review"
+
+    review_state = session.get(session_key, {})
+
+    if (
+        not isinstance(review_state, dict)
+        or review_state.get("date") != today_sp
+        or review_state.get("owner") != owner_key
+    ):
+        review_state = {
+            "date": today_sp,
+            "owner": owner_key,
+            "failed_cards": [],
+        }
+
+    failed_cards = review_state.get("failed_cards", [])
+
+    if not isinstance(failed_cards, list):
+        failed_cards = []
+
+    card_key = str(card_id)
+
+    # Save the original rating for debugging and responses.
+    requested_rating = rating
+
+    if use_binary_rating:
+        # Right after a previous Wrong becomes rating 2.
+        if rating == 3 and card_key in failed_cards:
+            rating = 2
 
     # --------------------------------------------------
     # Shared statistics helpers
@@ -887,7 +950,7 @@ def review_flashcard():
         flashcard.interval = MIN_INTERVAL
         flashcard.last_review = now
 
-        # Keep the card available during the current session.
+        # Keep available during the current session.
         flashcard.next_review = now
 
     elif rating == 2:
@@ -908,7 +971,9 @@ def review_flashcard():
 
         flashcard.level = (flashcard.level or 0) + 1
 
-        current_ease = Decimal(str(flashcard.ease or "1.30"))
+        current_ease = Decimal(
+            str(flashcard.ease or "1.30")
+        )
 
         new_ease = (
             current_ease
@@ -924,7 +989,9 @@ def review_flashcard():
             max(new_ease, Decimal("1.3"))
         )
 
-        current_interval = flashcard.interval or MIN_INTERVAL
+        current_interval = (
+            flashcard.interval or MIN_INTERVAL
+        )
 
         new_interval = int(
             math.ceil(
@@ -957,6 +1024,24 @@ def review_flashcard():
     db_session.commit()
 
     # --------------------------------------------------
+    # Update session failure history after successful save
+    # --------------------------------------------------
+    if use_binary_rating:
+        if rating == 1:
+            if card_key not in failed_cards:
+                failed_cards.append(card_key)
+
+        elif rating in (2, 3):
+            failed_cards = [
+                cid
+                for cid in failed_cards
+                if cid != card_key
+            ]
+
+        review_state["failed_cards"] = failed_cards
+        session[session_key] = review_state
+
+    # --------------------------------------------------
     # Check whether this owner has any due cards left
     # --------------------------------------------------
     due_left = (
@@ -978,8 +1063,9 @@ def review_flashcard():
     return jsonify({
         "status": "success",
         "guest": is_guest,
+        "requested_rating": requested_rating,
+        "applied_rating": rating,
     })
-
 
 
 

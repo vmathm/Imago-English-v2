@@ -1,27 +1,23 @@
+
 document.addEventListener("DOMContentLoaded", () => {
   // ====== Inputs from template ======
-  // Cards can be injected as `flashcards` or `window.flashcards`
   const cards =
-    (typeof flashcards !== "undefined" && Array.isArray(flashcards)) ? flashcards.slice() :
-    (Array.isArray(window.flashcards)) ? window.flashcards.slice() :
-    [];
+    (typeof flashcards !== "undefined" && Array.isArray(flashcards))
+      ? flashcards.slice()
+      : (Array.isArray(window.flashcards))
+        ? window.flashcards.slice()
+        : [];
 
-  // Student review mode if `studentId` is defined
-  // (teacher reviewing a student's cards)
   const hasStudent =
     (typeof studentId !== "undefined" && studentId !== null);
 
-  // Dashboard URL injected by template (fallback to "/")
   const DASHBOARD_URL =
     (typeof window.DASHBOARD_URL === "string" && window.DASHBOARD_URL) || "/";
 
-  // TTS language injected by template, e.g. "en" or "pt-BR"
   const TTS_LANGUAGE =
     (typeof window.IMAGO_TTS_LANGUAGE === "string" &&
       window.IMAGO_TTS_LANGUAGE) || "en";
 
-  // Whether the current registered student has an assigned teacher.
-  // Guests and unassigned students should receive false from the template.
   const HAS_ASSIGNED_TEACHER =
     window.HAS_ASSIGNED_TEACHER === true;
 
@@ -31,7 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (!container) return;
 
-  // ====== Early exit (no cards) ======
   if (cards.length === 0) {
     if (counterEl) counterEl.textContent = "0";
 
@@ -436,7 +431,7 @@ document.addEventListener("DOMContentLoaded", () => {
         lvlText
       );
 
-      // Rate buttons
+      // Teacher mode keeps numeric ratings
       const btnWrap =
         document.createElement("div");
 
@@ -631,24 +626,31 @@ document.addEventListener("DOMContentLoaded", () => {
         aBtn
       );
 
-      // Rate buttons
+      // Wrong / Right buttons
       const btnWrap =
         document.createElement("div");
 
-      ["1", "2", "3"].forEach((v) => {
-        const cls =
-          v === "1"
-            ? "btn btn-danger rate-btn"
-            : v === "2"
-              ? "btn btn-warning rate-btn"
-              : "btn btn-success rate-btn";
-
+      [
+        {
+          value: "wrong",
+          text: "✕",
+          className:
+            "btn btn-danger rate-btn",
+        },
+        {
+          value: "right",
+          text: "✓",
+          className:
+            "btn btn-success rate-btn",
+        },
+      ].forEach((option) => {
         const b =
           makeBtn({
-            text: v,
-            className: cls,
+            text: option.text,
+            className:
+              option.className,
             dataset: {
-              value: v,
+              value: option.value,
             },
           });
 
@@ -775,35 +777,36 @@ document.addEventListener("DOMContentLoaded", () => {
         problemWrap.appendChild(
           helpOptions
         );
-        } else {
-          const teacherInfo = document.createElement("p");
+      } else {
+        const teacherInfo =
+          document.createElement("p");
 
-          teacherInfo.className =
-            "small text-muted mb-0";
+        teacherInfo.className =
+          "small text-muted mb-0";
 
-          teacherInfo.append(
-            document.createTextNode(
-              "Precisa de ajuda com seus flashcards? "
-            )
-          );
+        teacherInfo.append(
+          document.createTextNode(
+            "Precisa de ajuda com seus flashcards? "
+          )
+        );
 
-          const teacherLink =
-            document.createElement("a");
+        const teacherLink =
+          document.createElement("a");
 
-          teacherLink.href =
-            "/calendar/admin";
+        teacherLink.href =
+          "/calendar/admin";
 
-          teacherLink.textContent =
-            "Conecte-se a um professor.";
+        teacherLink.textContent =
+          "Conecte-se a um professor.";
 
-          teacherInfo.appendChild(
-            teacherLink
-          );
+        problemWrap.appendChild(
+          teacherInfo
+        );
 
-          problemWrap.appendChild(
-            teacherInfo
-          );
-        }
+        teacherInfo.appendChild(
+          teacherLink
+        );
+      }
 
       box.append(
         qP,
@@ -847,6 +850,9 @@ document.addEventListener("DOMContentLoaded", () => {
             : "block";
       };
 
+      // =====================
+      // Student rating handlers
+      // =====================
       container
         .querySelectorAll(
           ".rate-btn"
@@ -879,8 +885,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 false
               );
 
+              // The frontend sends the student's answer.
+              // The backend will decide whether Right
+              // means rating 2 or rating 3.
               const rating =
-                btn.dataset.value;
+                btn.dataset.value === "wrong"
+                  ? "1"
+                  : "3";
 
               try {
                 const res =
@@ -912,9 +923,10 @@ document.addEventListener("DOMContentLoaded", () => {
                   return;
                 }
 
-                if (
-                  rating === "1"
-                ) {
+                // Rating 1 keeps the card in the
+                // retry queue. Ratings 2 and 3
+                // both complete the card for today.
+                if (rating === "1") {
                   if (
                     !reviewPool.some(
                       (c) =>
@@ -976,6 +988,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // =====================
+    // Flag problem card
+    // =====================
     async function flagProblemCard(
       card,
       useReview,
@@ -1055,8 +1070,7 @@ document.addEventListener("DOMContentLoaded", () => {
           );
         }
 
-        // Remove this card
-        // from the current session.
+        // Remove this card from the current session.
         if (useReview) {
           if (
             reviewPool.length &&
@@ -1102,6 +1116,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    // =====================
+    // Next card
+    // =====================
     function showNext() {
       const hasQueue =
         index < queue.length;
@@ -1109,8 +1126,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const hasReview =
         reviewPool.length > 0;
 
-      // Finished: redirect
-      // to dashboard and flash success.
       if (
         !hasQueue &&
         !hasReview
@@ -1121,9 +1136,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       updateCounter();
 
-      // BUFFER RULE:
-      // use reviewPool when 5+
-      // or when queue is empty.
+      // Use reviewPool when 5+ cards
+      // or when the main queue is empty.
       const useReview =
         reviewPool.length >= 5 ||
         (!hasQueue && hasReview);
