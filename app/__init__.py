@@ -71,27 +71,7 @@ def create_app():
 
     @app.context_processor
     def inject_library_availability():
-        from flask_login import current_user
-        from app.models import Book
-
-        library_available = False
-
-        if (
-            current_user.is_authenticated
-            and current_user.role == "student"
-            and current_user.level
-        ):
-            library_available = (
-                db_session.query(Book.id)
-                .filter(Book.level == current_user.level)
-                .first()
-                is not None
-            )
-
-        return {
-            "library_available": library_available
-        }
-
+        return {"library_available": True}
 
     
 

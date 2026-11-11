@@ -88,35 +88,50 @@
 
     {# CEFR level navigation #}
 
-    {% set levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] %}
+    {% if not has_assigned_level %}
 
-    <nav
-        class="d-flex flex-wrap justify-content-center gap-2 mt-4 mb-3"
-        aria-label="Filter books by CEFR level"
-    >
+        {% set levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] %}
 
-        <a
-            href="{{ url_for('audiobook.library') }}"
-            class="btn btn-sm {{ 'btn-primary' if not selected_level else 'btn-outline-primary' }}"
-            {% if not selected_level %}aria-current="page"{% endif %}
+        <p class="text-center text-muted mt-4 mb-2">
+            Escolha o nível de inglês mais adequado para você
+            e encontre livros compatíveis com sua leitura.
+        </p>
+
+        <nav
+            class="d-flex flex-wrap justify-content-center gap-2 mt-3 mb-3"
+            aria-label="Filtrar livros por nível de inglês"
         >
-            All levels
-        </a>
-
-        {% for level in levels %}
 
             <a
-                href="{{ url_for('audiobook.library', level=level) }}"
-                class="btn btn-sm {{ 'btn-primary' if selected_level == level else 'btn-outline-primary' }}"
-                {% if selected_level == level %}aria-current="page"{% endif %}
+                href="{{ url_for('audiobook.library') }}"
+                class="btn btn-sm {{ 'btn-primary' if not selected_level else 'btn-outline-primary' }}"
+                {% if not selected_level %}aria-current="page"{% endif %}
             >
-                {{ level }}
+                Todos os níveis
             </a>
 
-        {% endfor %}
+            {% for level in levels %}
 
-    </nav>
+                <a
+                    href="{{ url_for('audiobook.library', level=level) }}"
+                    class="btn btn-sm {{ 'btn-primary' if selected_level == level else 'btn-outline-primary' }}"
+                    {% if selected_level == level %}aria-current="page"{% endif %}
+                >
+                    {{ level }}
+                </a>
 
+            {% endfor %}
+
+        </nav>
+
+    {% else %}
+
+        <p class="text-muted mt-4 mb-3">
+            Livros disponíveis para o seu nível:
+            <strong>{{ selected_level }}</strong>
+        </p>
+
+    {% endif %}
 
     {# Book grid #}
 

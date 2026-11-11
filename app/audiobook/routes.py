@@ -280,10 +280,24 @@ def library():
 
     valid_levels = {"A1", "A2", "B1", "B2", "C1", "C2"}
 
-    selected_level = request.args.get("level", "").strip().upper()
+    has_assigned_level = (
+        current_user.is_authenticated
+        and current_user.role == "student"
+        and current_user.level in valid_levels
+    )
 
-    if selected_level not in valid_levels:
-        selected_level = None
+    if has_assigned_level:
+        # Students with an assigned level cannot override it.
+        selected_level = current_user.level
+    else:
+        # Guests and users without an assigned level
+        # can optionally filter the library.
+        selected_level = request.args.get(
+            "level", ""
+        ).strip().upper()
+
+        if selected_level not in valid_levels:
+            selected_level = None
 
     query = (
         db_session.query(Book)
@@ -303,8 +317,8 @@ def library():
         "library.html",
         books=books,
         selected_level=selected_level,
+        has_assigned_level=has_assigned_level,
     )
-
 
 @bp.route("/library/<string:book_slug>")
 @user_or_guest_required
